@@ -7,3 +7,36 @@
 
 # Local History for Visual Studio Code
 .history/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.venv.bak/
+dist/
+*.whl
+
+# Node / Frontend
+node_modules/
+frontend/dist/
+frontend/.nuxt/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# Test artifacts
+*.db
+.pytest_cache/
