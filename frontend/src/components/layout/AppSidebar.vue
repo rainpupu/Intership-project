@@ -30,6 +30,7 @@ import {
   Cpu,
   Clock,
   DataAnalysis,
+  User,
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -46,6 +47,7 @@ const menuItems = [
   { path: '/training', title: '模型训练', icon: Cpu },
   { path: '/history', title: '历史记录', icon: Clock },
   { path: '/dashboard', title: '仪表盘', icon: DataAnalysis },
+  { path: '/profile', title: '个人信息', icon: User },
 ]
 </script>
 

@@ -45,7 +45,7 @@ const userStore = useUserStore()
 function handleCommand(command) {
   switch (command) {
     case 'profile':
-      // 个人信息（暂未实现）
+      router.push('/profile')
       break
     case 'logout':
       ElMessageBox.confirm('确定要退出登录吗？', '提示', {

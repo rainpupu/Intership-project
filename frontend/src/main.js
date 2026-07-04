@@ -1,6 +1,7 @@
 /**
  * 应用入口
  *
+ * - 注册全局错误监控（在其他插件之前注册）
  * - 初始化 Vue 应用
  * - 注册 ElementPlus / Router / Pinia 插件
  * - 引入全局样式
@@ -20,8 +21,14 @@ import App from './App.vue'
 import router from './router'
 import pinia from './stores'
 
+// 全局错误监控
+import { setupErrorReporting } from "@/utils/errorReporter";
+
 // 创建应用
 const app = createApp(App)
+
+// 注册全局错误监控（在其他插件之前注册）
+setupErrorReporting(app)
 
 // 注册插件
 app.use(pinia)                        // 状态管理

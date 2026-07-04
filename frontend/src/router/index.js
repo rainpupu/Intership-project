@@ -5,6 +5,7 @@
  * - /register → 注册页
  */
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 // 路由表
 const routes = [
@@ -57,6 +58,12 @@ const routes = [
         component: () => import('@/views/DashboardPage.vue'),
         meta: { title: '仪表盘', icon: 'DataAnalysis' },
       },
+      {
+        path: 'profile',
+        name: 'Profile',
+        component: () => import('@/views/ProfilePage.vue'),
+        meta: { title: '个人信息', icon: 'User' },
+      },
     ],
   },
   // 404 重定向到登录页
@@ -79,14 +86,15 @@ router.beforeEach((to, from, next) => {
     ? `${to.meta.title} - visagent`
     : 'visagent'
 
-  // 获取登录状态
-  const token = localStorage.getItem('visagent_token')
+  // 从 store 获取登录状态（基于 HttpOnly cookie，不再依赖 localStorage token）
+  const userStore = useUserStore()
+  const isLoggedIn = userStore.isLoggedIn
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth !== false)
 
-  if (requiresAuth && !token) {
+  if (requiresAuth && !isLoggedIn) {
     // 未登录，跳转到登录页
     next({ path: '/login', query: { redirect: to.fullPath } })
-  } else if ((to.path === '/login' || to.path === '/register') && token) {
+  } else if ((to.path === '/login' || to.path === '/register') && isLoggedIn) {
     // 已登录则跳转到首页
     next('/')
   } else {
