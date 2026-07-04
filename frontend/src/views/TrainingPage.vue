@@ -227,7 +227,7 @@
           </el-upload>
         </el-form-item>
         <el-form-item label="模型名称" required>
-          <el-input v-model="uploadForm.model_name" placeholder="如 rsod_yolov11n" />
+          <el-input v-model="uploadForm.model_name" placeholder="如 visagent_yolov11n" />
         </el-form-item>
         <el-form-item label="版本号" required>
           <el-input v-model="uploadForm.version" placeholder="如 v1.0.0" />
