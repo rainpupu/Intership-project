@@ -50,8 +50,8 @@
         <div class="card-header">
           <h3>检测趋势</h3>
           <el-radio-group v-model="trendPeriod" size="small" @change="loadTrendData">
-            <el-radio-button label="week">近7天</el-radio-button>
-            <el-radio-button label="month">近30天</el-radio-button>
+            <el-radio-button value="week">近7天</el-radio-button>
+            <el-radio-button value="month">近30天</el-radio-button>
           </el-radio-group>
         </div>
         <div ref="trendChartRef" class="chart-container"></div>
@@ -462,9 +462,3 @@ onUnmounted(() => {
   }
 }
 </style>
-<template>
-  <div class="page-container">
-    <h2>仪表盘</h2>
-    <p>Day10 将在此实现 ECharts 数据可视化仪表盘</p>
-  </div>
-</template>

@@ -24,9 +24,9 @@
       <div class="control-section">
         <label>检测模式</label>
         <el-radio-group v-model="detectMode">
-          <el-radio-button label="single">单图检测</el-radio-button>
-          <el-radio-button label="batch">批量检测</el-radio-button>
-          <el-radio-button label="video">视频检测</el-radio-button>
+          <el-radio-button value="single">单图检测</el-radio-button>
+          <el-radio-button value="batch">批量检测</el-radio-button>
+          <el-radio-button value="video">视频检测</el-radio-button>
         </el-radio-group>
       </div>
 
@@ -410,9 +410,3 @@ onMounted(() => {
   }
 }
 </style>
-<template>
-  <div class="page-container">
-    <h2>目标检测</h2>
-    <p>Day8 将在此实现图片上传 / 检测 / 结果展示功能</p>
-  </div>
-</template>

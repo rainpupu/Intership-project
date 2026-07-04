@@ -12,11 +12,11 @@
       <!-- 任务状态筛选 -->
       <div class="status-filter">
         <el-radio-group v-model="statusFilter" size="small" @change="loadTasks">
-          <el-radio-button label="">全部</el-radio-button>
-          <el-radio-button label="pending">等待中</el-radio-button>
-          <el-radio-button label="running">运行中</el-radio-button>
-          <el-radio-button label="completed">已完成</el-radio-button>
-          <el-radio-button label="failed">失败</el-radio-button>
+          <el-radio-button value="">全部</el-radio-button>
+          <el-radio-button value="pending">等待中</el-radio-button>
+          <el-radio-button value="running">运行中</el-radio-button>
+          <el-radio-button value="completed">已完成</el-radio-button>
+          <el-radio-button value="failed">失败</el-radio-button>
         </el-radio-group>
       </div>
 
@@ -649,9 +649,3 @@ onUnmounted(() => {
   }
 }
 </style>
-<template>
-  <div class="page-container">
-    <h2>模型训练</h2>
-    <p>Day6 将在此实现 YOLOv11 模型训练管理功能</p>
-  </div>
-</template>

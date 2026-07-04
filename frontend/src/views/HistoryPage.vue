@@ -4,8 +4,8 @@
     <div class="filter-bar">
       <div class="filter-left">
         <el-radio-group v-model="historyType" @change="loadHistory">
-          <el-radio-button label="detection">检测记录</el-radio-button>
-          <el-radio-button label="training">训练记录</el-radio-button>
+          <el-radio-button value="detection">检测记录</el-radio-button>
+          <el-radio-button value="training">训练记录</el-radio-button>
         </el-radio-group>
         
         <el-select v-model="sceneFilter" placeholder="所有场景" clearable @change="loadHistory" class="scene-select">
@@ -363,9 +363,3 @@ onMounted(() => {
   }
 }
 </style>
-<template>
-  <div class="page-container">
-    <h2>历史记录</h2>
-    <p>Day10 将在此实现检测 / 训练历史记录管理功能</p>
-  </div>
-</template>
