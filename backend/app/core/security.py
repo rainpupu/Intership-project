@@ -2,9 +2,13 @@
 安全工具模块
 - 密码哈希与校验（bcrypt）
 - JWT Token 生成与验证
+- 用户认证依赖
 """
 from datetime import datetime, timedelta
-from jose import jwt
+from fastapi import Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
+from jose import jwt, JWTError
+from sqlalchemy.orm import Session
 import bcrypt
 from app.config.settings import settings
 
@@ -67,3 +71,41 @@ def decode_access_token(token: str) -> dict:
         settings.JWT_SECRET_KEY,
         algorithms=[settings.JWT_ALGORITHM],
     )
+
+
+# OAuth2 密码模式，用于从请求 Header 中提取 Token
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db=None,
+):
+    """
+    从 JWT Token 中解析当前用户
+    在需要认证的路由中通过 Depends(get_current_user) 使用
+    """
+    from app.database.session import get_db as _get_db
+    from app.services.user_service import user_service
+    
+    if db is None:
+        db = next(_get_db())
+    
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="无效的认证凭据",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = decode_access_token(token)
+        user_id_str: str = payload.get("sub")
+        if user_id_str is None:
+            raise credentials_exception
+        user_id = int(user_id_str)
+    except (JWTError, ValueError):
+        raise credentials_exception
+
+    user = user_service.get_user_by_id(db, user_id)
+    if user is None:
+        raise credentials_exception
+    return user

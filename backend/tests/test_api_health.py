@@ -16,7 +16,7 @@ class TestRoot:
         response = client.get("/")
         assert response.status_code == 200
         data = response.json()
-        assert data["message"] == "欢迎使用 RSOD Agent Platform"
+        assert data["message"] == "欢迎使用 VisAgent"
         assert data["version"] == "0.1.0"
         assert "/docs" in data["docs"]
         assert "/redoc" in data["redoc"]
@@ -31,7 +31,7 @@ class TestHealth:
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
-        assert data["app_name"] == "RSOD Agent Platform"
+        assert data["app_name"] == "VisAgent"
         assert data["version"] == "0.1.0"
 
     def test_database_health(self):
@@ -77,7 +77,7 @@ class TestDocs:
         response = client.get("/openapi.json")
         assert response.status_code == 200
         data = response.json()
-        assert data["info"]["title"] == "RSOD Agent Platform"
+        assert data["info"]["title"] == "VisAgent"
         assert "/api/auth/register" in data["paths"]
         assert "/api/auth/login" in data["paths"]
         assert "/api/auth/me" in data["paths"]

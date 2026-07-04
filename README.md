@@ -1,4 +1,4 @@
-# RSOD Agent Platform
+# VisAgent
 
 基于 YOLOv11 的遥感目标检测智能体平台，提供图像检测、模型训练、智能对话等一站式 AI 检测服务。
 

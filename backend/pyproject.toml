@@ -1,21 +1,35 @@
 [project]
 name = "backend"
 version = "0.1.0"
-description = "RSOD Agent Platform - 基于 YOLOv11 的目标检测智能体平台后端"
+description = "VisAgent - 基于 YOLOv11 的目标检测智能体平台后端"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi>=0.115.0",
-    "uvicorn[standard]>=0.34.0",
-    "sqlalchemy>=2.0.0",
-    "psycopg2-binary>=2.9.0",
-    "alembic>=1.14.0",
-    "pydantic-settings>=2.7.0",
-    "python-jose>=3.3.0",
-    "bcrypt>=4.0.0",
-    "python-multipart>=0.0.18",
+    "fastapi>=0.139.0",
+    "uvicorn[standard]>=0.49.0",
+    "sqlalchemy>=2.0.50",
+    "psycopg2-binary>=2.9.10",
+    "alembic>=1.18.0",
+    "pydantic-settings>=2.14.0",
+    "python-jose>=3.5.0",
+    "bcrypt>=5.0.0",
+    "python-multipart>=0.0.30",
     "minio>=7.2.0",
-    "redis>=5.2.0",
+    "redis>=8.0.0",
+    # Agent 框架
+    "langchain>=1.3.0",
+    "langgraph>=1.2.0",
+    # LLM 服务
+    "openai>=2.44.0",
+    # 目标检测
+    "ultralytics>=8.4.0",
+    # 图像处理
+    "opencv-python-headless>=5.0.0",
+    "Pillow>=12.0.0",
+    # 向量存储
+    "pgvector>=0.4.0",
+    # 环境变量
+    "python-dotenv>=1.2.0",
 ]
 
 [dependency-groups]
@@ -23,7 +37,7 @@ dev = [
     "httpx>=0.28.1",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
-    "ruff>=0.9.0",
+    "ruff>=0.15.0",
 ]
 
 [tool.ruff]

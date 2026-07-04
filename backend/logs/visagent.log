@@ -1,0 +1,608 @@
+2026-07-02 18:27:28 - visagent - INFO - 正在初始化服务...
+2026-07-02 18:27:32 - visagent.request - INFO - Request started | Method: GET | Path: / | Client: testclient | User-Agent: testclient
+2026-07-02 18:27:32 - visagent.request - INFO - Request completed | Method: GET | Path: / | Status: 200 | Duration: 1.70ms
+2026-07-02 18:27:32 - visagent.request - INFO - Request started | Method: GET | Path: /api/health | Client: testclient | User-Agent: testclient
+2026-07-02 18:27:32 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health | Status: 200 | Duration: 1.38ms
+2026-07-02 18:27:32 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/database | Client: testclient | User-Agent: testclient
+2026-07-02 18:27:32 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/database | Status: 200 | Duration: 8.43ms
+2026-07-02 18:27:32 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/redis | Client: testclient | User-Agent: testclient
+2026-07-02 18:27:32 - visagent.health - ERROR - Redis 健康检查失败: No module named 'redis'
+2026-07-02 18:27:32 - visagent.exceptions - WARNING - HTTPException: 503 {'status': 'unhealthy', 'redis': 'disconnected', 'message': "Redis 连接失败: No module named 'redis'"} | Path: /api/health/redis | Method: GET
+2026-07-02 18:27:32 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/redis | Status: 503 | Duration: 2.94ms
+2026-07-02 18:27:32 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/minio | Client: testclient | User-Agent: testclient
+2026-07-02 18:27:32 - visagent.health - ERROR - MinIO 健康检查失败: No module named 'minio'
+2026-07-02 18:27:32 - visagent.exceptions - WARNING - HTTPException: 503 {'status': 'unhealthy', 'minio': 'disconnected', 'message': "MinIO 连接失败: No module named 'minio'"} | Path: /api/health/minio | Method: GET
+2026-07-02 18:27:32 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/minio | Status: 503 | Duration: 2.91ms
+2026-07-02 18:27:32 - visagent.request - INFO - Request started | Method: GET | Path: /docs | Client: testclient | User-Agent: testclient
+2026-07-02 18:27:32 - visagent.request - INFO - Request completed | Method: GET | Path: /docs | Status: 200 | Duration: 0.78ms
+2026-07-02 18:27:32 - visagent.request - INFO - Request started | Method: GET | Path: /redoc | Client: testclient | User-Agent: testclient
+2026-07-02 18:27:32 - visagent.request - INFO - Request completed | Method: GET | Path: /redoc | Status: 200 | Duration: 0.66ms
+2026-07-02 18:27:32 - visagent.request - INFO - Request started | Method: GET | Path: /openapi.json | Client: testclient | User-Agent: testclient
+2026-07-02 18:27:32 - visagent.request - INFO - Request completed | Method: GET | Path: /openapi.json | Status: 200 | Duration: 26.54ms
+2026-07-02 18:27:48 - visagent - INFO - 正在初始化服务...
+2026-07-02 18:27:52 - visagent.request - INFO - Request started | Method: GET | Path: / | Client: testclient | User-Agent: testclient
+2026-07-02 18:27:52 - visagent.request - INFO - Request completed | Method: GET | Path: / | Status: 200 | Duration: 1.63ms
+2026-07-02 18:27:52 - visagent.request - INFO - Request started | Method: GET | Path: /api/health | Client: testclient | User-Agent: testclient
+2026-07-02 18:27:52 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health | Status: 200 | Duration: 1.28ms
+2026-07-02 18:27:52 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/database | Client: testclient | User-Agent: testclient
+2026-07-02 18:27:52 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/database | Status: 200 | Duration: 5.37ms
+2026-07-02 18:27:52 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/redis | Client: testclient | User-Agent: testclient
+2026-07-02 18:27:52 - visagent.health - ERROR - Redis 健康检查失败: No module named 'redis'
+2026-07-02 18:27:52 - visagent.exceptions - WARNING - HTTPException: 503 {'status': 'unhealthy', 'redis': 'disconnected', 'message': "Redis 连接失败: No module named 'redis'"} | Path: /api/health/redis | Method: GET
+2026-07-02 18:27:52 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/redis | Status: 503 | Duration: 1.91ms
+2026-07-02 18:27:52 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/minio | Client: testclient | User-Agent: testclient
+2026-07-02 18:27:52 - visagent.health - ERROR - MinIO 健康检查失败: No module named 'minio'
+2026-07-02 18:27:52 - visagent.exceptions - WARNING - HTTPException: 503 {'status': 'unhealthy', 'minio': 'disconnected', 'message': "MinIO 连接失败: No module named 'minio'"} | Path: /api/health/minio | Method: GET
+2026-07-02 18:27:52 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/minio | Status: 503 | Duration: 2.97ms
+2026-07-02 18:27:52 - visagent.request - INFO - Request started | Method: GET | Path: /docs | Client: testclient | User-Agent: testclient
+2026-07-02 18:27:52 - visagent.request - INFO - Request completed | Method: GET | Path: /docs | Status: 200 | Duration: 0.55ms
+2026-07-02 18:27:52 - visagent.request - INFO - Request started | Method: GET | Path: /redoc | Client: testclient | User-Agent: testclient
+2026-07-02 18:27:52 - visagent.request - INFO - Request completed | Method: GET | Path: /redoc | Status: 200 | Duration: 0.49ms
+2026-07-02 18:27:52 - visagent.request - INFO - Request started | Method: GET | Path: /openapi.json | Client: testclient | User-Agent: testclient
+2026-07-02 18:27:52 - visagent.request - INFO - Request completed | Method: GET | Path: /openapi.json | Status: 200 | Duration: 50.47ms
+2026-07-02 18:29:20 - visagent - INFO - 正在初始化服务...
+2026-07-02 18:29:20 - visagent - INFO - MinIO 存储桶 'visagent-images' 初始化完成
+2026-07-02 18:29:20 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:21 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 201 | Duration: 345.55ms
+2026-07-02 18:29:21 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:21 - visagent.exceptions - WARNING - HTTPException: 400 用户名已存在 | Path: /api/auth/register | Method: POST
+2026-07-02 18:29:21 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 400 | Duration: 2.89ms
+2026-07-02 18:29:22 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:22 - visagent.exceptions - WARNING - HTTPException: 400 邮箱已被注册 | Path: /api/auth/register | Method: POST
+2026-07-02 18:29:22 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 400 | Duration: 3.05ms
+2026-07-02 18:29:22 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:22 - visagent.exceptions - WARNING - ValidationError: ['body -> username: String should have at least 3 characters'] | Path: /api/auth/register | Method: POST
+2026-07-02 18:29:22 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 2.12ms
+2026-07-02 18:29:22 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:22 - visagent.exceptions - WARNING - ValidationError: ['body -> password: String should have at least 6 characters'] | Path: /api/auth/register | Method: POST
+2026-07-02 18:29:22 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 2.60ms
+2026-07-02 18:29:22 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:22 - visagent.exceptions - WARNING - ValidationError: ['body -> email: Field required', 'body -> password: Field required'] | Path: /api/auth/register | Method: POST
+2026-07-02 18:29:22 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 3.24ms
+2026-07-02 18:29:22 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:22 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 282.56ms
+2026-07-02 18:29:23 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:23 - visagent.exceptions - WARNING - HTTPException: 401 用户名或密码错误 | Path: /api/auth/login | Method: POST
+2026-07-02 18:29:23 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 401 | Duration: 276.74ms
+2026-07-02 18:29:23 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:23 - visagent.exceptions - WARNING - HTTPException: 401 用户名或密码错误 | Path: /api/auth/login | Method: POST
+2026-07-02 18:29:23 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 401 | Duration: 3.31ms
+2026-07-02 18:29:23 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:23 - visagent.exceptions - WARNING - ValidationError: ['body -> password: Field required'] | Path: /api/auth/login | Method: POST
+2026-07-02 18:29:23 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 422 | Duration: 2.05ms
+2026-07-02 18:29:23 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:24 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 275.60ms
+2026-07-02 18:29:24 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:24 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 200 | Duration: 5.11ms
+2026-07-02 18:29:24 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:24 - visagent.exceptions - WARNING - HTTPException: 401 Not authenticated | Path: /api/auth/me | Method: GET
+2026-07-02 18:29:24 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 1.77ms
+2026-07-02 18:29:24 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:24 - visagent.exceptions - WARNING - HTTPException: 401 无效的认证凭据 | Path: /api/auth/me | Method: GET
+2026-07-02 18:29:24 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 2.00ms
+2026-07-02 18:29:24 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:24 - visagent.exceptions - WARNING - HTTPException: 401 Not authenticated | Path: /api/auth/me | Method: GET
+2026-07-02 18:29:24 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 1.29ms
+2026-07-02 18:29:24 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:24 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 201 | Duration: 279.13ms
+2026-07-02 18:29:24 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:24 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 271.38ms
+2026-07-02 18:29:24 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:24 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 200 | Duration: 2.90ms
+2026-07-02 18:29:25 - visagent - INFO - 服务已关闭
+2026-07-02 18:29:25 - visagent.request - INFO - Request started | Method: GET | Path: / | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:25 - visagent.request - INFO - Request completed | Method: GET | Path: / | Status: 200 | Duration: 1.55ms
+2026-07-02 18:29:25 - visagent.request - INFO - Request started | Method: GET | Path: /api/health | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:25 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health | Status: 200 | Duration: 1.04ms
+2026-07-02 18:29:25 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/database | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:25 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/database | Status: 200 | Duration: 3.13ms
+2026-07-02 18:29:25 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/redis | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:25 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/redis | Status: 200 | Duration: 59.46ms
+2026-07-02 18:29:25 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/minio | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:25 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/minio | Status: 200 | Duration: 7.83ms
+2026-07-02 18:29:25 - visagent.request - INFO - Request started | Method: GET | Path: /docs | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:25 - visagent.request - INFO - Request completed | Method: GET | Path: /docs | Status: 200 | Duration: 0.59ms
+2026-07-02 18:29:25 - visagent.request - INFO - Request started | Method: GET | Path: /redoc | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:25 - visagent.request - INFO - Request completed | Method: GET | Path: /redoc | Status: 200 | Duration: 0.48ms
+2026-07-02 18:29:25 - visagent.request - INFO - Request started | Method: GET | Path: /openapi.json | Client: testclient | User-Agent: testclient
+2026-07-02 18:29:25 - visagent.request - INFO - Request completed | Method: GET | Path: /openapi.json | Status: 200 | Duration: 24.41ms
+2026-07-02 18:47:03 - visagent - INFO - 正在初始化服务...
+2026-07-02 18:47:03 - visagent - INFO - MinIO 存储桶 'visagent-images' 初始化完成
+2026-07-02 18:47:03 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:04 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 201 | Duration: 458.44ms
+2026-07-02 18:47:04 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:04 - visagent.exceptions - WARNING - HTTPException: 400 用户名已存在 | Path: /api/auth/register | Method: POST
+2026-07-02 18:47:04 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 400 | Duration: 10.10ms
+2026-07-02 18:47:05 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:05 - visagent.exceptions - WARNING - HTTPException: 400 邮箱已被注册 | Path: /api/auth/register | Method: POST
+2026-07-02 18:47:05 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 400 | Duration: 6.26ms
+2026-07-02 18:47:05 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:05 - visagent.exceptions - WARNING - ValidationError: ['body -> username: String should have at least 3 characters'] | Path: /api/auth/register | Method: POST
+2026-07-02 18:47:05 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 4.89ms
+2026-07-02 18:47:05 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:05 - visagent.exceptions - WARNING - ValidationError: ['body -> password: String should have at least 6 characters'] | Path: /api/auth/register | Method: POST
+2026-07-02 18:47:05 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 4.78ms
+2026-07-02 18:47:05 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:05 - visagent.exceptions - WARNING - ValidationError: ['body -> email: Field required', 'body -> password: Field required'] | Path: /api/auth/register | Method: POST
+2026-07-02 18:47:05 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 3.52ms
+2026-07-02 18:47:06 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:06 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 396.85ms
+2026-07-02 18:47:07 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:07 - visagent.exceptions - WARNING - HTTPException: 401 用户名或密码错误 | Path: /api/auth/login | Method: POST
+2026-07-02 18:47:07 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 401 | Duration: 374.52ms
+2026-07-02 18:47:07 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:07 - visagent.exceptions - WARNING - HTTPException: 401 用户名或密码错误 | Path: /api/auth/login | Method: POST
+2026-07-02 18:47:07 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 401 | Duration: 9.85ms
+2026-07-02 18:47:07 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:07 - visagent.exceptions - WARNING - ValidationError: ['body -> password: Field required'] | Path: /api/auth/login | Method: POST
+2026-07-02 18:47:07 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 422 | Duration: 4.32ms
+2026-07-02 18:47:08 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:08 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 367.95ms
+2026-07-02 18:47:08 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:08 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 200 | Duration: 7.57ms
+2026-07-02 18:47:08 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:08 - visagent.exceptions - WARNING - HTTPException: 401 Not authenticated | Path: /api/auth/me | Method: GET
+2026-07-02 18:47:08 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 1.94ms
+2026-07-02 18:47:08 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:08 - visagent.exceptions - WARNING - HTTPException: 401 无效的认证凭据 | Path: /api/auth/me | Method: GET
+2026-07-02 18:47:08 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 3.14ms
+2026-07-02 18:47:08 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:08 - visagent.exceptions - WARNING - HTTPException: 401 Not authenticated | Path: /api/auth/me | Method: GET
+2026-07-02 18:47:08 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 1.89ms
+2026-07-02 18:47:08 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:09 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 201 | Duration: 460.04ms
+2026-07-02 18:47:09 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:09 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 373.50ms
+2026-07-02 18:47:09 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:09 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 200 | Duration: 4.77ms
+2026-07-02 18:47:09 - visagent - INFO - 服务已关闭
+2026-07-02 18:47:09 - visagent.request - INFO - Request started | Method: GET | Path: / | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:09 - visagent.request - INFO - Request completed | Method: GET | Path: / | Status: 200 | Duration: 2.76ms
+2026-07-02 18:47:09 - visagent.request - INFO - Request started | Method: GET | Path: /api/health | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:09 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health | Status: 200 | Duration: 2.05ms
+2026-07-02 18:47:09 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/database | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:09 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/database | Status: 200 | Duration: 3.58ms
+2026-07-02 18:47:09 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/redis | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:10 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/redis | Status: 200 | Duration: 187.04ms
+2026-07-02 18:47:10 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/minio | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:10 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/minio | Status: 200 | Duration: 19.04ms
+2026-07-02 18:47:10 - visagent.request - INFO - Request started | Method: GET | Path: /docs | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:10 - visagent.request - INFO - Request completed | Method: GET | Path: /docs | Status: 200 | Duration: 0.70ms
+2026-07-02 18:47:10 - visagent.request - INFO - Request started | Method: GET | Path: /redoc | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:10 - visagent.request - INFO - Request completed | Method: GET | Path: /redoc | Status: 200 | Duration: 0.78ms
+2026-07-02 18:47:10 - visagent.request - INFO - Request started | Method: GET | Path: /openapi.json | Client: testclient | User-Agent: testclient
+2026-07-02 18:47:10 - visagent.request - INFO - Request completed | Method: GET | Path: /openapi.json | Status: 200 | Duration: 32.53ms
+2026-07-02 18:53:58 - visagent - INFO - 正在初始化服务...
+2026-07-02 18:53:58 - visagent - INFO - MinIO 存储桶 'visagent-images' 初始化完成
+2026-07-02 18:53:58 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:53:59 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 201 | Duration: 443.53ms
+2026-07-02 18:53:59 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:53:59 - visagent.exceptions - WARNING - HTTPException: 400 用户名已存在 | Path: /api/auth/register | Method: POST
+2026-07-02 18:53:59 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 400 | Duration: 5.40ms
+2026-07-02 18:53:59 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:53:59 - visagent.exceptions - WARNING - HTTPException: 400 邮箱已被注册 | Path: /api/auth/register | Method: POST
+2026-07-02 18:53:59 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 400 | Duration: 5.53ms
+2026-07-02 18:54:00 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:00 - visagent.exceptions - WARNING - ValidationError: ['body -> username: String should have at least 3 characters'] | Path: /api/auth/register | Method: POST
+2026-07-02 18:54:00 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 3.47ms
+2026-07-02 18:54:00 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:00 - visagent.exceptions - WARNING - ValidationError: ['body -> password: String should have at least 6 characters'] | Path: /api/auth/register | Method: POST
+2026-07-02 18:54:00 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 3.51ms
+2026-07-02 18:54:00 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:00 - visagent.exceptions - WARNING - ValidationError: ['body -> email: Field required', 'body -> password: Field required'] | Path: /api/auth/register | Method: POST
+2026-07-02 18:54:00 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 4.08ms
+2026-07-02 18:54:00 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:01 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 372.01ms
+2026-07-02 18:54:01 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:01 - visagent.exceptions - WARNING - HTTPException: 401 用户名或密码错误 | Path: /api/auth/login | Method: POST
+2026-07-02 18:54:01 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 401 | Duration: 371.86ms
+2026-07-02 18:54:02 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:02 - visagent.exceptions - WARNING - HTTPException: 401 用户名或密码错误 | Path: /api/auth/login | Method: POST
+2026-07-02 18:54:02 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 401 | Duration: 5.04ms
+2026-07-02 18:54:02 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:02 - visagent.exceptions - WARNING - ValidationError: ['body -> password: Field required'] | Path: /api/auth/login | Method: POST
+2026-07-02 18:54:02 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 422 | Duration: 4.20ms
+2026-07-02 18:54:02 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:03 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 386.93ms
+2026-07-02 18:54:03 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:03 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 200 | Duration: 6.72ms
+2026-07-02 18:54:03 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:03 - visagent.exceptions - WARNING - HTTPException: 401 Not authenticated | Path: /api/auth/me | Method: GET
+2026-07-02 18:54:03 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 1.60ms
+2026-07-02 18:54:03 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:03 - visagent.exceptions - WARNING - HTTPException: 401 无效的认证凭据 | Path: /api/auth/me | Method: GET
+2026-07-02 18:54:03 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 3.93ms
+2026-07-02 18:54:03 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:03 - visagent.exceptions - WARNING - HTTPException: 401 Not authenticated | Path: /api/auth/me | Method: GET
+2026-07-02 18:54:03 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 2.31ms
+2026-07-02 18:54:03 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:04 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 201 | Duration: 473.47ms
+2026-07-02 18:54:04 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:04 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 415.59ms
+2026-07-02 18:54:04 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:04 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 200 | Duration: 4.87ms
+2026-07-02 18:54:04 - visagent - INFO - 服务已关闭
+2026-07-02 18:54:04 - visagent.request - INFO - Request started | Method: GET | Path: / | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:04 - visagent.request - INFO - Request completed | Method: GET | Path: / | Status: 200 | Duration: 3.27ms
+2026-07-02 18:54:04 - visagent.request - INFO - Request started | Method: GET | Path: /api/health | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:04 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health | Status: 200 | Duration: 1.62ms
+2026-07-02 18:54:04 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/database | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:04 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/database | Status: 200 | Duration: 4.32ms
+2026-07-02 18:54:04 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/redis | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:04 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/redis | Status: 200 | Duration: 163.52ms
+2026-07-02 18:54:04 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/minio | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:04 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/minio | Status: 200 | Duration: 10.05ms
+2026-07-02 18:54:04 - visagent.request - INFO - Request started | Method: GET | Path: /docs | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:04 - visagent.request - INFO - Request completed | Method: GET | Path: /docs | Status: 200 | Duration: 1.70ms
+2026-07-02 18:54:04 - visagent.request - INFO - Request started | Method: GET | Path: /redoc | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:04 - visagent.request - INFO - Request completed | Method: GET | Path: /redoc | Status: 200 | Duration: 0.84ms
+2026-07-02 18:54:04 - visagent.request - INFO - Request started | Method: GET | Path: /openapi.json | Client: testclient | User-Agent: testclient
+2026-07-02 18:54:04 - visagent.request - INFO - Request completed | Method: GET | Path: /openapi.json | Status: 200 | Duration: 41.06ms
+2026-07-02 19:13:02 - visagent - INFO - 正在初始化服务...
+2026-07-02 19:13:02 - visagent - INFO - MinIO 存储桶 'visagent-images' 初始化完成
+2026-07-02 19:13:02 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:02 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 201 | Duration: 374.41ms
+2026-07-02 19:13:03 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:03 - visagent.exceptions - WARNING - HTTPException: 400 用户名已存在 | Path: /api/auth/register | Method: POST
+2026-07-02 19:13:03 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 400 | Duration: 6.03ms
+2026-07-02 19:13:03 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:03 - visagent.exceptions - WARNING - HTTPException: 400 邮箱已被注册 | Path: /api/auth/register | Method: POST
+2026-07-02 19:13:03 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 400 | Duration: 5.22ms
+2026-07-02 19:13:03 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:03 - visagent.exceptions - WARNING - ValidationError: ['body -> username: String should have at least 3 characters'] | Path: /api/auth/register | Method: POST
+2026-07-02 19:13:03 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 5.55ms
+2026-07-02 19:13:03 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:03 - visagent.exceptions - WARNING - ValidationError: ['body -> password: String should have at least 6 characters'] | Path: /api/auth/register | Method: POST
+2026-07-02 19:13:03 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 2.71ms
+2026-07-02 19:13:03 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:03 - visagent.exceptions - WARNING - ValidationError: ['body -> email: Field required', 'body -> password: Field required'] | Path: /api/auth/register | Method: POST
+2026-07-02 19:13:03 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 3.98ms
+2026-07-02 19:13:04 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:04 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 304.11ms
+2026-07-02 19:13:04 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:05 - visagent.exceptions - WARNING - HTTPException: 401 用户名或密码错误 | Path: /api/auth/login | Method: POST
+2026-07-02 19:13:05 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 401 | Duration: 290.13ms
+2026-07-02 19:13:05 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:05 - visagent.exceptions - WARNING - HTTPException: 401 用户名或密码错误 | Path: /api/auth/login | Method: POST
+2026-07-02 19:13:05 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 401 | Duration: 4.73ms
+2026-07-02 19:13:05 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:05 - visagent.exceptions - WARNING - ValidationError: ['body -> password: Field required'] | Path: /api/auth/login | Method: POST
+2026-07-02 19:13:05 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 422 | Duration: 2.46ms
+2026-07-02 19:13:05 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:05 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 304.82ms
+2026-07-02 19:13:05 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:05 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 200 | Duration: 12.58ms
+2026-07-02 19:13:06 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:06 - visagent.exceptions - WARNING - HTTPException: 401 Not authenticated | Path: /api/auth/me | Method: GET
+2026-07-02 19:13:06 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 2.77ms
+2026-07-02 19:13:06 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:06 - visagent.exceptions - WARNING - HTTPException: 401 无效的认证凭据 | Path: /api/auth/me | Method: GET
+2026-07-02 19:13:06 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 2.23ms
+2026-07-02 19:13:06 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:06 - visagent.exceptions - WARNING - HTTPException: 401 Not authenticated | Path: /api/auth/me | Method: GET
+2026-07-02 19:13:06 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 2.49ms
+2026-07-02 19:13:06 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:06 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 201 | Duration: 302.93ms
+2026-07-02 19:13:06 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:07 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 301.18ms
+2026-07-02 19:13:07 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:07 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 200 | Duration: 5.27ms
+2026-07-02 19:13:07 - visagent - INFO - 服务已关闭
+2026-07-02 19:13:07 - visagent.request - INFO - Request started | Method: GET | Path: / | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:07 - visagent.request - INFO - Request completed | Method: GET | Path: / | Status: 200 | Duration: 73.78ms
+2026-07-02 19:13:07 - visagent.request - INFO - Request started | Method: GET | Path: /api/health | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:07 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health | Status: 200 | Duration: 1.52ms
+2026-07-02 19:13:07 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/database | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:07 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/database | Status: 200 | Duration: 3.21ms
+2026-07-02 19:13:07 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/redis | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:07 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/redis | Status: 200 | Duration: 104.10ms
+2026-07-02 19:13:07 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/minio | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:07 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/minio | Status: 200 | Duration: 8.10ms
+2026-07-02 19:13:07 - visagent.request - INFO - Request started | Method: GET | Path: /docs | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:07 - visagent.request - INFO - Request completed | Method: GET | Path: /docs | Status: 200 | Duration: 0.75ms
+2026-07-02 19:13:07 - visagent.request - INFO - Request started | Method: GET | Path: /redoc | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:07 - visagent.request - INFO - Request completed | Method: GET | Path: /redoc | Status: 200 | Duration: 0.81ms
+2026-07-02 19:13:07 - visagent.request - INFO - Request started | Method: GET | Path: /openapi.json | Client: testclient | User-Agent: testclient
+2026-07-02 19:13:07 - visagent.request - INFO - Request completed | Method: GET | Path: /openapi.json | Status: 200 | Duration: 87.93ms
+2026-07-02 19:18:38 - visagent.request - INFO - Request started | Method: GET | Path: / | Client: testclient | User-Agent: testclient
+2026-07-02 19:18:38 - visagent.request - INFO - Request completed | Method: GET | Path: / | Status: 200 | Duration: 84.57ms
+2026-07-02 19:18:38 - visagent.request - INFO - Request started | Method: GET | Path: /api/health | Client: testclient | User-Agent: testclient
+2026-07-02 19:18:38 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health | Status: 200 | Duration: 1.46ms
+2026-07-02 19:18:38 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/database | Client: testclient | User-Agent: testclient
+2026-07-02 19:18:38 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/database | Status: 200 | Duration: 11.39ms
+2026-07-02 19:18:38 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/redis | Client: testclient | User-Agent: testclient
+2026-07-02 19:18:38 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/redis | Status: 200 | Duration: 137.15ms
+2026-07-02 19:18:38 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/minio | Client: testclient | User-Agent: testclient
+2026-07-02 19:18:38 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/minio | Status: 200 | Duration: 8.09ms
+2026-07-02 19:18:38 - visagent.request - INFO - Request started | Method: GET | Path: /docs | Client: testclient | User-Agent: testclient
+2026-07-02 19:18:38 - visagent.request - INFO - Request completed | Method: GET | Path: /docs | Status: 200 | Duration: 0.62ms
+2026-07-02 19:18:38 - visagent.request - INFO - Request started | Method: GET | Path: /redoc | Client: testclient | User-Agent: testclient
+2026-07-02 19:18:38 - visagent.request - INFO - Request completed | Method: GET | Path: /redoc | Status: 200 | Duration: 0.59ms
+2026-07-02 19:18:38 - visagent.request - INFO - Request started | Method: GET | Path: /openapi.json | Client: testclient | User-Agent: testclient
+2026-07-02 19:18:38 - visagent.request - INFO - Request completed | Method: GET | Path: /openapi.json | Status: 200 | Duration: 82.59ms
+2026-07-02 19:18:58 - visagent.request - INFO - Request started | Method: GET | Path: / | Client: testclient | User-Agent: testclient
+2026-07-02 19:18:58 - visagent.request - INFO - Request completed | Method: GET | Path: / | Status: 200 | Duration: 88.27ms
+2026-07-02 19:18:58 - visagent.request - INFO - Request started | Method: GET | Path: /api/health | Client: testclient | User-Agent: testclient
+2026-07-02 19:18:58 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health | Status: 200 | Duration: 2.56ms
+2026-07-02 19:18:58 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/database | Client: testclient | User-Agent: testclient
+2026-07-02 19:18:58 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/database | Status: 200 | Duration: 6.48ms
+2026-07-02 19:18:58 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/redis | Client: testclient | User-Agent: testclient
+2026-07-02 19:18:58 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/redis | Status: 200 | Duration: 149.64ms
+2026-07-02 19:18:58 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/minio | Client: testclient | User-Agent: testclient
+2026-07-02 19:18:58 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/minio | Status: 200 | Duration: 17.87ms
+2026-07-02 19:18:58 - visagent.request - INFO - Request started | Method: GET | Path: /docs | Client: testclient | User-Agent: testclient
+2026-07-02 19:18:58 - visagent.request - INFO - Request completed | Method: GET | Path: /docs | Status: 200 | Duration: 1.04ms
+2026-07-02 19:18:58 - visagent.request - INFO - Request started | Method: GET | Path: /redoc | Client: testclient | User-Agent: testclient
+2026-07-02 19:18:58 - visagent.request - INFO - Request completed | Method: GET | Path: /redoc | Status: 200 | Duration: 3.20ms
+2026-07-02 19:18:58 - visagent.request - INFO - Request started | Method: GET | Path: /openapi.json | Client: testclient | User-Agent: testclient
+2026-07-02 19:18:58 - visagent.request - INFO - Request completed | Method: GET | Path: /openapi.json | Status: 200 | Duration: 94.75ms
+2026-07-02 19:19:05 - visagent - INFO - 正在初始化服务...
+2026-07-02 19:19:05 - visagent - INFO - MinIO 存储桶 'visagent-images' 初始化完成
+2026-07-02 19:19:05 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:06 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 201 | Duration: 359.91ms
+2026-07-02 19:19:06 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:06 - visagent.exceptions - WARNING - HTTPException: 400 用户名已存在 | Path: /api/auth/register | Method: POST
+2026-07-02 19:19:06 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 400 | Duration: 7.20ms
+2026-07-02 19:19:07 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:07 - visagent.exceptions - WARNING - HTTPException: 400 邮箱已被注册 | Path: /api/auth/register | Method: POST
+2026-07-02 19:19:07 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 400 | Duration: 5.50ms
+2026-07-02 19:19:07 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:07 - visagent.exceptions - WARNING - ValidationError: ['body -> username: String should have at least 3 characters'] | Path: /api/auth/register | Method: POST
+2026-07-02 19:19:07 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 2.47ms
+2026-07-02 19:19:07 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:07 - visagent.exceptions - WARNING - ValidationError: ['body -> password: String should have at least 6 characters'] | Path: /api/auth/register | Method: POST
+2026-07-02 19:19:07 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 2.67ms
+2026-07-02 19:19:07 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:07 - visagent.exceptions - WARNING - ValidationError: ['body -> email: Field required', 'body -> password: Field required'] | Path: /api/auth/register | Method: POST
+2026-07-02 19:19:07 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 2.09ms
+2026-07-02 19:19:07 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:07 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 287.30ms
+2026-07-02 19:19:08 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:08 - visagent.exceptions - WARNING - HTTPException: 401 用户名或密码错误 | Path: /api/auth/login | Method: POST
+2026-07-02 19:19:08 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 401 | Duration: 380.20ms
+2026-07-02 19:19:08 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:08 - visagent.exceptions - WARNING - HTTPException: 401 用户名或密码错误 | Path: /api/auth/login | Method: POST
+2026-07-02 19:19:08 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 401 | Duration: 3.74ms
+2026-07-02 19:19:08 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:08 - visagent.exceptions - WARNING - ValidationError: ['body -> password: Field required'] | Path: /api/auth/login | Method: POST
+2026-07-02 19:19:08 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 422 | Duration: 9.93ms
+2026-07-02 19:19:09 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:09 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 292.01ms
+2026-07-02 19:19:09 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:09 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 200 | Duration: 7.58ms
+2026-07-02 19:19:09 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:09 - visagent.exceptions - WARNING - HTTPException: 401 Not authenticated | Path: /api/auth/me | Method: GET
+2026-07-02 19:19:09 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 1.67ms
+2026-07-02 19:19:10 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:10 - visagent.exceptions - WARNING - HTTPException: 401 无效的认证凭据 | Path: /api/auth/me | Method: GET
+2026-07-02 19:19:10 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 4.51ms
+2026-07-02 19:19:10 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:10 - visagent.exceptions - WARNING - HTTPException: 401 Not authenticated | Path: /api/auth/me | Method: GET
+2026-07-02 19:19:10 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 2.02ms
+2026-07-02 19:19:10 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:10 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 201 | Duration: 316.19ms
+2026-07-02 19:19:10 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:10 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 347.26ms
+2026-07-02 19:19:10 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:10 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 200 | Duration: 5.55ms
+2026-07-02 19:19:10 - visagent - INFO - 服务已关闭
+2026-07-02 19:19:10 - visagent.request - INFO - Request started | Method: GET | Path: / | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:11 - visagent.request - INFO - Request completed | Method: GET | Path: / | Status: 200 | Duration: 72.39ms
+2026-07-02 19:19:11 - visagent.request - INFO - Request started | Method: GET | Path: /api/health | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:11 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health | Status: 200 | Duration: 1.88ms
+2026-07-02 19:19:11 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/database | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:11 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/database | Status: 200 | Duration: 3.13ms
+2026-07-02 19:19:11 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/redis | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:11 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/redis | Status: 200 | Duration: 78.07ms
+2026-07-02 19:19:11 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/minio | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:11 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/minio | Status: 200 | Duration: 8.32ms
+2026-07-02 19:19:11 - visagent.request - INFO - Request started | Method: GET | Path: /docs | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:11 - visagent.request - INFO - Request completed | Method: GET | Path: /docs | Status: 200 | Duration: 0.60ms
+2026-07-02 19:19:11 - visagent.request - INFO - Request started | Method: GET | Path: /redoc | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:11 - visagent.request - INFO - Request completed | Method: GET | Path: /redoc | Status: 200 | Duration: 2.34ms
+2026-07-02 19:19:11 - visagent.request - INFO - Request started | Method: GET | Path: /openapi.json | Client: testclient | User-Agent: testclient
+2026-07-02 19:19:11 - visagent.request - INFO - Request completed | Method: GET | Path: /openapi.json | Status: 200 | Duration: 96.80ms
+2026-07-04 10:34:36 - visagent - INFO - 正在初始化服务...
+2026-07-04 10:34:43 - visagent - ERROR - MinIO 初始化失败: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: /visagent-images?location= (Caused by NewConnectionError("HTTPConnection(host='localhost', port=9000): Failed to establish a new connection: [Errno 61] Connection refused"))
+2026-07-04 10:34:43 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:43 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 201 | Duration: 358.89ms
+2026-07-04 10:34:43 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:43 - visagent.exceptions - WARNING - HTTPException: 400 用户名已存在 | Path: /api/auth/register | Method: POST
+2026-07-04 10:34:43 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 400 | Duration: 8.08ms
+2026-07-04 10:34:44 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:44 - visagent.exceptions - WARNING - HTTPException: 400 邮箱已被注册 | Path: /api/auth/register | Method: POST
+2026-07-04 10:34:44 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 400 | Duration: 2.92ms
+2026-07-04 10:34:44 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:44 - visagent.exceptions - WARNING - ValidationError: ['body -> username: String should have at least 3 characters'] | Path: /api/auth/register | Method: POST
+2026-07-04 10:34:44 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 3.45ms
+2026-07-04 10:34:44 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:44 - visagent.exceptions - WARNING - ValidationError: ['body -> password: String should have at least 6 characters'] | Path: /api/auth/register | Method: POST
+2026-07-04 10:34:44 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 3.30ms
+2026-07-04 10:34:44 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:44 - visagent.exceptions - WARNING - ValidationError: ['body -> email: Field required', 'body -> password: Field required'] | Path: /api/auth/register | Method: POST
+2026-07-04 10:34:44 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 1.77ms
+2026-07-04 10:34:44 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:44 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 286.94ms
+2026-07-04 10:34:45 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:45 - visagent.exceptions - WARNING - HTTPException: 401 用户名或密码错误 | Path: /api/auth/login | Method: POST
+2026-07-04 10:34:45 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 401 | Duration: 282.76ms
+2026-07-04 10:34:45 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:45 - visagent.exceptions - WARNING - HTTPException: 401 用户名或密码错误 | Path: /api/auth/login | Method: POST
+2026-07-04 10:34:45 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 401 | Duration: 3.23ms
+2026-07-04 10:34:45 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:45 - visagent.exceptions - WARNING - ValidationError: ['body -> password: Field required'] | Path: /api/auth/login | Method: POST
+2026-07-04 10:34:45 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 422 | Duration: 2.58ms
+2026-07-04 10:34:46 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:46 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 281.48ms
+2026-07-04 10:34:46 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:46 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 200 | Duration: 8.14ms
+2026-07-04 10:34:46 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:46 - visagent.exceptions - WARNING - HTTPException: 401 Not authenticated | Path: /api/auth/me | Method: GET
+2026-07-04 10:34:46 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 1.52ms
+2026-07-04 10:34:46 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:46 - visagent.exceptions - WARNING - HTTPException: 401 无效的认证凭据 | Path: /api/auth/me | Method: GET
+2026-07-04 10:34:46 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 5.55ms
+2026-07-04 10:34:46 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:46 - visagent.exceptions - WARNING - HTTPException: 401 Not authenticated | Path: /api/auth/me | Method: GET
+2026-07-04 10:34:46 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 2.07ms
+2026-07-04 10:34:46 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:46 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 201 | Duration: 288.50ms
+2026-07-04 10:34:46 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:47 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 284.30ms
+2026-07-04 10:34:47 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:47 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 200 | Duration: 4.64ms
+2026-07-04 10:34:47 - visagent - INFO - 服务已关闭
+2026-07-04 10:34:47 - visagent.request - INFO - Request started | Method: GET | Path: / | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:47 - visagent.request - INFO - Request completed | Method: GET | Path: / | Status: 200 | Duration: 72.17ms
+2026-07-04 10:34:47 - visagent.request - INFO - Request started | Method: GET | Path: /api/health | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:47 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health | Status: 200 | Duration: 1.49ms
+2026-07-04 10:34:47 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/database | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:47 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/database | Status: 200 | Duration: 4.03ms
+2026-07-04 10:34:47 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/redis | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:47 - visagent.health - ERROR - Redis 健康检查失败: Error 61 connecting to localhost:6379. Connection refused.
+2026-07-04 10:34:47 - visagent.exceptions - WARNING - HTTPException: 503 {'status': 'unhealthy', 'redis': 'disconnected', 'message': 'Redis 连接失败: Error 61 connecting to localhost:6379. Connection refused.'} | Path: /api/health/redis | Method: GET
+2026-07-04 10:34:47 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/redis | Status: 503 | Duration: 99.33ms
+2026-07-04 10:34:47 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/minio | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:53 - visagent.health - ERROR - MinIO 健康检查失败: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError("HTTPConnection(host='localhost', port=9000): Failed to establish a new connection: [Errno 61] Connection refused"))
+2026-07-04 10:34:53 - visagent.exceptions - WARNING - HTTPException: 503 {'status': 'unhealthy', 'minio': 'disconnected', 'message': 'MinIO 连接失败: HTTPConnectionPool(host=\'localhost\', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError("HTTPConnection(host=\'localhost\', port=9000): Failed to establish a new connection: [Errno 61] Connection refused"))'} | Path: /api/health/minio | Method: GET
+2026-07-04 10:34:53 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/minio | Status: 503 | Duration: 6036.77ms
+2026-07-04 10:34:53 - visagent.request - INFO - Request started | Method: GET | Path: /docs | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:53 - visagent.request - INFO - Request completed | Method: GET | Path: /docs | Status: 200 | Duration: 1.47ms
+2026-07-04 10:34:53 - visagent.request - INFO - Request started | Method: GET | Path: /redoc | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:53 - visagent.request - INFO - Request completed | Method: GET | Path: /redoc | Status: 200 | Duration: 0.84ms
+2026-07-04 10:34:53 - visagent.request - INFO - Request started | Method: GET | Path: /openapi.json | Client: testclient | User-Agent: testclient
+2026-07-04 10:34:53 - visagent.request - INFO - Request completed | Method: GET | Path: /openapi.json | Status: 200 | Duration: 90.31ms
+2026-07-04 11:02:33 - visagent - INFO - 正在初始化服务...
+2026-07-04 11:02:33 - visagent - INFO - MinIO 存储桶 'visagent-images' 初始化完成
+2026-07-04 11:02:33 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:33 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 201 | Duration: 341.20ms
+2026-07-04 11:02:34 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:34 - visagent.exceptions - WARNING - HTTPException: 400 用户名已存在 | Path: /api/auth/register | Method: POST
+2026-07-04 11:02:34 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 400 | Duration: 4.58ms
+2026-07-04 11:02:34 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:34 - visagent.exceptions - WARNING - HTTPException: 400 邮箱已被注册 | Path: /api/auth/register | Method: POST
+2026-07-04 11:02:34 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 400 | Duration: 3.73ms
+2026-07-04 11:02:34 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:34 - visagent.exceptions - WARNING - ValidationError: ['body -> username: String should have at least 3 characters'] | Path: /api/auth/register | Method: POST
+2026-07-04 11:02:34 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 2.72ms
+2026-07-04 11:02:34 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:34 - visagent.exceptions - WARNING - ValidationError: ['body -> password: String should have at least 6 characters'] | Path: /api/auth/register | Method: POST
+2026-07-04 11:02:34 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 2.54ms
+2026-07-04 11:02:35 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:35 - visagent.exceptions - WARNING - ValidationError: ['body -> email: Field required', 'body -> password: Field required'] | Path: /api/auth/register | Method: POST
+2026-07-04 11:02:35 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 422 | Duration: 2.84ms
+2026-07-04 11:02:35 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:35 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 276.57ms
+2026-07-04 11:02:36 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:36 - visagent.exceptions - WARNING - HTTPException: 401 用户名或密码错误 | Path: /api/auth/login | Method: POST
+2026-07-04 11:02:36 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 401 | Duration: 280.35ms
+2026-07-04 11:02:36 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:36 - visagent.exceptions - WARNING - HTTPException: 401 用户名或密码错误 | Path: /api/auth/login | Method: POST
+2026-07-04 11:02:36 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 401 | Duration: 2.77ms
+2026-07-04 11:02:36 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:36 - visagent.exceptions - WARNING - ValidationError: ['body -> password: Field required'] | Path: /api/auth/login | Method: POST
+2026-07-04 11:02:36 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 422 | Duration: 3.21ms
+2026-07-04 11:02:37 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:37 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 281.00ms
+2026-07-04 11:02:37 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:37 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 200 | Duration: 8.17ms
+2026-07-04 11:02:37 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:37 - visagent.exceptions - WARNING - HTTPException: 401 Not authenticated | Path: /api/auth/me | Method: GET
+2026-07-04 11:02:37 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 2.40ms
+2026-07-04 11:02:37 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:37 - visagent.exceptions - WARNING - HTTPException: 401 无效的认证凭据 | Path: /api/auth/me | Method: GET
+2026-07-04 11:02:37 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 2.60ms
+2026-07-04 11:02:37 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:37 - visagent.exceptions - WARNING - HTTPException: 401 Not authenticated | Path: /api/auth/me | Method: GET
+2026-07-04 11:02:37 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 401 | Duration: 2.16ms
+2026-07-04 11:02:37 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:38 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 201 | Duration: 281.50ms
+2026-07-04 11:02:38 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:38 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 271.15ms
+2026-07-04 11:02:38 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:38 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 200 | Duration: 5.23ms
+2026-07-04 11:02:38 - visagent - INFO - 服务已关闭
+2026-07-04 11:02:38 - visagent.request - INFO - Request started | Method: GET | Path: / | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:38 - visagent.request - INFO - Request completed | Method: GET | Path: / | Status: 200 | Duration: 68.91ms
+2026-07-04 11:02:38 - visagent.request - INFO - Request started | Method: GET | Path: /api/health | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:38 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health | Status: 200 | Duration: 2.14ms
+2026-07-04 11:02:38 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/database | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:38 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/database | Status: 200 | Duration: 3.12ms
+2026-07-04 11:02:38 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/redis | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:38 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/redis | Status: 200 | Duration: 98.61ms
+2026-07-04 11:02:38 - visagent.request - INFO - Request started | Method: GET | Path: /api/health/minio | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:38 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health/minio | Status: 200 | Duration: 9.34ms
+2026-07-04 11:02:38 - visagent.request - INFO - Request started | Method: GET | Path: /docs | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:38 - visagent.request - INFO - Request completed | Method: GET | Path: /docs | Status: 200 | Duration: 0.68ms
+2026-07-04 11:02:38 - visagent.request - INFO - Request started | Method: GET | Path: /redoc | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:38 - visagent.request - INFO - Request completed | Method: GET | Path: /redoc | Status: 200 | Duration: 0.66ms
+2026-07-04 11:02:38 - visagent.request - INFO - Request started | Method: GET | Path: /openapi.json | Client: testclient | User-Agent: testclient
+2026-07-04 11:02:38 - visagent.request - INFO - Request completed | Method: GET | Path: /openapi.json | Status: 200 | Duration: 80.94ms
+2026-07-04 11:07:07 - visagent - INFO - 正在初始化服务...
+2026-07-04 11:07:07 - visagent - INFO - MinIO 存储桶 'visagent-images' 初始化完成
+2026-07-04 11:07:10 - visagent.request - INFO - Request started | Method: GET | Path: /api/health | Client: 127.0.0.1 | User-Agent: curl/8.7.1
+2026-07-04 11:07:10 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health | Status: 200 | Duration: 6.95ms
+2026-07-04 11:07:10 - visagent.request - INFO - Request started | Method: GET | Path: /api/health | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:07:10 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health | Status: 200 | Duration: 1.02ms
+2026-07-04 11:07:10 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:07:11 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 201 | Duration: 602.04ms
+2026-07-04 11:07:11 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:07:11 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 302.46ms
+2026-07-04 11:07:11 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:07:11 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 200 | Duration: 12.20ms
+2026-07-04 11:07:11 - visagent.request - INFO - Request started | Method: GET | Path: /api/detection/scenes | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:07:11 - visagent.request - INFO - Request completed | Method: GET | Path: /api/detection/scenes | Status: 404 | Duration: 64.57ms
+2026-07-04 11:07:11 - visagent.request - INFO - Request started | Method: POST | Path: /api/chat/sessions | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:07:11 - visagent.request - INFO - Request completed | Method: POST | Path: /api/chat/sessions | Status: 404 | Duration: 0.81ms
+2026-07-04 11:07:11 - visagent.request - INFO - Request started | Method: GET | Path: /api/training/tasks | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:07:11 - visagent.request - INFO - Request completed | Method: GET | Path: /api/training/tasks | Status: 404 | Duration: 1.44ms
+2026-07-04 11:07:11 - visagent.request - INFO - Request started | Method: GET | Path: /api/detection/history | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:07:11 - visagent.request - INFO - Request completed | Method: GET | Path: /api/detection/history | Status: 404 | Duration: 0.74ms
+2026-07-04 11:07:11 - visagent - INFO - 服务已关闭
+2026-07-04 11:08:00 - visagent - INFO - 正在初始化服务...
+2026-07-04 11:08:00 - visagent - INFO - MinIO 存储桶 'visagent-images' 初始化完成
+2026-07-04 11:08:03 - visagent.request - INFO - Request started | Method: GET | Path: /api/health | Client: 127.0.0.1 | User-Agent: curl/8.7.1
+2026-07-04 11:08:03 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health | Status: 200 | Duration: 6.96ms
+2026-07-04 11:08:04 - visagent.request - INFO - Request started | Method: GET | Path: /api/health | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:08:04 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health | Status: 200 | Duration: 0.80ms
+2026-07-04 11:08:04 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:08:04 - visagent.exceptions - WARNING - HTTPException: 400 用户名已存在 | Path: /api/auth/register | Method: POST
+2026-07-04 11:08:04 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 400 | Duration: 141.27ms
+2026-07-04 11:08:04 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:08:04 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 302.38ms
+2026-07-04 11:08:04 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:08:04 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 200 | Duration: 11.68ms
+2026-07-04 11:08:04 - visagent.request - INFO - Request started | Method: GET | Path: /api/detection/scenes | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:08:04 - visagent.request - INFO - Request completed | Method: GET | Path: /api/detection/scenes | Status: 200 | Duration: 99.21ms
+2026-07-04 11:08:04 - visagent.request - INFO - Request started | Method: POST | Path: /api/chat/sessions | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:08:04 - visagent.chat_service - INFO - 创建对话会话: session_id=1, user_id=1
+2026-07-04 11:08:04 - visagent.request - INFO - Request completed | Method: POST | Path: /api/chat/sessions | Status: 200 | Duration: 45.19ms
+2026-07-04 11:08:04 - visagent.request - INFO - Request started | Method: GET | Path: /api/chat/sessions | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:08:04 - visagent.request - INFO - Request completed | Method: GET | Path: /api/chat/sessions | Status: 200 | Duration: 27.60ms
+2026-07-04 11:08:04 - visagent.request - INFO - Request started | Method: GET | Path: /api/training/tasks | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:08:04 - visagent.request - INFO - Request completed | Method: GET | Path: /api/training/tasks | Status: 200 | Duration: 28.21ms
+2026-07-04 11:08:04 - visagent.request - INFO - Request started | Method: GET | Path: /api/detection/history | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:08:04 - visagent.request - INFO - Request completed | Method: GET | Path: /api/detection/history | Status: 404 | Duration: 1.27ms
+2026-07-04 11:08:05 - visagent - INFO - 服务已关闭
+2026-07-04 11:08:59 - visagent - INFO - 正在初始化服务...
+2026-07-04 11:08:59 - visagent - INFO - MinIO 存储桶 'visagent-images' 初始化完成
+2026-07-04 11:09:02 - visagent.request - INFO - Request started | Method: GET | Path: /api/health | Client: 127.0.0.1 | User-Agent: curl/8.7.1
+2026-07-04 11:09:02 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health | Status: 200 | Duration: 7.99ms
+2026-07-04 11:09:03 - visagent.request - INFO - Request started | Method: GET | Path: /api/health | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:09:03 - visagent.request - INFO - Request completed | Method: GET | Path: /api/health | Status: 200 | Duration: 0.83ms
+2026-07-04 11:09:03 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/register | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:09:03 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/register | Status: 201 | Duration: 426.61ms
+2026-07-04 11:09:03 - visagent.request - INFO - Request started | Method: POST | Path: /api/auth/login | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:09:03 - visagent.request - INFO - Request completed | Method: POST | Path: /api/auth/login | Status: 200 | Duration: 291.03ms
+2026-07-04 11:09:03 - visagent.request - INFO - Request started | Method: GET | Path: /api/auth/me | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:09:03 - visagent.request - INFO - Request completed | Method: GET | Path: /api/auth/me | Status: 200 | Duration: 8.65ms
+2026-07-04 11:09:03 - visagent.request - INFO - Request started | Method: GET | Path: /api/detection/scenes | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:09:03 - visagent.request - INFO - Request completed | Method: GET | Path: /api/detection/scenes | Status: 200 | Duration: 94.47ms
+2026-07-04 11:09:03 - visagent.request - INFO - Request started | Method: POST | Path: /api/chat/sessions | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:09:03 - visagent.chat_service - INFO - 创建对话会话: session_id=2, user_id=1
+2026-07-04 11:09:03 - visagent.request - INFO - Request completed | Method: POST | Path: /api/chat/sessions | Status: 200 | Duration: 28.92ms
+2026-07-04 11:09:03 - visagent.request - INFO - Request started | Method: GET | Path: /api/chat/sessions | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:09:04 - visagent.request - INFO - Request completed | Method: GET | Path: /api/chat/sessions | Status: 200 | Duration: 38.23ms
+2026-07-04 11:09:04 - visagent.request - INFO - Request started | Method: GET | Path: /api/training/tasks | Client: 127.0.0.1 | User-Agent: python-requests/2.34.2
+2026-07-04 11:09:04 - visagent.request - INFO - Request completed | Method: GET | Path: /api/training/tasks | Status: 200 | Duration: 24.82ms
+2026-07-04 11:09:04 - visagent - INFO - 服务已关闭

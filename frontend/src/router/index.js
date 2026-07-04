@@ -80,7 +80,7 @@ router.beforeEach((to, from, next) => {
     : 'visagent'
 
   // 获取登录状态
-  const token = localStorage.getItem('rsod_token')
+  const token = localStorage.getItem('visagent_token')
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth !== false)
 
   if (requiresAuth && !token) {

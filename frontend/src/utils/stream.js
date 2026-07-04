@@ -30,7 +30,7 @@ export function streamChat(url, body, callbacks) {
   const { onMessage, onDone, onError } = callbacks
 
   // 从 localStorage 获取 Token
-  const token = localStorage.getItem('rsod_token')
+  const token = localStorage.getItem('visagent_token')
 
   // 使用 fetch + ReadableStream 处理 SSE
   const controller = new AbortController()

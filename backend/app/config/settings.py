@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     """应用全局配置"""
 
     # ── 应用基础配置 ──────────────────────────────────
-    APP_NAME: str = "RSOD Agent Platform"
+    APP_NAME: str = "VisAgent"
     APP_VERSION: str = "0.1.0"
     DEBUG: bool = True
     LOG_LEVEL: str = "INFO"
@@ -45,13 +45,23 @@ class Settings(BaseSettings):
     MINIO_ENDPOINT: str = "localhost:9000"
     MINIO_ACCESS_KEY: str = "minioadmin"
     MINIO_SECRET_KEY: str = "minioadmin"
-    MINIO_BUCKET: str = "rsod-agent-images"
+    MINIO_BUCKET: str = "visagent-images"
     MINIO_SECURE: bool = False
 
     # ── JWT 认证配置 ──────────────────────────────────
     JWT_SECRET_KEY: str = "your-super-secret-key-change-in-production"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+
+    # ── 大模型配置 ────────────────────────────────────
+    OPENAI_API_KEY: str = ""
+    OPENAI_BASE_URL: str = "https://api.openai.com/v1"
+    OPENAI_MODEL: str = "gpt-4o"
+
+    # ── LangChain 配置 ────────────────────────────────
+    LANGCHAIN_TRACING_V2: bool = False
+    LANGCHAIN_API_KEY: str = ""
+    LANGCHAIN_PROJECT: str = "visagent"
 
     # ── CORS 配置 ────────────────────────────────────
     ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:5173,http://localhost:8080"

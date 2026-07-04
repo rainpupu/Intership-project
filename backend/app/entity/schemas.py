@@ -8,7 +8,7 @@ Pydantic 请求/响应模型
 - List 模型：分页列表查询的参数和响应
 """
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 from pydantic import BaseModel, Field
 
 
@@ -122,7 +122,7 @@ class ApiResponse(BaseModel):
     """统一 API 响应"""
     code: int = 200
     message: str = "success"
-    data: Optional[dict | list] = None
+    data: Optional[Union[dict, list]] = None
 
 
 class PageParams(BaseModel):
