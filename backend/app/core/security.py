@@ -74,7 +74,9 @@ def decode_access_token(token: str) -> dict:
 
 
 # OAuth2 密码模式，用于从请求 Header 中提取 Token
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+# 设置 auto_error=False，当没有 Authorization header 时不抛出异常，而是返回 None
+# 这样可以继续从 cookie 中读取 token
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 
 async def get_current_user(
