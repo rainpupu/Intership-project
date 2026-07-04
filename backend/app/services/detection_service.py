@@ -425,8 +425,11 @@ class DetectionService:
                     "id": t.id,
                     "task_type": t.task_type,
                     "status": t.status,
+                    "scene_id": t.scene_id,
                     "total_images": t.total_images,
                     "total_objects": t.total_objects,
+                    "conf_threshold": t.conf_threshold,
+                    "iou_threshold": t.iou_threshold,
                     "created_at": t.created_at.isoformat() if t.created_at else None
                 }
                 for t in tasks
