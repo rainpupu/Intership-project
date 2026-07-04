@@ -40,15 +40,20 @@ request.interceptors.response.use(
     return response.data
   },
   (error) => {
-    const { response } = error
+    const { response, config } = error
     if (response) {
       switch (response.status) {
         case 401:
-          // Token 过期或无效
-          ElMessage.error('登录已过期，请重新登录')
-          const userStore = useUserStore()
-          userStore.logout()
-          router.push('/login')
+          // 登录接口的 401 表示用户名或密码错误，不做 token 过期处理
+          if (config?.url?.includes('/auth/login')) {
+            ElMessage.error(response.data?.detail || '用户名或密码错误')
+          } else {
+            // 其他接口的 401 表示 Token 过期或无效
+            ElMessage.error('登录已过期，请重新登录')
+            const userStore = useUserStore()
+            userStore.logout()
+            router.push('/login')
+          }
           break
         case 403:
           ElMessage.error('没有权限访问该资源')
