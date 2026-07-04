@@ -15,6 +15,12 @@ from langgraph.prebuilt import create_react_agent
 from app.config.settings import settings
 from app.core.logger import get_logger
 from app.services.agent_tools import get_all_tools
+from app.services.agent_prompts import (
+    SUPERVISOR_SYSTEM_PROMPT,
+    DETECTION_SYSTEM_PROMPT,
+    ANALYSIS_SYSTEM_PROMPT,
+    QA_SYSTEM_PROMPT
+)
 
 logger = get_logger("agent_graph")
 
@@ -44,27 +50,6 @@ def get_llm():
 
 
 # ── Supervisor 节点 ───────────────────────────────────
-
-SUPERVISOR_SYSTEM_PROMPT = """你是一个智能助手 Supervisor，负责协调多个专业 Agent 来完成用户的需求。
-
-可用的 Agent：
-1. detection_agent - 检测 Agent，负责执行目标检测任务
-   - 当用户要求检测图像、识别物体、分析图片时使用
-   - 关键词：检测、识别、分析图片、找出目标
-
-2. analysis_agent - 分析 Agent，负责分析检测结果和生成报告
-   - 当用户要求分析检测结果、生成报告、总结统计时使用
-   - 关键词：分析、报告、统计、总结、趋势
-
-3. qa_agent - 问答 Agent，负责回答问题和知识检索
-   - 当用户提问、需要知识、查询历史时使用
-   - 关键词：什么是、如何、为什么、查询、历史
-
-4. end - 结束对话
-   - 当用户要求结束、再见、不需要更多帮助时使用
-
-请根据用户的输入，判断应该由哪个 Agent 处理。
-只返回 agent 名称，不要返回其他内容。"""
 
 
 async def supervisor_node(state: AgentState) -> dict:
@@ -115,20 +100,6 @@ async def supervisor_node(state: AgentState) -> dict:
 
 # ── 检测 Agent 节点 ──────────────────────────────────
 
-DETECTION_SYSTEM_PROMPT = """你是一个专业的目标检测 Agent。
-
-你的职责：
-1. 理解用户的检测需求
-2. 调用 detect_objects 工具执行检测
-3. 解读检测结果，用通俗易懂的语言描述
-
-使用工具时注意：
-- 根据用户描述选择合适的场景
-- 如果用户没有指定场景，先使用 get_scenes 工具查看可用场景
-- 如果图像路径不明确，询问用户确认
-
-请用中文回复。"""
-
 
 async def detection_agent_node(state: AgentState) -> dict:
     """
@@ -172,19 +143,6 @@ async def detection_agent_node(state: AgentState) -> dict:
 
 # ── 分析 Agent 节点 ──────────────────────────────────
 
-ANALYSIS_SYSTEM_PROMPT = """你是一个专业的数据分析 Agent。
-
-你的职责：
-1. 分析检测结果和历史数据
-2. 生成专业的分析报告
-3. 提供统计信息和趋势分析
-
-你可以使用以下工具：
-- get_statistics: 获取检测统计信息
-- query_history: 查询检测历史记录
-
-请用中文回复，生成结构清晰的分析报告。"""
-
 
 async def analysis_agent_node(state: AgentState) -> dict:
     """
@@ -227,20 +185,6 @@ async def analysis_agent_node(state: AgentState) -> dict:
 
 
 # ── 问答 Agent 节点 ──────────────────────────────────
-
-QA_SYSTEM_PROMPT = """你是一个专业的问答 Agent，专注于目标检测和计算机视觉领域。
-
-你的职责：
-1. 回答用户关于目标检测、模型训练、数据处理等问题
-2. 使用知识库检索相关信息
-3. 提供准确、专业的解答
-
-你可以使用以下工具：
-- search_knowledge: 从知识库中检索相关信息
-- get_scenes: 获取可用的检测场景
-- query_history: 查询检测历史记录
-
-请用中文回复，提供详细且易懂的解释。"""
 
 
 async def qa_agent_node(state: AgentState) -> dict:
@@ -336,10 +280,10 @@ def build_agent_graph():
     # 设置入口
     graph.set_entry_point("supervisor")
     
-    # 编译图
-    compiled_graph = graph.compile()
+    # 编译图，设置递归限制防止无限循环
+    compiled_graph = graph.compile(recursion_limit=10)
     
-    logger.info("Agent 图构建完成")
+    logger.info("Agent 图构建完成（递归限制: 10）")
     return compiled_graph
 
 
