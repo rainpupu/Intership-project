@@ -8,6 +8,9 @@ from app.api.health import router as health_router
 from app.api.training import router as training_router
 from app.api.detection import router as detection_router
 from app.api.chat import router as chat_router
+from app.api.dashboard import router as dashboard_router
+from app.api.camera import router as camera_router
+from app.api.knowledge import router as knowledge_router
 from app.core.logger import setup_logger, get_logger
 from app.core.exceptions import (
     AppException,
@@ -110,6 +113,9 @@ app.include_router(health_router)
 app.include_router(training_router)
 app.include_router(detection_router)
 app.include_router(chat_router)
+app.include_router(dashboard_router)
+app.include_router(camera_router)
+app.include_router(knowledge_router)
 
 
 @app.get("/")
