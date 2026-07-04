@@ -11,6 +11,7 @@
 # Python
 __pycache__/
 *.py[cod]
+*.pt
 *.egg-info/
 .venv/
 .venv.bak/
@@ -40,3 +41,6 @@ Thumbs.db
 # Test artifacts
 *.db
 .pytest_cache/
+
+backend/data
+backend/logs
