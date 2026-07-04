@@ -17,7 +17,7 @@ uv add <package>
 uv add --dev <package>
 
 # 运行开发服务器（需先配置 .env）
-uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8888
+uv run uvicorn main:app --reload --host 0.0.0.0 --port 8888
 
 # 或使用项目脚本
 uv run backend-server
@@ -87,7 +87,7 @@ cp .env.example .env
 
 # 安装依赖并启动
 uv sync
-uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8888
+uv run uvicorn main:app --reload --host 0.0.0.0 --port 8888
 ```
 
 后端默认运行在 `http://localhost:8888`，API 文档在 `http://localhost:8888/docs`。
