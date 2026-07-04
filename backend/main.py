@@ -33,10 +33,24 @@ def init_minio():
         logger.error(f"MinIO 初始化失败: {e}")
 
 
+def init_redis():
+    """初始化 Redis 连接"""
+    from app.storage.redis_client import redis_client
+    if redis_client.is_connected():
+        logger.info("Redis 连接成功")
+    else:
+        logger.warning("Redis 连接失败，缓存功能将不可用")
+
+
 def init_seed():
     """初始化种子数据（检测场景等）"""
-    from app.database.session import SessionLocal
+    from app.database.session import SessionLocal, Base, engine
     from app.database.seed import seed_scenes
+
+    # 创建所有数据库表（如果不存在）
+    logger.info('正在创建数据库表...')
+    Base.metadata.create_all(bind=engine)
+    logger.info('数据库表创建完成')
 
     db = SessionLocal()
     try:
@@ -53,6 +67,7 @@ async def lifespan(_app: FastAPI):
     # 启动时执行
     logger.info("正在初始化服务...")
     init_minio()
+    init_redis()
     init_seed()
     yield
     # 关闭时执行

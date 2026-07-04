@@ -288,26 +288,37 @@ async def get_detection_scenes(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """获取检测场景列表"""
+    """获取检测场景列表（带 Redis 缓存）"""
+    from app.storage.redis_client import redis_client
+    
+    # 尝试从缓存获取
+    cache_key = "detection_scenes:active"
+    cached = redis_client.cache_get("scenes", cache_key)
+    if cached is not None:
+        return ApiResponse(code=200, data=cached)
+    
+    # 缓存未命中，查询数据库
     scenes = db.query(DetectionScene).filter(
         DetectionScene.is_active == True
     ).all()
     
-    return ApiResponse(
-        code=200,
-        data=[
-            {
-                "id": s.id,
-                "name": s.name,
-                "display_name": s.display_name,
-                "description": s.description,
-                "category": s.category,
-                "class_names": s.class_names,
-                "class_names_cn": s.class_names_cn
-            }
-            for s in scenes
-        ]
-    )
+    result = [
+        {
+            "id": s.id,
+            "name": s.name,
+            "display_name": s.display_name,
+            "description": s.description,
+            "category": s.category,
+            "class_names": s.class_names,
+            "class_names_cn": s.class_names_cn
+        }
+        for s in scenes
+    ]
+    
+    # 写入缓存（1小时过期）
+    redis_client.cache_set("scenes", cache_key, result, ex=3600)
+    
+    return ApiResponse(code=200, data=result)
 
 
 @router.post("/scenes", response_model=ApiResponse)

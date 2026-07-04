@@ -56,23 +56,22 @@ async def database_health():
 @router.get("/redis")
 async def redis_health():
     """真实检测 Redis 连接"""
-    try:
-        import redis
-        r = redis.from_url(settings.REDIS_URL)
-        r.ping()
+    from app.storage.redis_client import redis_client
+    
+    if redis_client.is_connected():
         return {
             "status": "healthy",
             "redis": "connected",
             "message": "Redis 连接正常",
         }
-    except Exception as e:
-        logger.error(f"Redis 健康检查失败: {e}")
+    else:
+        logger.error("Redis 健康检查失败: 连接不可用")
         raise HTTPException(
             status_code=503,
             detail={
                 "status": "unhealthy",
                 "redis": "disconnected",
-                "message": f"Redis 连接失败: {str(e)}",
+                "message": "Redis 连接失败",
             },
         )
 
