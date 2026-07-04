@@ -144,8 +144,18 @@ async function createSession() {
   try {
     const res = await createSessionApi({ title: `对话 ${sessions.value.length + 1}` })
     if (res.data) {
-      sessions.value.unshift(res.data)
-      selectSession(res.data)
+      // 后端返回的数据结构：{ session_id, session_uuid, title }
+      // 需要转换为前端期望的数据结构：{ id, session_uuid, title, ... }
+      const session = {
+        id: res.data.session_id,
+        session_uuid: res.data.session_uuid,
+        title: res.data.title,
+        message_count: 0,
+        last_message_at: new Date().toISOString(),
+        created_at: new Date().toISOString()
+      }
+      sessions.value.unshift(session)
+      await selectSession(session)
     }
   } catch (error) {
     ElMessage.error('创建会话失败')
@@ -188,15 +198,15 @@ async function deleteSession(sessionId) {
 }
 
 // 发送消息
-function sendMessage() {
+async function sendMessage() {
   const message = inputMessage.value.trim()
   if (!message || loading.value) return
 
   // 如果没有会话，先创建
   if (!currentSession.value) {
-    createSession().then(() => {
-      doSendMessage(message)
-    })
+    await createSession()
+    // 创建会话成功后，currentSession.value 已经被设置
+    doSendMessage(message)
   } else {
     doSendMessage(message)
   }
@@ -214,9 +224,11 @@ function doSendMessage(message) {
   scrollToBottom()
 
   // 发起 SSE 流式请求
+  // 后端期望 message 作为查询参数，而不是 body 参数
+  const url = `/api/chat/sessions/${currentSession.value.id}/messages?message=${encodeURIComponent(message)}`
   const stop = streamChat(
-    `/api/chat/sessions/${currentSession.value.id}/messages`,
-    { message },
+    url,
+    {},
     {
       onMessage: (data) => {
         if (typeof data === 'string') {
@@ -540,9 +552,3 @@ onMounted(() => {
   }
 }
 </style>
-<template>
-  <div class="page-container">
-    <h2>智能对话</h2>
-    <p>Day11 将在此实现 LangGraph Agent 流式对话功能</p>
-  </div>
-</template>

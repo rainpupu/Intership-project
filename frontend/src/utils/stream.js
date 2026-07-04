@@ -35,13 +35,16 @@ export function streamChat(url, body, callbacks) {
   // 使用 fetch + ReadableStream 处理 SSE
   const controller = new AbortController()
 
+  // 如果 body 为空对象或 undefined，则不发送 body
+  const hasBody = body && Object.keys(body).length > 0
+
   fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify(body),
+    ...(hasBody ? { body: JSON.stringify(body) } : {}),
     signal: controller.signal,
   })
     .then(async (response) => {
