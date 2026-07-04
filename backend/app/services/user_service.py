@@ -65,7 +65,9 @@ class UserService:
         Raises:
             HTTPException: 用户名或密码错误
         """
-        user = db.query(User).filter(User.username == username).first()
+        user = db.query(User).filter(
+            (User.username == username) | (User.email == username)
+        ).first()
         if not user:
             raise HTTPException(status_code=401, detail="用户名或密码错误")
 

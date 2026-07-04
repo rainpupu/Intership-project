@@ -6,6 +6,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.security import get_current_user
@@ -15,6 +16,11 @@ from app.entity.schemas import ApiResponse
 from app.services.chat_service import chat_service
 
 router = APIRouter(prefix="/api/chat", tags=["智能对话"])
+
+
+class SendMessageRequest(BaseModel):
+    """发送消息请求体"""
+    message: str
 
 
 @router.post("/sessions", response_model=ApiResponse)
@@ -44,7 +50,7 @@ async def create_session(
 @router.post("/sessions/{session_id}/messages")
 async def send_message(
     session_id: int,
-    message: str,
+    body: SendMessageRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -70,7 +76,7 @@ async def send_message(
         raise HTTPException(status_code=404, detail="会话不存在")
     
     return StreamingResponse(
-        chat_service.send_message_stream(db, session_id, message),
+        chat_service.send_message_stream(db, session_id, body.message),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

@@ -4,6 +4,7 @@
 包括单图检测、批量检测、文件夹检测、视频检测等
 """
 import os
+import tempfile
 import time
 import uuid
 from datetime import datetime
@@ -127,9 +128,22 @@ class DetectionService:
         
         # 解析结果
         detections = []
+        annotated_image_path = None
         if results and len(results) > 0:
             result = results[0]
             img_height, img_width = result.orig_shape
+            
+            # 生成标注图像
+            try:
+                annotated_dir = os.path.join(tempfile.gettempdir(), "visagent_annotated")
+                os.makedirs(annotated_dir, exist_ok=True)
+                annotated_image_path = os.path.join(
+                    annotated_dir,
+                    f"annotated_{os.path.basename(image_path)}"
+                )
+                result.save(filename=annotated_image_path)
+            except Exception as e:
+                logger.warning(f"保存标注图像失败: {e}")
             
             for box in result.boxes:
                 class_id = int(box.cls[0])
@@ -148,6 +162,7 @@ class DetectionService:
         
         return {
             "image_path": image_path,
+            "annotated_image_path": annotated_image_path,
             "detections": detections,
             "total_objects": len(detections),
             "inference_time": inference_time,
@@ -213,7 +228,52 @@ class DetectionService:
         progress_callback=None
     ) -> Dict[str, Any]:
         """
-        视频检测
+        视频检测（异步版本）
+        
+        使用 asyncio.to_thread 避免阻塞事件循环
+        
+        Args:
+            db: 数据库会话
+            scene_id: 场景ID
+            video_path: 视频路径
+            output_path: 输出视频路径
+            conf_threshold: 置信度阈值
+            iou_threshold: IoU 阈值
+            image_size: 推理图像尺寸
+            progress_callback: 进度回调函数
+        
+        Returns:
+            检测结果
+        """
+        import asyncio
+        
+        # 在线程中执行同步的视频处理
+        result = await asyncio.to_thread(
+            self._detect_video_sync,
+            db=db,
+            scene_id=scene_id,
+            video_path=video_path,
+            output_path=output_path,
+            conf_threshold=conf_threshold,
+            iou_threshold=iou_threshold,
+            image_size=image_size,
+            progress_callback=progress_callback
+        )
+        return result
+    
+    def _detect_video_sync(
+        self,
+        db: Session,
+        scene_id: int,
+        video_path: str,
+        output_path: str,
+        conf_threshold: float = 0.25,
+        iou_threshold: float = 0.45,
+        image_size: int = 640,
+        progress_callback=None
+    ) -> Dict[str, Any]:
+        """
+        视频检测（同步实现）
         
         Args:
             db: 数据库会话
@@ -363,13 +423,19 @@ class DetectionService:
             except Exception as e:
                 logger.error(f"上传标注图像失败: {e}")
         
+        # 获取场景的中文类别名映射
+        scene = db.query(DetectionScene).filter(DetectionScene.id == scene_id).first()
+        class_names_cn_map = scene.class_names_cn if scene and scene.class_names_cn else {}
+        
         # 保存检测结果
         for det in detections:
+            class_name = det.get("class_name", "")
             result = DetectionResult(
                 task_id=task.id,
                 image_path=image_path,
                 annotated_image_url=annotated_image_url,
-                class_name=det.get("class_name", ""),
+                class_name=class_name,
+                class_name_cn=class_names_cn_map.get(class_name, ""),
                 class_id=det.get("class_id", 0),
                 confidence=det.get("confidence", 0),
                 bbox=det.get("bbox", []),
