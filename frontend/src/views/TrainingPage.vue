@@ -4,9 +4,14 @@
     <div class="task-list-panel">
       <div class="panel-header">
         <h3>训练任务</h3>
-        <el-button type="primary" size="small" @click="showCreateDialog = true">
-          <el-icon><Plus /></el-icon>新建任务
-        </el-button>
+        <div class="header-actions">
+          <el-button type="primary" size="small" @click="showCreateDialog = true">
+            <el-icon><Plus /></el-icon>新建任务
+          </el-button>
+          <el-button type="success" size="small" @click="showUploadDialog = true">
+            <el-icon><Upload /></el-icon>上传模型
+          </el-button>
+        </div>
       </div>
       
       <!-- 任务状态筛选 -->
@@ -193,12 +198,68 @@
         <el-button type="primary" @click="createTask" :loading="creating">创建</el-button>
       </template>
     </el-dialog>
+
+    <!-- 上传模型对话框 -->
+    <el-dialog v-model="showUploadDialog" title="上传训练模型" width="500px">
+      <el-form :model="uploadForm" label-width="100px">
+        <el-form-item label="检测场景" required>
+          <el-select v-model="uploadForm.scene_id" placeholder="选择模型对应的场景">
+            <el-option
+              v-for="scene in scenes"
+              :key="scene.id"
+              :label="scene.display_name"
+              :value="scene.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="模型文件" required>
+          <el-upload
+            :auto-upload="false"
+            :limit="1"
+            accept=".pt"
+            :on-change="handleModelFileChange"
+            :file-list="uploadForm.model_file ? [{ name: uploadForm.model_file.name }] : []"
+          >
+            <el-button type="primary" size="small">选择文件</el-button>
+            <template #tip>
+              <div class="el-upload__tip">支持 .pt 格式的 YOLO 模型文件</div>
+            </template>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="模型名称" required>
+          <el-input v-model="uploadForm.model_name" placeholder="如 rsod_yolov11n" />
+        </el-form-item>
+        <el-form-item label="版本号" required>
+          <el-input v-model="uploadForm.version" placeholder="如 v1.0.0" />
+        </el-form-item>
+        <el-form-item label="模型类型">
+          <el-select v-model="uploadForm.model_type">
+            <el-option label="YOLOv11n (轻量)" value="yolov11n" />
+            <el-option label="YOLOv11s (小型)" value="yolov11s" />
+            <el-option label="YOLOv11m (中型)" value="yolov11m" />
+            <el-option label="YOLOv11l (大型)" value="yolov11l" />
+            <el-option label="YOLOv11x (超大)" value="yolov11x" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="模型描述">
+          <el-input v-model="uploadForm.description" type="textarea" :rows="2" placeholder="模型说明（可选）" />
+        </el-form-item>
+        <el-form-item label="设为默认">
+          <el-switch v-model="uploadForm.is_default" />
+          <span class="form-tip">开启后该场景的检测将使用此模型</span>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showUploadDialog = false">取消</el-button>
+        <el-button type="primary" @click="uploadModel" :loading="uploading">上传</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
-import { Plus, Cpu, VideoPlay, VideoPause, Close, Refresh } from '@element-plus/icons-vue'
+import { Plus, Cpu, VideoPlay, VideoPause, Close, Refresh, Upload } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import * as echarts from 'echarts'
 import {
@@ -207,7 +268,8 @@ import {
   startTrainingApi,
   pauseTrainingApi,
   cancelTrainingApi,
-  getTrainingMetricsApi
+  getTrainingMetricsApi,
+  uploadModelApi
 } from '@/api/training'
 import { getScenesApi } from '@/api/detection'
 
@@ -230,6 +292,19 @@ const createForm = ref({
   device: 'cpu',
   dataset_path: '',
   data_yaml: ''
+})
+
+// 上传模型
+const showUploadDialog = ref(false)
+const uploading = ref(false)
+const uploadForm = ref({
+  scene_id: null,
+  model_file: null,
+  version: 'v1.0.0',
+  model_name: '',
+  model_type: 'yolov11n',
+  description: '',
+  is_default: true
 })
 
 // 训练指标
@@ -326,6 +401,44 @@ async function cancelTask() {
     if (error !== 'cancel') {
       ElMessage.error('取消任务失败')
     }
+  }
+}
+
+// 处理模型文件选择
+function handleModelFileChange(file) {
+  uploadForm.value.model_file = file.raw
+  // 自动填充模型名称
+  if (!uploadForm.value.model_name) {
+    uploadForm.value.model_name = file.name.replace('.pt', '')
+  }
+}
+
+// 上传模型
+async function uploadModel() {
+  if (!uploadForm.value.scene_id || !uploadForm.value.model_file || !uploadForm.value.version || !uploadForm.value.model_name) {
+    ElMessage.warning('请填写必填项')
+    return
+  }
+  
+  uploading.value = true
+  try {
+    const res = await uploadModelApi(uploadForm.value)
+    ElMessage.success(`模型上传成功：${res.data?.model_name} ${res.data?.version}`)
+    showUploadDialog.value = false
+    // 重置表单
+    uploadForm.value = {
+      scene_id: null,
+      model_file: null,
+      version: 'v1.0.0',
+      model_name: '',
+      model_type: 'yolov11n',
+      description: '',
+      is_default: true
+    }
+  } catch (error) {
+    ElMessage.error('上传模型失败')
+  } finally {
+    uploading.value = false
   }
 }
 
@@ -488,6 +601,11 @@ onUnmounted(() => {
       font-size: 16px;
       color: $text-primary;
     }
+
+    .header-actions {
+      display: flex;
+      gap: $spacing-sm;
+    }
   }
 
   .status-filter {
@@ -647,5 +765,11 @@ onUnmounted(() => {
     margin: $spacing-md 0 0;
     font-size: 16px;
   }
+}
+
+.form-tip {
+  margin-left: $spacing-sm;
+  font-size: 12px;
+  color: $text-secondary;
 }
 </style>

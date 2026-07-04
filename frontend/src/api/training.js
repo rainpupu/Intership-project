@@ -114,3 +114,21 @@ export function generateDataYamlApi(data) {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
 }
+
+/**
+ * 上传训练好的模型文件
+ * @param {Object} data - { scene_id, model_file, version, model_name, model_type, description, is_default }
+ */
+export function uploadModelApi(data) {
+  const formData = new FormData()
+  formData.append('scene_id', data.scene_id)
+  formData.append('model_file', data.model_file)
+  formData.append('version', data.version)
+  formData.append('model_name', data.model_name)
+  formData.append('model_type', data.model_type || 'yolov11n')
+  formData.append('description', data.description || '')
+  formData.append('is_default', data.is_default ?? true)
+  return request.post('/training/models/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}
