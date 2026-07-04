@@ -42,20 +42,23 @@ const router = useRouter()
 const userStore = useUserStore()
 
 /** 处理下拉菜单命令 */
-function handleCommand(command) {
+async function handleCommand(command) {
   switch (command) {
     case 'profile':
       router.push('/profile')
       break
     case 'logout':
-      ElMessageBox.confirm('确定要退出登录吗？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }).then(() => {
-        userStore.logout()
+      try {
+        await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+        })
+        await userStore.logout()
         router.push('/login')
-      }).catch(() => {})
+      } catch {
+        // 用户取消确认框或 logout 出错，不做处理
+      }
       break
   }
 }
