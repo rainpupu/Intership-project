@@ -442,6 +442,7 @@ class TrainingService:
                     "id": t.id,
                     "task_uuid": t.task_uuid,
                     "status": t.status,
+                    "scene_id": t.scene_id,
                     "model_name": t.model_name,
                     "epochs": t.epochs,
                     "current_epoch": t.current_epoch,
