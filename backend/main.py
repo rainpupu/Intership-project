@@ -33,12 +33,27 @@ def init_minio():
         logger.error(f"MinIO 初始化失败: {e}")
 
 
+def init_seed():
+    """初始化种子数据（检测场景等）"""
+    from app.database.session import SessionLocal
+    from app.database.seed import seed_scenes
+
+    db = SessionLocal()
+    try:
+        seed_scenes(db)
+    except Exception as e:
+        logger.error(f"种子数据初始化失败: {e}")
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     """应用生命周期管理"""
     # 启动时执行
     logger.info("正在初始化服务...")
     init_minio()
+    init_seed()
     yield
     # 关闭时执行
     logger.info("服务已关闭")
