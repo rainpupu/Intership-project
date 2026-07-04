@@ -246,3 +246,83 @@ async def generate_data_yaml_api(
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/models/upload", response_model=ApiResponse)
+async def upload_model(
+    scene_id: int = Form(..., description="场景ID"),
+    model_file: UploadFile = File(..., description="模型文件(.pt)"),
+    version: str = Form(..., description="版本号，如 v1.0.0"),
+    model_name: str = Form(..., description="模型名称"),
+    model_type: str = Form("yolov11n", description="模型类型：yolov11n/s/m/l/x"),
+    description: str = Form("", description="模型描述"),
+    is_default: bool = Form(True, description="是否设为默认模型"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """手动上传训练好的模型文件（适用于 AutoDL 等外部平台训练后导入）"""
+    import os
+    import shutil
+    from pathlib import Path
+    from datetime import datetime
+    from app.entity.db_models import ModelVersion
+    
+    # 验证场景
+    scene = db.query(DetectionScene).filter(DetectionScene.id == scene_id).first()
+    if not scene:
+        raise HTTPException(status_code=404, detail="场景不存在")
+    
+    # 验证文件类型
+    if not model_file.filename.endswith('.pt'):
+        raise HTTPException(status_code=400, detail="仅支持 .pt 模型文件")
+    
+    # 创建模型存储目录
+    models_dir = Path("data/models") / scene.name
+    models_dir.mkdir(parents=True, exist_ok=True)
+    
+    # 保存模型文件
+    model_filename = f"{model_name}_{version}.pt"
+    model_path = models_dir / model_filename
+    
+    with open(model_path, "wb") as buffer:
+        shutil.copyfileobj(model_file.file, buffer)
+    
+    file_size = model_path.stat().st_size
+    
+    # 如果设为默认模型，先取消该场景其他默认模型
+    if is_default:
+        db.query(ModelVersion).filter(
+            ModelVersion.scene_id == scene_id,
+            ModelVersion.is_default == True
+        ).update({"is_default": False})
+    
+    # 创建模型版本记录
+    model_version = ModelVersion(
+        scene_id=scene_id,
+        training_task_id=None,  # 手动上传，无关联训练任务
+        version=version,
+        model_name=model_name,
+        model_type=model_type,
+        status="active",
+        model_path=str(model_path),
+        description=description or f"手动上传于 {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+        file_size=file_size,
+        is_default=is_default
+    )
+    db.add(model_version)
+    db.commit()
+    db.refresh(model_version)
+    
+    return ApiResponse(
+        code=200,
+        message="模型上传成功",
+        data={
+            "id": model_version.id,
+            "scene": scene.display_name,
+            "version": version,
+            "model_name": model_name,
+            "model_path": str(model_path),
+            "file_size": file_size,
+            "is_default": is_default
+        }
+    )
