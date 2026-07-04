@@ -19,16 +19,22 @@
           <el-input
             v-model="registerForm.username"
             placeholder="用户名"
-            prefix-icon="User"
-          />
+          >
+            <template #prefix>
+              <el-icon><User /></el-icon>
+            </template>
+          </el-input>
         </el-form-item>
 
         <el-form-item prop="email">
           <el-input
             v-model="registerForm.email"
             placeholder="邮箱"
-            prefix-icon="Message"
-          />
+          >
+            <template #prefix>
+              <el-icon><Message /></el-icon>
+            </template>
+          </el-input>
         </el-form-item>
 
         <el-form-item prop="password">
@@ -36,9 +42,12 @@
             v-model="registerForm.password"
             type="password"
             placeholder="密码（至少 6 位）"
-            prefix-icon="Lock"
             show-password
-          />
+          >
+            <template #prefix>
+              <el-icon><Lock /></el-icon>
+            </template>
+          </el-input>
         </el-form-item>
 
         <el-form-item prop="confirmPassword">
@@ -46,10 +55,13 @@
             v-model="registerForm.confirmPassword"
             type="password"
             placeholder="确认密码"
-            prefix-icon="Lock"
             show-password
             @keyup.enter="handleRegister"
-          />
+          >
+            <template #prefix>
+              <el-icon><Lock /></el-icon>
+            </template>
+          </el-input>
         </el-form-item>
 
         <el-form-item>
@@ -76,6 +88,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { User, Lock, Message } from '@element-plus/icons-vue'
 import { registerApi } from '@/api/auth'
 
 const router = useRouter()

@@ -302,9 +302,9 @@ function formatTime(timestamp) {
   return new Date(timestamp).toLocaleString('zh-CN')
 }
 
-onMounted(() => {
-  loadScenes()
-  loadHistory()
+onMounted(async () => {
+  await loadScenes()
+  await loadHistory()
 })
 </script>
 

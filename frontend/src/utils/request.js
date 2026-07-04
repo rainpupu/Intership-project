@@ -13,19 +13,16 @@ import router from '@/router'
 const request = axios.create({
   baseURL: '/api',        // 使用 Vite proxy 转发
   timeout: 30000,         // 30 秒超时
+  withCredentials: true,  // 自动发送 cookie
   headers: {
     'Content-Type': 'application/json',
   },
 })
 
-// 请求拦截器 —— 注入 Token
+// 请求拦截器
 request.interceptors.request.use(
   (config) => {
-    // 从 Pinia store 获取 Token
-    const userStore = useUserStore()
-    if (userStore.token) {
-      config.headers.Authorization = `Bearer ${userStore.token}`
-    }
+    // Token 存储在 HttpOnly cookie 中，浏览器会自动携带，无需手动注入
     return config
   },
   (error) => {

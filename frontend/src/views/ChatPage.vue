@@ -224,11 +224,11 @@ function doSendMessage(message) {
   scrollToBottom()
 
   // 发起 SSE 流式请求
-  // 后端期望 message 作为查询参数，而不是 body 参数
-  const url = `/api/chat/sessions/${currentSession.value.id}/messages?message=${encodeURIComponent(message)}`
+  // 后端期望 message 作为 JSON body
+  const url = `/api/chat/sessions/${currentSession.value.id}/messages`
   const stop = streamChat(
     url,
-    {},
+    { message },
     {
       onMessage: (data) => {
         if (typeof data === 'string') {

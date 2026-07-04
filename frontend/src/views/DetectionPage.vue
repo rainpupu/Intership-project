@@ -27,6 +27,7 @@
           <el-radio-button value="single">单图检测</el-radio-button>
           <el-radio-button value="batch">批量检测</el-radio-button>
           <el-radio-button value="video">视频检测</el-radio-button>
+          <el-radio-button value="camera">实时摄像头</el-radio-button>
         </el-radio-group>
       </div>
 
@@ -42,7 +43,7 @@
       </div>
 
       <!-- 文件上传 -->
-      <div class="control-section">
+      <div class="control-section" v-if="detectMode !== 'camera'">
         <label>上传{{ detectMode === 'video' ? '视频' : '图像' }}</label>
         <el-upload
           ref="uploadRef"
@@ -62,6 +63,7 @@
 
       <!-- 检测按钮 -->
       <el-button
+        v-if="detectMode !== 'camera'"
         type="primary"
         size="large"
         :loading="detecting"
@@ -71,12 +73,63 @@
       >
         <el-icon><Aim /></el-icon>开始检测
       </el-button>
+      
+      <!-- 摄像头控制按钮 -->
+      <el-button
+        v-else
+        :type="cameraActive ? 'danger' : 'success'"
+        size="large"
+        @click="toggleCamera"
+        :disabled="!selectedScene"
+        class="detect-btn"
+      >
+        <el-icon><VideoCamera /></el-icon>
+        {{ cameraActive ? '停止检测' : '开启摄像头' }}
+      </el-button>
     </div>
 
     <!-- 右侧结果展示 -->
     <div class="result-panel">
+      <!-- 摄像头实时检测 -->
+      <div v-if="detectMode === 'camera'" class="camera-container">
+        <div class="camera-header">
+          <h3>实时摄像头检测</h3>
+          <div v-if="cameraActive" class="camera-stats">
+            <el-tag type="success">FPS: {{ cameraFps }}</el-tag>
+            <el-tag type="info">目标: {{ cameraObjects }}</el-tag>
+          </div>
+        </div>
+        
+        <div class="camera-view">
+          <!-- 原始视频 -->
+          <div class="video-wrapper">
+            <h4>原始画面</h4>
+            <video ref="videoRef" autoplay muted playsinline class="camera-video"></video>
+          </div>
+          
+          <!-- 检测结果 -->
+          <div class="video-wrapper">
+            <h4>检测结果</h4>
+            <canvas ref="cameraCanvasRef" class="camera-canvas"></canvas>
+          </div>
+        </div>
+        
+        <!-- 检测详情 -->
+        <div v-if="cameraDetections.length > 0" class="detection-details">
+          <h4>实时检测结果</h4>
+          <el-table :data="cameraDetections" stripe max-height="200">
+            <el-table-column prop="class_name" label="类别" width="120" />
+            <el-table-column prop="confidence" label="置信度" width="100">
+              <template #default="{ row }">
+                {{ (row.confidence * 100).toFixed(1) }}%
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </div>
+      
       <!-- 检测结果 -->
-      <div v-if="detectionResult" class="result-content">
+      <div v-else-if="detectionResult" class="result-content">
         <div class="result-header">
           <h3>检测结果</h3>
           <div class="result-stats">
@@ -117,16 +170,17 @@
       <!-- 空状态 -->
       <div v-else class="empty-result">
         <el-icon :size="64"><Aim /></el-icon>
-        <p>上传图像并开始检测</p>
-        <p class="hint">支持单图、批量、视频检测模式</p>
+        <p v-if="detectMode === 'camera'">选择场景并开启摄像头</p>
+        <p v-else>上传图像并开始检测</p>
+        <p class="hint">支持单图、批量、视频、实时摄像头检测模式</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch } from 'vue'
-import { UploadFilled, Aim } from '@element-plus/icons-vue'
+import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { UploadFilled, Aim, VideoCamera } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getScenesApi, detectSingleApi, detectBatchApi, detectVideoApi } from '@/api/detection'
 
@@ -146,6 +200,17 @@ const detecting = ref(false)
 const detectionResult = ref(null)
 const canvasRef = ref(null)
 const currentImage = ref(null)
+
+// 摄像头相关状态
+const videoRef = ref(null)
+const cameraCanvasRef = ref(null)
+const cameraActive = ref(false)
+const cameraFps = ref(0)
+const cameraObjects = ref(0)
+const cameraDetections = ref([])
+let ws = null
+let animationFrameId = null
+let mediaStream = null
 
 // 加载场景列表
 async function loadScenes() {
@@ -273,10 +338,180 @@ function drawDetections() {
 watch(detectMode, () => {
   fileList.value = []
   detectionResult.value = null
+  if (detectMode.value !== 'camera' && cameraActive.value) {
+    stopCamera()
+  }
 })
+
+// 切换摄像头
+async function toggleCamera() {
+  if (cameraActive.value) {
+    stopCamera()
+  } else {
+    await startCamera()
+  }
+}
+
+// 开启摄像头
+async function startCamera() {
+  if (!selectedScene.value) {
+    ElMessage.warning('请先选择检测场景')
+    return
+  }
+  
+  try {
+    // 获取摄像头权限
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 640, height: 480 }
+    })
+    
+    // 显示原始视频
+    if (videoRef.value) {
+      videoRef.value.srcObject = mediaStream
+    }
+    
+    // 连接 WebSocket（动态获取后端地址）
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const wsHost = import.meta.env.DEV 
+      ? `${window.location.hostname}:8888`  // 开发环境直连后端
+      : window.location.host                  // 生产环境使用当前 host
+    const wsUrl = `${protocol}//${wsHost}/api/camera/detect?scene_id=${selectedScene.value}`
+    ws = new WebSocket(wsUrl)
+    
+    ws.onopen = () => {
+      cameraActive.value = true
+      ElMessage.success('摄像头连接成功')
+      sendFrameLoop()
+    }
+    
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data)
+      if (data.type === 'detection') {
+        cameraDetections.value = data.detections || []
+        cameraFps.value = data.fps || 0
+        cameraObjects.value = data.total_objects || 0
+        drawCameraDetections(data.detections)
+      } else if (data.type === 'error') {
+        ElMessage.error(data.message)
+      }
+    }
+    
+    ws.onerror = (error) => {
+      console.error('WebSocket 错误:', error)
+      ElMessage.error('连接错误')
+      stopCamera()
+    }
+    
+    ws.onclose = () => {
+      cameraActive.value = false
+    }
+    
+  } catch (error) {
+    console.error('摄像头访问失败:', error)
+    ElMessage.error('无法访问摄像头，请检查权限设置')
+  }
+}
+
+// 停止摄像头
+function stopCamera() {
+  cameraActive.value = false
+  
+  // 停止 WebSocket
+  if (ws) {
+    ws.close()
+    ws = null
+  }
+  
+  // 停止媒体流
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(track => track.stop())
+    mediaStream = null
+  }
+  
+  // 停止动画帧
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId)
+    animationFrameId = null
+  }
+  
+  cameraDetections.value = []
+  cameraFps.value = 0
+  cameraObjects.value = 0
+}
+
+// 循环发送帧
+function sendFrameLoop() {
+  if (!cameraActive.value || !ws || ws.readyState !== WebSocket.OPEN) return
+  
+  const video = videoRef.value
+  if (!video || video.readyState < 2) {
+    animationFrameId = requestAnimationFrame(sendFrameLoop)
+    return
+  }
+  
+  // 创建临时 canvas 抽帧
+  const tempCanvas = document.createElement('canvas')
+  tempCanvas.width = video.videoWidth
+  tempCanvas.height = video.videoHeight
+  const tempCtx = tempCanvas.getContext('2d')
+  tempCtx.drawImage(video, 0, 0)
+  
+  // 转换为 JPEG 并发送
+  tempCanvas.toBlob((blob) => {
+    if (blob && ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(blob)
+    }
+  }, 'image/jpeg', 0.7)
+  
+  // 控制发送频率（约 10fps）
+  setTimeout(() => {
+    animationFrameId = requestAnimationFrame(sendFrameLoop)
+  }, 100)
+}
+
+// 绘制摄像头检测结果
+function drawCameraDetections(detections) {
+  const canvas = cameraCanvasRef.value
+  const video = videoRef.value
+  if (!canvas || !video || video.readyState < 2) return
+  
+  // 设置 canvas 尺寸与视频一致
+  canvas.width = video.videoWidth
+  canvas.height = video.videoHeight
+  
+  const ctx = canvas.getContext('2d')
+  
+  // 绘制当前视频帧
+  ctx.drawImage(video, 0, 0)
+  
+  // 绘制检测框
+  detections.forEach(det => {
+    const [x1, y1, x2, y2] = det.bbox
+    
+    // 绘制边界框
+    ctx.strokeStyle = '#67c23a'
+    ctx.lineWidth = 2
+    ctx.strokeRect(x1, y1, x2 - x1, y2 - y1)
+    
+    // 绘制标签背景
+    const label = `${det.class_name} ${(det.confidence * 100).toFixed(0)}%`
+    ctx.font = '14px Arial'
+    const textWidth = ctx.measureText(label).width
+    ctx.fillStyle = '#67c23a'
+    ctx.fillRect(x1, y1 - 24, textWidth + 10, 24)
+    
+    // 绘制标签文字
+    ctx.fillStyle = '#fff'
+    ctx.fillText(label, x1 + 5, y1 - 6)
+  })
+}
 
 onMounted(() => {
   loadScenes()
+})
+
+onUnmounted(() => {
+  stopCamera()
 })
 </script>
 
@@ -407,6 +642,63 @@ onMounted(() => {
   .hint {
     font-size: 14px;
     color: $text-placeholder;
+  }
+}
+
+.camera-container {
+  background: #fff;
+  border-radius: $border-radius-lg;
+  padding: $spacing-lg;
+
+  .camera-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-lg;
+
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      color: $text-primary;
+    }
+
+    .camera-stats {
+      display: flex;
+      gap: $spacing-sm;
+    }
+  }
+
+  .camera-view {
+    display: flex;
+    gap: $spacing-lg;
+    margin-bottom: $spacing-lg;
+
+    .video-wrapper {
+      flex: 1;
+
+      h4 {
+        margin: 0 0 $spacing-sm;
+        font-size: 14px;
+        color: $text-regular;
+      }
+    }
+
+    .camera-video,
+    .camera-canvas {
+      width: 100%;
+      max-height: 360px;
+      border: 1px solid #ebeef5;
+      border-radius: $border-radius-md;
+      background: #000;
+    }
+  }
+
+  .detection-details {
+    h4 {
+      margin: 0 0 $spacing-md;
+      font-size: 16px;
+      color: $text-primary;
+    }
   }
 }
 </style>

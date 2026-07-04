@@ -29,9 +29,6 @@
 export function streamChat(url, body, callbacks) {
   const { onMessage, onDone, onError } = callbacks
 
-  // 从 localStorage 获取 Token
-  const token = localStorage.getItem('visagent_token')
-
   // 使用 fetch + ReadableStream 处理 SSE
   const controller = new AbortController()
 
@@ -40,9 +37,9 @@ export function streamChat(url, body, callbacks) {
 
   fetch(url, {
     method: 'POST',
+    credentials: 'include',  // 自动携带 HttpOnly cookie
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     ...(hasBody ? { body: JSON.stringify(body) } : {}),
     signal: controller.signal,
