@@ -202,14 +202,14 @@ class ChatService:
         # 构建消息列表
         messages = self._build_messages_for_agent(history[:-1], message)  # 排除刚保存的用户消息
         
-        # 获取 Agent 图
-        graph = self._get_agent_graph()
-        
         # 流式执行 Agent
         full_response = ""
         agent_used = None
         
         try:
+            # 获取 Agent 图
+            graph = self._get_agent_graph()
+            
             # 初始化状态
             initial_state = {
                 "messages": messages,
