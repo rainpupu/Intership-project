@@ -41,6 +41,7 @@ Thumbs.db
 # Test artifacts
 *.db
 .pytest_cache/
+cookies.txt
 
 backend/data
 backend/logs
