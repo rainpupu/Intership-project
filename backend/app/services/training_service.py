@@ -26,6 +26,43 @@ class TrainingService:
     def __init__(self):
         self.active_tasks: Dict[int, threading.Thread] = {}
         self.task_stop_flags: Dict[int, threading.Event] = {}
+        # 启动时恢复中断的任务状态
+        self._recover_interrupted_tasks()
+    
+    def _recover_interrupted_tasks(self):
+        """
+        恢复因进程重启而中断的训练任务
+        
+        将 running 状态的任务标记为 failed，避免任务永远卡住
+        """
+        from app.database.session import SessionLocal
+        
+        db = SessionLocal()
+        try:
+            # 查找所有 running 状态的任务
+            running_tasks = db.query(TrainingTask).filter(
+                TrainingTask.status == "running"
+            ).all()
+            
+            if running_tasks:
+                logger.warning(f"发现 {len(running_tasks)} 个中断的训练任务，正在恢复状态...")
+                
+                for task in running_tasks:
+                    task.status = "failed"
+                    task.error_message = "服务重启导致训练中断"
+                    task.updated_at = datetime.now()
+                    logger.info(f"任务 {task.id} ({task.task_uuid}) 标记为 failed")
+                
+                db.commit()
+                logger.info(f"已恢复 {len(running_tasks)} 个中断任务的状态")
+            else:
+                logger.info("没有发现中断的训练任务")
+                
+        except Exception as e:
+            logger.error(f"恢复中断任务失败: {e}")
+            db.rollback()
+        finally:
+            db.close()
     
     def create_training_task(
         self,
@@ -125,6 +162,7 @@ class TrainingService:
         from app.database.session import SessionLocal
         
         db = SessionLocal()
+        task = None
         try:
             task = db.query(TrainingTask).filter(TrainingTask.id == task_id).first()
             if not task:
@@ -189,9 +227,10 @@ class TrainingService:
             
         except Exception as e:
             logger.error(f"训练任务失败: task_id={task_id}, error={e}")
-            task.status = "failed"
-            task.error_message = str(e)
-            db.commit()
+            if task is not None:
+                task.status = "failed"
+                task.error_message = str(e)
+                db.commit()
         finally:
             # 清理
             self.active_tasks.pop(task_id, None)
@@ -395,6 +434,114 @@ class TrainingService:
         except Exception as e:
             logger.error(f"解析 results.csv 失败: {e}")
             return False
+    
+    def validate_model(
+        self,
+        db: Session,
+        task_id: int,
+        data_yaml: Optional[str] = None,
+        img_size: int = 640,
+        batch_size: int = 16
+    ) -> Optional[Dict[str, Any]]:
+        """
+        模型评估
+        
+        Args:
+            db: 数据库会话
+            task_id: 训练任务ID
+            data_yaml: 数据集配置文件路径（可选，默认使用训练时的配置）
+            img_size: 图像尺寸
+            batch_size: 批次大小
+        
+        Returns:
+            评估结果字典
+        """
+        import threading
+        
+        # 获取任务信息
+        task = db.query(TrainingTask).filter(TrainingTask.id == task_id).first()
+        if not task:
+            logger.error(f"训练任务不存在: task_id={task_id}")
+            return None
+        
+        # 检查任务状态
+        if task.status not in ["completed", "failed"]:
+            logger.error(f"任务状态不允许评估: task_id={task_id}, status={task.status}")
+            return None
+        
+        # 获取模型路径
+        model_version = db.query(ModelVersion).filter(
+            ModelVersion.training_task_id == task_id,
+            ModelVersion.status == "active"
+        ).first()
+        
+        if not model_version:
+            logger.error(f"未找到训练产出的模型: task_id={task_id}")
+            return None
+        
+        model_path = model_version.model_path
+        if not os.path.exists(model_path):
+            logger.error(f"模型文件不存在: {model_path}")
+            return None
+        
+        # 使用训练时的数据集配置或指定的配置
+        eval_data_yaml = data_yaml or task.data_yaml
+        if not eval_data_yaml:
+            logger.error(f"未指定数据集配置: task_id={task_id}")
+            return None
+        
+        try:
+            from ultralytics import YOLO
+            
+            logger.info(f"开始模型评估: task_id={task_id}, model={model_path}")
+            
+            # 加载模型
+            model = YOLO(model_path)
+            
+            # 执行评估
+            results = model.val(
+                data=eval_data_yaml,
+                imgsz=img_size,
+                batch=batch_size,
+                verbose=True
+            )
+            
+            # 提取评估指标
+            eval_result = {
+                "task_id": task_id,
+                "model_path": model_path,
+                "metrics": {
+                    "mAP50": float(results.box.map50),
+                    "mAP50-95": float(results.box.map),
+                    "precision": float(results.box.mp),
+                    "recall": float(results.box.mr),
+                    "f1": float(results.box.f1),
+                },
+                "per_class_ap": {},
+                "confusion_matrix": results.confusion_matrix.matrix.tolist() if results.confusion_matrix else None,
+                "evaluated_at": datetime.now().isoformat()
+            }
+            
+            # 提取各类别 AP
+            if hasattr(results.box, 'ap_class_index') and hasattr(results, 'names'):
+                for idx, ap in enumerate(results.box.ap):
+                    class_name = results.names.get(idx, f"class_{idx}")
+                    eval_result["per_class_ap"][class_name] = float(ap)
+            
+            # 更新模型版本的评估指标
+            model_version.map50 = eval_result["metrics"]["mAP50"]
+            model_version.map50_95 = eval_result["metrics"]["mAP50-95"]
+            model_version.precision = eval_result["metrics"]["precision"]
+            model_version.recall = eval_result["metrics"]["recall"]
+            model_version.per_class_ap = eval_result["per_class_ap"]
+            db.commit()
+            
+            logger.info(f"模型评估完成: task_id={task_id}, mAP50={eval_result['metrics']['mAP50']:.4f}")
+            return eval_result
+            
+        except Exception as e:
+            logger.error(f"模型评估失败: task_id={task_id}, error={e}")
+            return None
     
     def get_task_list(
         self,

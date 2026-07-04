@@ -8,11 +8,14 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 
 from app.core.security import get_current_user
+from app.core.logger import get_logger
 from app.database.session import get_db
 from app.entity.db_models import User, DetectionScene
 from app.entity.schemas import ApiResponse
 from app.services.training_service import training_service
-from app.services.data_utils import validate_dataset, split_dataset, generate_data_yaml
+from app.services.data_utils import validate_dataset, split_dataset, generate_data_yaml, convert_voc_to_yolo, convert_coco_to_yolo, convert_labelme_to_yolo
+
+logger = get_logger("training_api")
 
 router = APIRouter(prefix="/api/training", tags=["训练管理"])
 
@@ -147,6 +150,37 @@ async def get_training_metrics(
     """获取训练指标"""
     metrics = training_service.get_training_metrics(db, task_id)
     return ApiResponse(code=200, data=metrics)
+
+
+@router.post("/tasks/{task_id}/validate", response_model=ApiResponse)
+async def validate_model(
+    task_id: int,
+    data_yaml: Optional[str] = Form(None, description="数据集配置文件路径（可选）"),
+    img_size: int = Form(640, description="图像尺寸"),
+    batch_size: int = Form(16, description="批次大小"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """模型评估
+    
+    对训练完成的模型在验证集上进行评估，返回 mAP、precision、recall 等指标
+    """
+    result = training_service.validate_model(
+        db=db,
+        task_id=task_id,
+        data_yaml=data_yaml,
+        img_size=img_size,
+        batch_size=batch_size
+    )
+    
+    if not result:
+        raise HTTPException(status_code=400, detail="模型评估失败，请检查任务状态和模型文件")
+    
+    return ApiResponse(
+        code=200,
+        message="模型评估完成",
+        data=result
+    )
 
 
 @router.get("/tasks", response_model=ApiResponse)
@@ -325,4 +359,148 @@ async def upload_model(
             "file_size": file_size,
             "is_default": is_default
         }
+    )
+
+
+# ── 数据集格式转换 ──────────────────────────────────
+
+@router.post("/datasets/convert/voc-to-yolo", response_model=ApiResponse)
+async def convert_voc_to_yolo_api(
+    voc_file: UploadFile = File(..., description="VOC XML 文件"),
+    class_names: str = Form(..., description="类别名称，逗号分隔"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """VOC XML → YOLO TXT 格式转换"""
+    import tempfile
+    import os
+
+    class_list = [name.strip() for name in class_names.split(",")]
+
+    with tempfile.NamedTemporaryFile(suffix=".xml", delete=False) as tmp:
+        tmp.write(await voc_file.read())
+        voc_path = tmp.name
+
+    try:
+        output_dir = tempfile.mkdtemp(prefix="voc2yolo_")
+        result_path = convert_voc_to_yolo(voc_path, output_dir, class_list)
+        os.unlink(voc_path)
+
+        if result_path is None:
+            raise HTTPException(status_code=400, detail="VOC 转换失败")
+
+        return ApiResponse(
+            code=200,
+            message="VOC → YOLO 转换成功",
+            data={"output_path": result_path}
+        )
+    except Exception as e:
+        if os.path.exists(voc_path):
+            os.unlink(voc_path)
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/datasets/convert/coco-to-yolo", response_model=ApiResponse)
+async def convert_coco_to_yolo_api(
+    coco_file: UploadFile = File(..., description="COCO JSON 文件"),
+    image_dir: str = Form(..., description="图像目录路径（用于获取图像尺寸）"),
+    output_dir: str = Form(..., description="YOLO 标注输出目录"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """COCO JSON → YOLO TXT 格式转换"""
+    import tempfile
+    import os
+
+    with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp:
+        tmp.write(await coco_file.read())
+        coco_path = tmp.name
+
+    try:
+        result = convert_coco_to_yolo(coco_path, output_dir, image_dir)
+        os.unlink(coco_path)
+
+        return ApiResponse(
+            code=200,
+            message=f"COCO → YOLO 转换成功，共 {len(result)} 个文件",
+            data={"count": len(result), "files": result}
+        )
+    except Exception as e:
+        if os.path.exists(coco_path):
+            os.unlink(coco_path)
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/datasets/convert/labelme-to-yolo", response_model=ApiResponse)
+async def convert_labelme_to_yolo_api(
+    labelme_file: UploadFile = File(..., description="LabelMe JSON 文件"),
+    class_names: str = Form(..., description="类别名称，逗号分隔"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """LabelMe JSON → YOLO TXT 格式转换"""
+    import tempfile
+    import os
+
+    class_list = [name.strip() for name in class_names.split(",")]
+
+    with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp:
+        tmp.write(await labelme_file.read())
+        labelme_path = tmp.name
+
+    try:
+        output_dir = tempfile.mkdtemp(prefix="labelme2yolo_")
+        result_path = convert_labelme_to_yolo(labelme_path, output_dir, class_list)
+        os.unlink(labelme_path)
+
+        if result_path is None:
+            raise HTTPException(status_code=400, detail="LabelMe 转换失败")
+
+        return ApiResponse(
+            code=200,
+            message="LabelMe → YOLO 转换成功",
+            data={"output_path": result_path}
+        )
+    except Exception as e:
+        if os.path.exists(labelme_path):
+            os.unlink(labelme_path)
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/models/{model_id}/download")
+async def download_model(
+    model_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """下载模型文件
+    
+    返回模型文件流，支持 .pt 文件下载
+    """
+    from fastapi.responses import FileResponse
+    from app.entity.db_models import ModelVersion
+    
+    # 查询模型版本
+    model_version = db.query(ModelVersion).filter(
+        ModelVersion.id == model_id,
+        ModelVersion.status == "active"
+    ).first()
+    
+    if not model_version:
+        raise HTTPException(status_code=404, detail="模型不存在")
+    
+    # 检查模型文件是否存在
+    model_path = model_version.model_path
+    if not os.path.exists(model_path):
+        raise HTTPException(status_code=404, detail="模型文件不存在")
+    
+    # 生成下载文件名
+    filename = f"{model_version.model_name}_{model_version.version}.pt"
+    
+    logger.info(f"用户 {current_user.username} 下载模型: {filename}")
+    
+    return FileResponse(
+        path=model_path,
+        filename=filename,
+        media_type="application/octet-stream"
     )

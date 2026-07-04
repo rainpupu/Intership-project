@@ -132,3 +132,43 @@ export function uploadModelApi(data) {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
 }
+
+/**
+ * VOC XML → YOLO TXT 格式转换
+ * @param {Object} data - { voc_file, class_names }
+ */
+export function convertVocToYoloApi(data) {
+  const formData = new FormData()
+  formData.append('voc_file', data.voc_file)
+  formData.append('class_names', data.class_names)
+  return request.post('/training/datasets/convert/voc-to-yolo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}
+
+/**
+ * COCO JSON → YOLO TXT 格式转换
+ * @param {Object} data - { coco_file, image_dir, output_dir }
+ */
+export function convertCocoToYoloApi(data) {
+  const formData = new FormData()
+  formData.append('coco_file', data.coco_file)
+  formData.append('image_dir', data.image_dir)
+  formData.append('output_dir', data.output_dir)
+  return request.post('/training/datasets/convert/coco-to-yolo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}
+
+/**
+ * LabelMe JSON → YOLO TXT 格式转换
+ * @param {Object} data - { labelme_file, class_names }
+ */
+export function convertLabelmeToYoloApi(data) {
+  const formData = new FormData()
+  formData.append('labelme_file', data.labelme_file)
+  formData.append('class_names', data.class_names)
+  return request.post('/training/datasets/convert/labelme-to-yolo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}
