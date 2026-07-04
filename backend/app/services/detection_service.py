@@ -45,15 +45,16 @@ class DetectionService:
         try:
             from ultralytics import YOLO
             
+            # ultralytics 支持自动下载预训练模型（如 yolo11n.pt），
+            # 本地文件不存在时由 YOLO() 内部处理下载，此处不做预检查
             if not os.path.exists(model_path):
-                logger.error(f"模型文件不存在: {model_path}")
-                return False
+                logger.info(f"模型文件未缓存，将由 ultralytics 自动下载: {model_path}")
             
             self.models[scene_id] = YOLO(model_path)
             logger.info(f"加载模型成功: scene_id={scene_id}, path={model_path}")
             return True
         except Exception as e:
-            logger.error(f"加载模型失败: {e}")
+            logger.error(f"加载模型失败: scene_id={scene_id}, path={model_path}, error={e}")
             return False
     
     def get_default_model_path(self, db: Session, scene_id: int) -> Optional[str]:
@@ -78,7 +79,7 @@ class DetectionService:
             return model_version.model_path
         
         # 如果没有默认模型，使用预训练模型
-        return "yolov11n.pt"
+        return "yolo11n.pt"
     
     async def detect_single(
         self,
