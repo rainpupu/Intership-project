@@ -5,7 +5,7 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from app.core.security import create_access_token, hash_password, verify_password
-from app.entity.db_models import User
+from app.entity.db_models import User, UserRole, Role
 
 
 class UserService:
@@ -81,8 +81,18 @@ class UserService:
 
     @staticmethod
     def get_user_roles(db: Session, user: User) -> list[str]:
-        """获取用户的角色标识列表"""
-        return [ur.role.name for ur in user.user_roles]
+        """获取用户的角色标识列表
+        
+        直接查询数据库，避免依赖 User 对象的 lazy-loaded 关系，
+        防止在 User 对象 detached 后访问 user_roles 时抛出 DetachedInstanceError。
+        """
+        roles = (
+            db.query(Role.name)
+            .join(UserRole, UserRole.role_id == Role.id)
+            .filter(UserRole.user_id == user.id)
+            .all()
+        )
+        return [role[0] for role in roles]
 
     @staticmethod
     def get_user_by_id(db: Session, user_id: int) -> User:
