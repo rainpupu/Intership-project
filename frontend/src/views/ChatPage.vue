@@ -253,6 +253,9 @@ function doSendMessage(message) {
               description: data.description
             })
           }
+        } else if (data.type === 'error') {
+          // 错误消息
+          ElMessage.error(data.content || '处理消息时出现错误')
         } else if (data.type === 'token') {
           // 流式 token
           const lastMsg = messages.value[messages.value.length - 1]

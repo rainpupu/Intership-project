@@ -49,6 +49,13 @@ export function streamChat(url, body, callbacks) {
   })
     .then(async (response) => {
       if (!response.ok) {
+        if (response.status === 401) {
+          const { useUserStore } = await import('@/stores/user')
+          const userStore = useUserStore()
+          userStore.logout()
+          window.location.href = '/login'
+          return
+        }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
