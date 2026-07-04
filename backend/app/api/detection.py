@@ -61,7 +61,8 @@ async def detect_single(
             image_path=tmp_path,
             conf_threshold=conf_threshold,
             iou_threshold=iou_threshold,
-            image_size=image_size
+            image_size=image_size,
+            inference_time=result.get("inference_time", 0)
         )
         
         return ApiResponse(
@@ -129,7 +130,8 @@ async def detect_batch(
                     image_path=result["image_path"],
                     conf_threshold=conf_threshold,
                     iou_threshold=iou_threshold,
-                    image_size=image_size
+                    image_size=image_size,
+                    inference_time=result.get("inference_time", 0)
                 )
                 total_objects += result["total_objects"]
         

@@ -311,7 +311,8 @@ class DetectionService:
         annotated_image_path: Optional[str] = None,
         conf_threshold: float = 0.25,
         iou_threshold: float = 0.45,
-        image_size: int = 640
+        image_size: int = 640,
+        inference_time: float = 0
     ) -> DetectionTask:
         """
         保存检测结果到数据库
@@ -339,7 +340,7 @@ class DetectionService:
             status="completed",
             total_images=1,
             total_objects=len(detections),
-            total_inference_time=sum(d.get("inference_time", 0) for d in detections),
+            total_inference_time=inference_time,
             conf_threshold=conf_threshold,
             iou_threshold=iou_threshold,
             image_size=image_size,
@@ -374,7 +375,7 @@ class DetectionService:
                 bbox=det.get("bbox", []),
                 image_width=det.get("image_width"),
                 image_height=det.get("image_height"),
-                inference_time=det.get("inference_time")
+                inference_time=inference_time
             )
             db.add(result)
         
