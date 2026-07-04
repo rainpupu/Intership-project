@@ -5,7 +5,7 @@
 - 用户认证依赖
 """
 from datetime import datetime, timedelta
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from sqlalchemy.orm import Session
@@ -78,16 +78,22 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 async def get_current_user(
+    request: Request,
     token: str = Depends(oauth2_scheme),
     db = None,
 ):
     """
     从 JWT Token 中解析当前用户
+    支持从 Authorization header 或 HttpOnly cookie 中读取 token
     在需要认证的路由中通过 Depends(get_current_user) 使用
     """
     from app.database.session import get_db as _get_db
     from app.services.user_service import user_service
 
+    # 优先从 Authorization header 读取，其次从 cookie 读取
+    if not token:
+        token = request.cookies.get("access_token")
+    
     _own_db = False
     if db is None:
         db_gen = _get_db()
@@ -100,6 +106,8 @@ async def get_current_user(
             detail="无效的认证凭据",
             headers={"WWW-Authenticate": "Bearer"},
         )
+        if not token:
+            raise credentials_exception
         try:
             payload = decode_access_token(token)
             user_id_str: str = payload.get("sub")

@@ -26,3 +26,10 @@ export function loginApi(data) {
 export function getUserInfoApi() {
   return request.get('/auth/me')
 }
+
+/**
+ * 登出 - 清除 HttpOnly cookie
+ */
+export function logoutApi() {
+  return request.post('/auth/logout')
+}
