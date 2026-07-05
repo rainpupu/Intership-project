@@ -46,3 +46,4 @@ cookies.txt
 backend/data
 backend/logs
 backend/uv.lock
+docs/
