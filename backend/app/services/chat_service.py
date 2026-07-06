@@ -219,10 +219,11 @@ class ChatService:
                 "current_task": None
             }
             
-            # 流式执行
+            # 流式执行（设置递归限制防止无限循环）
             async for event in graph.astream_events(
                 initial_state,
-                version="v2"
+                version="v2",
+                recursion_limit=10
             ):
                 event_kind = event["event"]
                 

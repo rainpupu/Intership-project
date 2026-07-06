@@ -38,14 +38,24 @@ class AgentState(TypedDict):
 
 # ── LLM 初始化 ────────────────────────────────────────
 
+import httpx
+
 def get_llm():
     """获取 LLM 实例"""
+    # 创建自定义 httpx 客户端，禁用 HTTP/2 并增加超时
+    http_async_client = httpx.AsyncClient(
+        http2=False,
+        timeout=60.0,
+        follow_redirects=True
+    )
+    
     return ChatOpenAI(
         model=settings.OPENAI_MODEL,
         openai_api_key=settings.OPENAI_API_KEY,
         openai_api_base=settings.OPENAI_BASE_URL,
         temperature=0.7,
-        streaming=True
+        streaming=True,
+        http_async_client=http_async_client
     )
 
 
@@ -91,7 +101,7 @@ async def supervisor_node(state: AgentState) -> dict:
         }
     
     except Exception as e:
-        logger.error(f"Supervisor 节点执行失败: {e}")
+        logger.error(f"Supervisor 节点执行失败: {type(e).__name__}: {e}")
         return {
             "next_agent": "qa_agent",
             "current_task": "qa_agent"
@@ -220,7 +230,7 @@ async def qa_agent_node(state: AgentState) -> dict:
         }
     
     except Exception as e:
-        logger.error(f"问答 Agent 执行失败: {e}")
+        logger.error(f"问答 Agent 执行失败: {type(e).__name__}: {e}")
         return {
             "messages": [AIMessage(content=f"回答问题时出现错误: {str(e)}")]
         }
@@ -280,10 +290,10 @@ def build_agent_graph():
     # 设置入口
     graph.set_entry_point("supervisor")
     
-    # 编译图，设置递归限制防止无限循环
-    compiled_graph = graph.compile(recursion_limit=10)
+    # 编译图
+    compiled_graph = graph.compile()
     
-    logger.info("Agent 图构建完成（递归限制: 10）")
+    logger.info("Agent 图构建完成")
     return compiled_graph
 
 
