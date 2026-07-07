@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     DB_USER: str = "visagent"
     DB_PASSWORD: str = "visagent"
 
-    DATABASE_URL: str = ""
+    #DATABASE_URL: str = ""
 
     @property
     def database_url(self) -> str:
@@ -52,6 +52,8 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str = "your-super-secret-key-change-in-production"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    COOKIE_SECURE: bool = False  # Cookie 安全标志，本地开发设为 false
+
 
     # ── 大模型配置 ────────────────────────────────────
     OPENAI_API_KEY: str = ""

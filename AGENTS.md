@@ -31,7 +31,7 @@ uv run ruff format app/
 # 运行测试
 uv run pytest
 
-# 激活虚拟环境
+# 激活虚拟环境（Linux/macOS）
 source .venv/bin/activate
 ```
 
