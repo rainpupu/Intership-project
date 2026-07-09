@@ -6,7 +6,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from app.config.settings import settings
-
 # 创建数据库引擎
 # pool_pre_ping=True：每次从连接池取连接前先测试是否可用
 engine = create_engine(
