@@ -286,11 +286,13 @@ async def generate_data_yaml_api(
 async def upload_model(
     scene_id: int = Form(..., description="场景ID"),
     model_file: UploadFile = File(..., description="模型文件(.pt)"),
-    version: str = Form(..., description="版本号，如 v1.0.0"),
+    version: str = Form("", description="版本号，如 v1.0.0（留空则 auto_version 决定）"),
     model_name: str = Form(..., description="模型名称"),
     model_type: str = Form("yolov11n", description="模型类型：yolov11n/s/m/l/x"),
     description: str = Form("", description="模型描述"),
     is_default: bool = Form(True, description="是否设为默认模型"),
+    auto_version: bool = Form(True, description="是否自动生成版本号（v1.0.0 → v1.0.1 → ...）"),
+    from_training_task_id: Optional[int] = Form(None, description="关联训练任务ID（可选）"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -300,45 +302,52 @@ async def upload_model(
     from pathlib import Path
     from datetime import datetime
     from app.entity.db_models import ModelVersion
-    
+
     # 验证场景
     scene = db.query(DetectionScene).filter(DetectionScene.id == scene_id).first()
     if not scene:
         raise HTTPException(status_code=404, detail="场景不存在")
-    
+
     # 验证文件类型
     if not model_file.filename.endswith('.pt'):
         raise HTTPException(status_code=400, detail="仅支持 .pt 模型文件")
-    
+
+    # 自动生成版本号
+    if auto_version or not version:
+        existing_count = db.query(ModelVersion).filter(
+            ModelVersion.scene_id == scene_id
+        ).count()
+        version = f"v{existing_count + 1}.0.0"
+
     # 创建模型存储目录
     models_dir = Path("data/models") / scene.name
     models_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # 保存模型文件
     model_filename = f"{model_name}_{version}.pt"
     model_path = models_dir / model_filename
-    
+
     with open(model_path, "wb") as buffer:
         shutil.copyfileobj(model_file.file, buffer)
-    
+
     file_size = model_path.stat().st_size
-    
+
     # 如果设为默认模型，先取消该场景其他默认模型
     if is_default:
         db.query(ModelVersion).filter(
             ModelVersion.scene_id == scene_id,
             ModelVersion.is_default == True
         ).update({"is_default": False})
-    
+
     # 创建模型版本记录
     model_version = ModelVersion(
         scene_id=scene_id,
-        training_task_id=None,  # 手动上传，无关联训练任务
+        training_task_id=from_training_task_id,
         version=version,
         model_name=model_name,
         model_type=model_type,
         status="active",
-        model_path=str(model_path),
+        model_path=str(model_path.absolute()),
         description=description or f"手动上传于 {datetime.now().strftime('%Y-%m-%d %H:%M')}",
         file_size=file_size,
         is_default=is_default
@@ -346,20 +355,127 @@ async def upload_model(
     db.add(model_version)
     db.commit()
     db.refresh(model_version)
-    
+
     return ApiResponse(
         code=200,
         message="模型上传成功",
         data={
             "id": model_version.id,
-            "scene": scene.display_name,
-            "version": version,
-            "model_name": model_name,
-            "model_path": str(model_path),
+            "scene_id": model_version.scene_id,
+            "scene_name": scene.display_name,
+            "version": model_version.version,
+            "model_name": model_version.model_name,
+            "model_type": model_version.model_type,
+            "model_path": model_version.model_path,
             "file_size": file_size,
-            "is_default": is_default
+            "is_default": model_version.is_default,
+            "status": model_version.status,
+            "description": model_version.description,
+            "from_training_task_id": model_version.training_task_id,
+            "created_at": model_version.created_at.isoformat() if model_version.created_at else None,
         }
     )
+
+
+# ── 模型管理 ──────────────────────────────────────────
+
+
+@router.get("/models", response_model=ApiResponse)
+async def get_model_list(
+    scene_id: Optional[int] = None,
+    status: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 20,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """获取模型版本列表（分页）"""
+    result = training_service.get_model_list(
+        db=db,
+        scene_id=scene_id,
+        status=status,
+        page=page,
+        page_size=page_size
+    )
+
+    return ApiResponse(code=200, data=result)
+
+
+@router.get("/models/{model_id}", response_model=ApiResponse)
+async def get_model_detail(
+    model_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """获取模型版本详情"""
+    model = training_service.get_model_by_id(db, model_id)
+    if not model:
+        raise HTTPException(status_code=404, detail="模型不存在")
+
+    return ApiResponse(code=200, data=model)
+
+
+@router.put("/models/{model_id}", response_model=ApiResponse)
+async def update_model(
+    model_id: int,
+    version: Optional[str] = Form(None, description="版本号"),
+    model_name: Optional[str] = Form(None, description="模型名称"),
+    description: Optional[str] = Form(None, description="模型描述"),
+    status: Optional[str] = Form(None, description="状态：active/archived/deleted"),
+    is_default: Optional[bool] = Form(None, description="是否设为默认"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """更新模型版本信息"""
+    updates = {}
+    if version is not None:
+        updates["version"] = version
+    if model_name is not None:
+        updates["model_name"] = model_name
+    if description is not None:
+        updates["description"] = description
+    if status is not None:
+        updates["status"] = status
+    if is_default is not None:
+        updates["is_default"] = is_default
+
+    if not updates:
+        raise HTTPException(status_code=400, detail="没有要更新的字段")
+
+    model = training_service.update_model(db, model_id, updates)
+    if not model:
+        raise HTTPException(status_code=404, detail="模型不存在")
+
+    return ApiResponse(code=200, message="模型更新成功", data=model)
+
+
+@router.delete("/models/{model_id}", response_model=ApiResponse)
+async def delete_model(
+    model_id: int,
+    hard_delete: bool = Form(False, description="True=硬删除，False=软删除"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """删除模型版本（默认软删除）"""
+    success = training_service.delete_model(db, model_id, hard_delete=hard_delete)
+    if not success:
+        raise HTTPException(status_code=404, detail="模型不存在")
+
+    return ApiResponse(code=200, message="模型删除成功")
+
+
+@router.put("/models/{model_id}/set-default", response_model=ApiResponse)
+async def set_default_model(
+    model_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """设置模型为场景默认模型"""
+    model = training_service.set_default_model(db, model_id)
+    if not model:
+        raise HTTPException(status_code=404, detail="模型不存在或状态不可用")
+
+    return ApiResponse(code=200, message="默认模型设置成功", data=model)
 
 
 # ── 数据集格式转换 ──────────────────────────────────

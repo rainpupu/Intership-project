@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.config.settings import settings
 from app.core.logger import get_logger
-from app.entity.db_models import TrainingTask, TrainingMetric, ModelVersion
+from app.entity.db_models import TrainingTask, TrainingMetric, ModelVersion, DetectionScene
 
 logger = get_logger("training_service")
 
@@ -599,6 +599,218 @@ class TrainingService:
                 for t in tasks
             ]
         }
+
+
+    # ══════════════════════════════════════════════════════════════
+    # 模型版本管理
+    # ══════════════════════════════════════════════════════════════
+
+    def get_model_by_id(self, db: Session, model_id: int) -> Optional[Dict[str, Any]]:
+        """
+        获取单个模型版本详情
+
+        Args:
+            db: 数据库会话
+            model_id: 模型版本ID
+
+        Returns:
+            模型版本信息字典
+        """
+        model = db.query(ModelVersion).filter(ModelVersion.id == model_id).first()
+        if not model:
+            return None
+
+        scene = db.query(DetectionScene).filter(DetectionScene.id == model.scene_id).first()
+
+        return {
+            "id": model.id,
+            "scene_id": model.scene_id,
+            "scene_name": scene.name if scene else None,
+            "scene_display_name": scene.display_name if scene else None,
+            "training_task_id": model.training_task_id,
+            "version": model.version,
+            "model_name": model.model_name,
+            "model_type": model.model_type,
+            "status": model.status,
+            "model_path": model.model_path,
+            "minio_url": model.minio_url,
+            "map50": model.map50,
+            "map50_95": model.map50_95,
+            "precision": model.precision,
+            "recall": model.recall,
+            "per_class_ap": model.per_class_ap,
+            "description": model.description,
+            "file_size": model.file_size,
+            "is_default": model.is_default,
+            "created_at": model.created_at.isoformat() if model.created_at else None,
+        }
+
+    def get_model_list(
+        self,
+        db: Session,
+        scene_id: Optional[int] = None,
+        status: Optional[str] = None,
+        page: int = 1,
+        page_size: int = 20
+    ) -> Dict[str, Any]:
+        """
+        获取模型版本列表（分页）
+
+        Args:
+            db: 数据库会话
+            scene_id: 场景ID（可选）
+            status: 状态过滤（可选）
+            page: 页码
+            page_size: 每页数量
+
+        Returns:
+            分页结果
+        """
+        query = db.query(ModelVersion)
+
+        if scene_id is not None:
+            query = query.filter(ModelVersion.scene_id == scene_id)
+        if status:
+            query = query.filter(ModelVersion.status == status)
+
+        total = query.count()
+        models = query.order_by(ModelVersion.created_at.desc()).offset(
+            (page - 1) * page_size
+        ).limit(page_size).all()
+
+        return {
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "items": [
+                {
+                    "id": m.id,
+                    "scene_id": m.scene_id,
+                    "training_task_id": m.training_task_id,
+                    "version": m.version,
+                    "model_name": m.model_name,
+                    "model_type": m.model_type,
+                    "status": m.status,
+                    "map50": m.map50,
+                    "map50_95": m.map50_95,
+                    "precision": m.precision,
+                    "recall": m.recall,
+                    "description": m.description,
+                    "file_size": m.file_size,
+                    "is_default": m.is_default,
+                    "created_at": m.created_at.isoformat() if m.created_at else None,
+                }
+                for m in models
+            ]
+        }
+
+    def update_model(
+        self,
+        db: Session,
+        model_id: int,
+        updates: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
+        """
+        更新模型版本信息
+
+        Args:
+            db: 数据库会话
+            model_id: 模型版本ID
+            updates: 更新字段字典（允许：version, description, status, is_default, model_name）
+
+        Returns:
+            更新后的模型版本信息
+        """
+        model = db.query(ModelVersion).filter(ModelVersion.id == model_id).first()
+        if not model:
+            return None
+
+        allowed_fields = {"version", "description", "status", "is_default", "model_name"}
+        for key, value in updates.items():
+            if key in allowed_fields and value is not None:
+                # 如果更新 is_default，需要处理唯一性
+                if key == "is_default" and value:
+                    db.query(ModelVersion).filter(
+                        ModelVersion.scene_id == model.scene_id,
+                        ModelVersion.is_default == True,
+                        ModelVersion.id != model_id
+                    ).update({"is_default": False})
+                setattr(model, key, value)
+
+        db.commit()
+        db.refresh(model)
+
+        return self.get_model_by_id(db, model_id)
+
+    def delete_model(self, db: Session, model_id: int, hard_delete: bool = False) -> bool:
+        """
+        删除模型版本
+
+        Args:
+            db: 数据库会话
+            model_id: 模型版本ID
+            hard_delete: True=硬删除（删记录+删文件），False=软删除（status=deleted）
+
+        Returns:
+            是否成功
+        """
+        model = db.query(ModelVersion).filter(ModelVersion.id == model_id).first()
+        if not model:
+            return False
+
+        if hard_delete:
+            # 删除模型文件
+            if model.model_path and os.path.exists(model.model_path):
+                try:
+                    os.remove(model.model_path)
+                    logger.info(f"删除模型文件: {model.model_path}")
+                except Exception as e:
+                    logger.error(f"删除模型文件失败 {model.model_path}: {e}")
+
+            db.delete(model)
+        else:
+            model.status = "deleted"
+            # 如果是默认模型，取消默认
+            if model.is_default:
+                model.is_default = False
+
+        db.commit()
+        logger.info(f"删除模型版本: model_id={model_id}, hard_delete={hard_delete}")
+        return True
+
+    def set_default_model(self, db: Session, model_id: int) -> Optional[Dict[str, Any]]:
+        """
+        设置模型为场景默认模型
+
+        Args:
+            db: 数据库会话
+            model_id: 模型版本ID
+
+        Returns:
+            更新后的模型版本信息
+        """
+        model = db.query(ModelVersion).filter(ModelVersion.id == model_id).first()
+        if not model:
+            return None
+
+        if model.status != "active":
+            logger.warning(f"模型状态不是 active，无法设为默认: model_id={model_id}, status={model.status}")
+            return None
+
+        # 取消该场景其他模型的默认标志
+        db.query(ModelVersion).filter(
+            ModelVersion.scene_id == model.scene_id,
+            ModelVersion.is_default == True,
+            ModelVersion.id != model_id
+        ).update({"is_default": False})
+
+        # 设置当前模型为默认
+        model.is_default = True
+        db.commit()
+        db.refresh(model)
+
+        logger.info(f"设置默认模型: model_id={model_id}, scene_id={model.scene_id}")
+        return self.get_model_by_id(db, model_id)
 
 
 # 全局训练服务实例
