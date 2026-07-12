@@ -26,6 +26,7 @@ class TrainingService:
     def __init__(self):
         self.active_tasks: Dict[int, threading.Thread] = {}
         self.task_stop_flags: Dict[int, threading.Event] = {}
+        self.task_stop_reason: Dict[int, str] = {}  # "paused" 或 "cancelled"，避免竞态条件
         # 启动时恢复中断的任务状态
         self._recover_interrupted_tasks()
     
@@ -129,9 +130,11 @@ class TrainingService:
             logger.error(f"任务状态不允许启动: task_id={task_id}, status={task.status}")
             return False
         
-        # 更新任务状态
+        # 更新任务状态（重置进度指标）
         task.status = "running"
         task.started_at = datetime.now()
+        task.current_epoch = 0
+        task.progress = 0
         task.error_message = None
         db.commit()
         
@@ -154,20 +157,24 @@ class TrainingService:
     def _train_worker(self, task_id: int, stop_flag: threading.Event):
         """
         训练工作线程
-        
+
+        通过 YOLO 回调实现实时进度更新和中途停止：
+        - on_train_epoch_end → 更新 current_epoch 和 progress 到 DB
+        - on_train_batch_start → 检查 stop_flag 实现 batch 级的中止响应
+
         Args:
             task_id: 任务ID
             stop_flag: 停止标志
         """
         from app.database.session import SessionLocal
-        
+
         db = SessionLocal()
         task = None
         try:
             task = db.query(TrainingTask).filter(TrainingTask.id == task_id).first()
             if not task:
                 return
-            
+
             # 动态导入 ultralytics（避免启动时加载）
             try:
                 from ultralytics import YOLO
@@ -177,14 +184,18 @@ class TrainingService:
                 task.error_message = "ultralytics 未安装"
                 db.commit()
                 return
-            
+
             # 加载模型
             model_name = task.model_name
             model_path = f"{model_name}.pt"
-            
+
             logger.info(f"加载模型: {model_path}")
             model = YOLO(model_path)
-            
+
+            # 注册训练回调
+            model.add_callback("on_train_epoch_end", self._make_progress_callback(task_id))
+            model.add_callback("on_train_batch_start", self._make_stop_callback(task_id, stop_flag))
+
             # 准备训练参数
             train_args = {
                 "data": task.data_yaml,
@@ -199,32 +210,38 @@ class TrainingService:
                 "exist_ok": True,
                 "verbose": True
             }
-            
+
             logger.info(f"开始训练: task_id={task_id}, args={train_args}")
-            
-            # 执行训练
+
+            # 执行训练（回调负责更新进度和响应停止信号）
             results = model.train(**train_args)
-            
-            # 检查是否被取消
-            if stop_flag.is_set():
+
+            # 检查训练停止原因
+            # task_stop_reason 由 pause_training / cancel_training 预先设置，
+            # 优先于 stop_flag 判断，避免与 API handler 的竞态条件
+            stop_reason = self.task_stop_reason.pop(task_id, None)
+            if stop_reason == "paused":
+                # pause_training 已把状态改为 paused，不做修改
+                logger.info(f"训练任务已暂停: task_id={task_id}")
+            elif stop_reason == "cancelled" or stop_flag.is_set():
                 task.status = "cancelled"
                 logger.info(f"训练任务已取消: task_id={task_id}")
             else:
-                # 训练完成
+                # 训练正常完成
                 task.status = "completed"
                 task.completed_at = datetime.now()
                 task.progress = 100
                 task.current_epoch = task.epochs
-                
+
                 # 保存模型版本
                 best_model_path = os.path.join("runs", "train", f"task_{task_id}", "weights", "best.pt")
                 if os.path.exists(best_model_path):
                     self._save_model_version(db, task, best_model_path)
-                
+
                 logger.info(f"训练任务完成: task_id={task_id}")
-            
+
             db.commit()
-            
+
         except Exception as e:
             logger.error(f"训练任务失败: task_id={task_id}, error={e}")
             if task is not None:
@@ -235,8 +252,57 @@ class TrainingService:
             # 清理
             self.active_tasks.pop(task_id, None)
             self.task_stop_flags.pop(task_id, None)
+            self.task_stop_reason.pop(task_id, None)
             db.close()
     
+    # ══════════════════════════════════════════════════════════════
+    # 训练回调（注册到 YOLO model.train()）
+    # ══════════════════════════════════════════════════════════════
+
+    def _make_progress_callback(self, task_id: int):
+        """
+        创建进度更新回调（注册到 on_train_epoch_end）
+
+        每个 epoch 结束后更新当前轮次和进度百分比到数据库，
+        前端可通过 GET /api/training/tasks/{id}/status 实时查看。
+        """
+        from app.database.session import SessionLocal
+
+        def on_epoch_end(trainer):
+            epoch = trainer.epoch
+            total = trainer.epochs
+            progress = min(int((epoch / total) * 100), 99)  # 留 1% 给完成时的更新
+
+            db = SessionLocal()
+            try:
+                task = db.query(TrainingTask).filter(TrainingTask.id == task_id).first()
+                if task:
+                    task.current_epoch = epoch
+                    task.progress = progress
+                    task.updated_at = datetime.now()
+                    db.commit()
+            except Exception as e:
+                logger.warning(f"更新训练进度失败 (task_id={task_id}): {e}")
+            finally:
+                db.close()
+
+        return on_epoch_end
+
+    def _make_stop_callback(
+        self, task_id: int, stop_flag: threading.Event
+    ):
+        """
+        创建停止检测回调（注册到 on_train_batch_start）
+
+        每个 batch 开始前检查 stop_flag，一旦发现暂停/取消信号，
+        设置 trainer.stop_train = True 让 YOLO 在当前 batch 结束时优雅退出。
+        """
+        def on_batch_start(trainer, *args):
+            if stop_flag.is_set():
+                trainer.stop_train = True
+
+        return on_batch_start
+
     def _save_model_version(self, db: Session, task: TrainingTask, model_path: str):
         """
         保存模型版本
@@ -284,11 +350,12 @@ class TrainingService:
         if task.status != "running":
             return False
         
-        # 设置停止标志
+        # 设置停止原因（优先于 stop_flag，避免 worker 线程误判）
+        self.task_stop_reason[task_id] = "paused"
         stop_flag = self.task_stop_flags.get(task_id)
         if stop_flag:
             stop_flag.set()
-        
+
         task.status = "paused"
         db.commit()
         
@@ -313,11 +380,12 @@ class TrainingService:
         if task.status not in ["running", "paused", "pending"]:
             return False
         
-        # 设置停止标志
+        # 设置停止原因（优先于 stop_flag，避免 worker 线程误判）
+        self.task_stop_reason[task_id] = "cancelled"
         stop_flag = self.task_stop_flags.get(task_id)
         if stop_flag:
             stop_flag.set()
-        
+
         task.status = "cancelled"
         db.commit()
         
