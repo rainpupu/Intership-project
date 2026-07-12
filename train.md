@@ -112,13 +112,14 @@
   在算力云实例上准备以下结构：
   /dataset/traffic_light/
   ├── images/
-  │   ├── train/    ← 训练图像（如 .jpg）
-  │   └── val/      ← 验证图像
+  │   ├── train/     ← 1,781 张（来自 train.json 标注的 1781 张图像）
+  │   ├── val/       ← 445 张（来自 eval.json 标注的 445 张图像）
+  │   └── test/      ← 45 张（来自 eval/ 目录，无标注，纯测试用）
   ├── labels/
-  │   ├── train/    ← YOLO 格式标注（.txt，与图像同名）
-  │   └── val/
-  └── data.yaml     ← 数据集配置
-
+  │   ├── train/     ← 1,781 个 .txt 文件（从 train.json 转换）
+  │   └── val/       ← 445 个 .txt 文件（从 eval.json 转换）
+  └── data.yaml      ← 数据集配置文件
+  
   data.yaml 内容：
   path: /dataset/traffic_light
   train: images/train
