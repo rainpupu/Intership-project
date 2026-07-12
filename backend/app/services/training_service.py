@@ -263,8 +263,9 @@ class TrainingService:
         """
         创建进度更新回调（注册到 on_train_epoch_end）
 
-        每个 epoch 结束后更新当前轮次和进度百分比到数据库，
-        前端可通过 GET /api/training/tasks/{id}/status 实时查看。
+        每个 epoch 结束后：
+        1. 更新 current_epoch 和 progress 到 TrainingTask
+        2. 从 trainer.metrics 提取指标写入 TrainingMetric
         """
         from app.database.session import SessionLocal
 
@@ -276,13 +277,41 @@ class TrainingService:
             db = SessionLocal()
             try:
                 task = db.query(TrainingTask).filter(TrainingTask.id == task_id).first()
-                if task:
-                    task.current_epoch = epoch
-                    task.progress = progress
-                    task.updated_at = datetime.now()
-                    db.commit()
+                if not task:
+                    return
+
+                # 1. 更新进度
+                task.current_epoch = epoch
+                task.progress = progress
+                task.updated_at = datetime.now()
+
+                # 2. 保存该 epoch 的训练指标（仅当尚未保存时）
+                existing = db.query(TrainingMetric).filter(
+                    TrainingMetric.task_id == task_id,
+                    TrainingMetric.epoch == epoch
+                ).first()
+
+                if not existing:
+                    # 从 trainer.metrics 提取（键名与 Ultralytics results.csv 一致）
+                    m = getattr(trainer, 'metrics', None) or {}
+
+                    metric = TrainingMetric(
+                        task_id=task_id,
+                        epoch=epoch,
+                        box_loss=float(getattr(m, 'get', lambda k, d: d)('train/box_loss', 0) or 0),
+                        cls_loss=float(getattr(m, 'get', lambda k, d: d)('train/cls_loss', 0) or 0),
+                        dfl_loss=float(getattr(m, 'get', lambda k, d: d)('train/dfl_loss', 0) or 0),
+                        precision=float(getattr(m, 'get', lambda k, d: d)('metrics/precision(B)', 0) or 0),
+                        recall=float(getattr(m, 'get', lambda k, d: d)('metrics/recall(B)', 0) or 0),
+                        map50=float(getattr(m, 'get', lambda k, d: d)('metrics/mAP50(B)', 0) or 0),
+                        map50_95=float(getattr(m, 'get', lambda k, d: d)('metrics/mAP50-95(B)', 0) or 0),
+                        lr=float(trainer.lr[0]) if hasattr(trainer, 'lr') and trainer.lr else 0,
+                    )
+                    db.add(metric)
+
+                db.commit()
             except Exception as e:
-                logger.warning(f"更新训练进度失败 (task_id={task_id}): {e}")
+                logger.warning(f"更新训练进度/指标失败 (task_id={task_id}): {e}")
             finally:
                 db.close()
 
