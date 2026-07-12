@@ -6,9 +6,6 @@ import os
 import tempfile
 from pathlib import Path
 from typing import List, Optional
-import json
-import os
-from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
@@ -168,6 +165,9 @@ async def detect_folder(
     current_user: User = Depends(get_current_user)
 ):
     """文件夹批量检测：扫描指定文件夹，对所有图片逐一检测"""
+    from datetime import datetime
+    from app.entity.db_models import DetectionTask, DetectionResult
+
     # 验证场景
     scene = db.query(DetectionScene).filter(DetectionScene.id == scene_id).first()
     if not scene:
@@ -188,26 +188,28 @@ async def detect_folder(
     if not image_files:
         raise HTTPException(status_code=400, detail="文件夹中没有支持的图像文件")
 
-    # 加载模型
-    model_path = detection_service.get_default_model_path(db, scene_id)
-    detection_service.load_model(scene_id, model_path)
-
     # 创建检测任务记录
-    task = await detection_service.save_detection_result(
-        db=db,
+    task = DetectionTask(
         user_id=current_user.id,
         scene_id=scene_id,
         task_type="folder",
-        source_path=folder_path,
-        detections=[],
-        output_urls=[]
+        status="processing",
+        total_images=len(image_files),
+        conf_threshold=conf_threshold,
+        iou_threshold=iou_threshold,
+        image_size=image_size,
     )
+    db.add(task)
+    db.commit()
+    db.refresh(task)
 
     # 逐文件检测
+    total_objects = 0
     all_detections = []
     for img_path in image_files:
         try:
-            detections = await detection_service.detect_single(
+            result = await detection_service.detect_single(
+                db=db,
                 scene_id=scene_id,
                 image_path=img_path,
                 conf_threshold=conf_threshold,
@@ -216,17 +218,21 @@ async def detect_folder(
             )
             all_detections.append({
                 "file": os.path.basename(img_path),
-                "detections": detections
+                "detections": result.get("detections", []),
+                "total_objects": result.get("total_objects", 0),
+                "inference_time": result.get("inference_time", 0)
             })
+            total_objects += result.get("total_objects", 0)
         except Exception as e:
             all_detections.append({
                 "file": os.path.basename(img_path),
                 "error": str(e)
             })
 
-    # 更新任务记录
-    detected_count = len([d for d in all_detections if "error" not in d])
-    task.result_summary = json.dumps({"total_files": len(image_files), "detected_files": detected_count})
+    # 更新任务状态
+    task.status = "completed"
+    task.total_objects = total_objects
+    task.completed_at = datetime.now()
     db.commit()
 
     return ApiResponse(
@@ -235,6 +241,7 @@ async def detect_folder(
         data={
             "task_id": task.id,
             "total_files": len(image_files),
+            "total_objects": total_objects,
             "results": all_detections
         }
     )

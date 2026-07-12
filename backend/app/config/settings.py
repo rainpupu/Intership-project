@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     DB_USER: str = "visagent"
     DB_PASSWORD: str = "visagent"
 
-    #DATABASE_URL: str = ""
+    DATABASE_URL: str = ""
 
     @property
     def database_url(self) -> str:

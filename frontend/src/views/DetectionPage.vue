@@ -20,6 +20,29 @@
         </el-select>
       </div>
 
+      <!-- 当前模型信息 -->
+      <div v-if="selectedScene && currentModel" class="control-section model-info-section">
+        <label>当前模型</label>
+        <div class="model-info-box">
+          <div class="model-info-row">
+            <span class="model-label">模型</span>
+            <span class="model-value">{{ currentModel.model_name }}</span>
+          </div>
+          <div class="model-info-row">
+            <span class="model-label">版本</span>
+            <span class="model-value">{{ currentModel.version }}</span>
+          </div>
+          <div class="model-info-row" v-if="currentModel.map50 !== null && currentModel.map50 !== undefined">
+            <span class="model-label">mAP50</span>
+            <span class="model-value">{{ (currentModel.map50 * 100).toFixed(1) }}%</span>
+          </div>
+          <div class="model-info-row" v-if="currentModel.map50_95 !== null && currentModel.map50_95 !== undefined">
+            <span class="model-label">mAP50:95</span>
+            <span class="model-value">{{ (currentModel.map50_95 * 100).toFixed(1) }}%</span>
+          </div>
+        </div>
+      </div>
+
       <!-- 检测模式 -->
       <div class="control-section">
         <label>检测模式</label>
@@ -183,10 +206,12 @@ import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { UploadFilled, Aim, VideoCamera } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getScenesApi, detectSingleApi, detectBatchApi, detectVideoApi } from '@/api/detection'
+import { getModelListApi } from '@/api/training'
 
 // 场景列表
 const scenes = ref([])
 const selectedScene = ref(null)
+const currentModel = ref(null)
 const detectMode = ref('single')
 const confThreshold = ref(0.25)
 const iouThreshold = ref(0.45)
@@ -219,9 +244,31 @@ async function loadScenes() {
     scenes.value = res.data || []
     if (scenes.value.length > 0) {
       selectedScene.value = scenes.value[0].id
+      await loadCurrentModel()
     }
   } catch (error) {
     console.error('加载场景失败:', error)
+  }
+}
+
+// 加载当前场景的默认模型信息
+async function loadCurrentModel() {
+  if (!selectedScene.value) {
+    currentModel.value = null
+    return
+  }
+  try {
+    const res = await getModelListApi({
+      scene_id: selectedScene.value,
+      status: 'active',
+      page: 1,
+      page_size: 50
+    })
+    const items = res.data?.items || []
+    currentModel.value = items.find(m => m.is_default) || items[0] || null
+  } catch (error) {
+    console.error('加载模型信息失败:', error)
+    currentModel.value = null
   }
 }
 
@@ -229,6 +276,7 @@ async function loadScenes() {
 function onSceneChange() {
   detectionResult.value = null
   fileList.value = []
+  loadCurrentModel()
 }
 
 // 文件变更
@@ -698,6 +746,32 @@ onUnmounted(() => {
       margin: 0 0 $spacing-md;
       font-size: 16px;
       color: $text-primary;
+    }
+  }
+}
+
+.model-info-section {
+  .model-info-box {
+    background: #f5f7fa;
+    border-radius: $border-radius-md;
+    padding: $spacing-sm $spacing-md;
+
+    .model-info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2px 0;
+
+      .model-label {
+        font-size: 12px;
+        color: $text-secondary;
+      }
+
+      .model-value {
+        font-size: 13px;
+        color: $text-primary;
+        font-weight: 500;
+      }
     }
   }
 }

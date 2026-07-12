@@ -172,3 +172,73 @@ export function convertLabelmeToYoloApi(data) {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
 }
+
+// ══════════════════════════════════════════════════════════════
+// 模型版本管理
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * 获取模型版本列表（分页）
+ * @param {Object} params - { scene_id, status, page, page_size }
+ */
+export function getModelListApi(params) {
+  return request.get('/training/models', { params })
+}
+
+/**
+ * 获取模型版本详情
+ * @param {number} modelId
+ */
+export function getModelDetailApi(modelId) {
+  return request.get(`/training/models/${modelId}`)
+}
+
+/**
+ * 更新模型版本信息
+ * @param {number} modelId
+ * @param {Object} data - { version, model_name, description, status, is_default }
+ */
+export function updateModelApi(modelId, data) {
+  const formData = new FormData()
+  if (data.version !== undefined) formData.append('version', data.version)
+  if (data.model_name !== undefined) formData.append('model_name', data.model_name)
+  if (data.description !== undefined) formData.append('description', data.description)
+  if (data.status !== undefined) formData.append('status', data.status)
+  if (data.is_default !== undefined) formData.append('is_default', data.is_default)
+  return request.put(`/training/models/${modelId}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}
+
+/**
+ * 删除模型版本
+ * @param {number} modelId
+ * @param {boolean} hardDelete - true=硬删除（删文件+记录），false=软删除
+ */
+export function deleteModelApi(modelId, hardDelete = false) {
+  const formData = new FormData()
+  formData.append('hard_delete', hardDelete)
+  return request.delete(`/training/models/${modelId}`, {
+    data: formData,
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}
+
+/**
+ * 设置模型为场景默认模型
+ * @param {number} modelId
+ */
+export function setDefaultModelApi(modelId) {
+  return request.put(`/training/models/${modelId}/set-default`)
+}
+
+/**
+ * 下载模型文件
+ * @param {number} modelId
+ * @returns {Promise<Blob>} 模型文件 Blob
+ */
+export function downloadModelApi(modelId) {
+  return request.get(`/training/models/${modelId}/download`, {
+    responseType: 'blob'
+  })
+}

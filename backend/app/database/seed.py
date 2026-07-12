@@ -97,6 +97,16 @@ DEFAULT_SCENES = [
             "nutrient-deficiency": "营养缺乏",
         },
     },
+    {
+        "name": "traffic_light",
+        "display_name": "交通灯检测",
+        "description": "车载影像交通灯状态识别（红/黄/绿/未亮灯）",
+        "category": "traffic",
+        "class_names": ["Red", "Yellow", "Green", "Off"],
+        "class_names_cn": {
+            "Red": "红灯", "Yellow": "黄灯", "Green": "绿灯", "Off": "未亮灯",
+        },
+    },
 ]
 
 

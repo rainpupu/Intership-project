@@ -147,6 +147,115 @@
         <el-icon :size="64"><Cpu /></el-icon>
         <p>选择任务查看详情</p>
       </div>
+
+      <!-- ════════════════════════════════════════════════════ -->
+      <!-- 模型版本管理 -->
+      <!-- ════════════════════════════════════════════════════ -->
+      <div class="model-card">
+        <div class="card-header">
+          <h3>模型版本管理</h3>
+          <div class="model-actions">
+            <el-select
+              v-model="modelSceneFilter"
+              placeholder="全部场景"
+              size="small"
+              clearable
+              @change="loadModels"
+              style="width: 140px; margin-right: 8px;"
+            >
+              <el-option
+                v-for="s in scenes"
+                :key="s.id"
+                :label="s.display_name"
+                :value="s.id"
+              />
+            </el-select>
+            <el-button size="small" @click="loadModels">
+              <el-icon><Refresh /></el-icon>刷新
+            </el-button>
+          </div>
+        </div>
+
+        <el-table
+          :data="models"
+          stripe
+          max-height="360"
+          v-loading="loadingModels"
+          empty-text="暂无模型，请上传训练好的 .pt 文件"
+        >
+          <el-table-column label="模型名称" min-width="140">
+            <template #default="{ row }">
+              <span class="model-name">{{ row.model_name }}</span>
+              <el-tag v-if="row.is_default" type="success" size="small" effect="dark" style="margin-left: 4px;">默认</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="version" label="版本" width="80" />
+          <el-table-column label="场景" width="100">
+            <template #default="{ row }">
+              {{ getSceneName(row.scene_id) }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="map50" label="mAP50" width="80">
+            <template #default="{ row }">
+              {{ row.map50 !== null && row.map50 !== undefined ? (row.map50 * 100).toFixed(1) + '%' : '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="status" label="状态" width="70">
+            <template #default="{ row }">
+              <el-tag :type="row.status === 'active' ? 'success' : 'info'" size="small">
+                {{ row.status === 'active' ? '正常' : row.status }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="创建时间" width="150">
+            <template #default="{ row }">
+              {{ formatTime(row.created_at) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="200" fixed="right">
+            <template #default="{ row }">
+              <el-button
+                v-if="!row.is_default"
+                type="primary"
+                size="small"
+                text
+                @click="handleSetDefault(row)"
+                :disabled="row.status !== 'active'"
+              >
+                设为默认
+              </el-button>
+              <el-button
+                type="success"
+                size="small"
+                text
+                @click="handleDownload(row)"
+              >
+                下载
+              </el-button>
+              <el-button
+                type="danger"
+                size="small"
+                text
+                @click="handleDelete(row)"
+              >
+                删除
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <!-- 分页 -->
+        <div v-if="modelTotal > 0" class="pagination-wrapper">
+          <el-pagination
+            v-model:current-page="modelPage"
+            :page-size="modelPageSize"
+            :total="modelTotal"
+            layout="total, prev, pager, next"
+            small
+            @current-change="loadModels"
+          />
+        </div>
+      </div>
     </div>
 
     <!-- 创建任务对话框 -->
@@ -269,7 +378,11 @@ import {
   pauseTrainingApi,
   cancelTrainingApi,
   getTrainingMetricsApi,
-  uploadModelApi
+  uploadModelApi,
+  getModelListApi,
+  deleteModelApi,
+  setDefaultModelApi,
+  downloadModelApi
 } from '@/api/training'
 import { getScenesApi } from '@/api/detection'
 
@@ -306,6 +419,14 @@ const uploadForm = ref({
   description: '',
   is_default: true
 })
+
+// 模型管理
+const models = ref([])
+const loadingModels = ref(false)
+const modelSceneFilter = ref(null)
+const modelPage = ref(1)
+const modelPageSize = ref(20)
+const modelTotal = ref(0)
 
 // 训练指标
 const metrics = ref([])
@@ -419,7 +540,7 @@ async function uploadModel() {
     ElMessage.warning('请填写必填项')
     return
   }
-  
+
   uploading.value = true
   try {
     const res = await uploadModelApi(uploadForm.value)
@@ -435,10 +556,100 @@ async function uploadModel() {
       description: '',
       is_default: true
     }
+    // 刷新模型列表
+    loadModels()
   } catch (error) {
     ElMessage.error('上传模型失败')
   } finally {
     uploading.value = false
+  }
+}
+
+// ── 模型管理 ──────────────────────────────────────────────
+
+// 加载模型列表
+async function loadModels() {
+  loadingModels.value = true
+  try {
+    const params = {
+      page: modelPage.value,
+      page_size: modelPageSize.value
+    }
+    if (modelSceneFilter.value) {
+      params.scene_id = modelSceneFilter.value
+    }
+    const res = await getModelListApi(params)
+    models.value = res.data?.items || []
+    modelTotal.value = res.data?.total || 0
+  } catch (error) {
+    console.error('加载模型列表失败:', error)
+    ElMessage.error('加载模型列表失败')
+  } finally {
+    loadingModels.value = false
+  }
+}
+
+// 获取场景显示名称
+function getSceneName(sceneId) {
+  const scene = scenes.value.find(s => s.id === sceneId)
+  return scene ? scene.display_name : `场景 #${sceneId}`
+}
+
+// 设为默认模型
+async function handleSetDefault(model) {
+  try {
+    await ElMessageBox.confirm(`将 "${model.model_name} v${model.version}" 设为场景默认模型？`, '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'info'
+    })
+    await setDefaultModelApi(model.id)
+    ElMessage.success('默认模型设置成功')
+    loadModels()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('设置默认模型失败')
+    }
+  }
+}
+
+// 删除模型
+async function handleDelete(model) {
+  try {
+    await ElMessageBox.confirm(
+      `确定删除模型 "${model.model_name} v${model.version}"？${model.is_default ? '（该模型为默认模型，删除后需重新设置）' : ''}`,
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    await deleteModelApi(model.id, false)
+    ElMessage.success('模型已删除')
+    loadModels()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除模型失败')
+    }
+  }
+}
+
+// 下载模型文件
+async function handleDownload(model) {
+  try {
+    const blob = await downloadModelApi(model.id)
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${model.model_name}_${model.version}.pt`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('模型下载已开始')
+  } catch (error) {
+    ElMessage.error('下载模型失败')
   }
 }
 
@@ -471,17 +682,19 @@ function renderCharts() {
     lossChart = echarts.init(lossChartRef.value)
     
     const epochs = metrics.value.map(m => m.epoch)
-    const trainLoss = metrics.value.map(m => m.train_loss)
-    const valLoss = metrics.value.map(m => m.val_loss)
-    
+    const boxLoss = metrics.value.map(m => m.box_loss)
+    const clsLoss = metrics.value.map(m => m.cls_loss)
+    const dflLoss = metrics.value.map(m => m.dfl_loss)
+
     lossChart.setOption({
       tooltip: { trigger: 'axis' },
-      legend: { data: ['训练损失', '验证损失'] },
+      legend: { data: ['边界框损失', '分类损失', 'DFL 损失'] },
       xAxis: { type: 'category', data: epochs, name: 'Epoch' },
       yAxis: { type: 'value', name: 'Loss' },
       series: [
-        { name: '训练损失', type: 'line', data: trainLoss, smooth: true },
-        { name: '验证损失', type: 'line', data: valLoss, smooth: true }
+        { name: '边界框损失', type: 'line', data: boxLoss, smooth: true },
+        { name: '分类损失', type: 'line', data: clsLoss, smooth: true },
+        { name: 'DFL 损失', type: 'line', data: dflLoss, smooth: true }
       ]
     })
   }
@@ -492,8 +705,8 @@ function renderCharts() {
     mapChart = echarts.init(mapChartRef.value)
     
     const epochs = metrics.value.map(m => m.epoch)
-    const map50 = metrics.value.map(m => m.mAP50)
-    const map5095 = metrics.value.map(m => m.mAP50_95)
+    const map50 = metrics.value.map(m => m.map50)
+    const map5095 = metrics.value.map(m => m.map50_95)
     
     mapChart.setOption({
       tooltip: { trigger: 'axis' },
@@ -561,6 +774,7 @@ function handleResize() {
 onMounted(() => {
   loadTasks()
   loadScenes()
+  loadModels()
   startPolling()
   window.addEventListener('resize', handleResize)
 })
@@ -764,6 +978,42 @@ onUnmounted(() => {
   p {
     margin: $spacing-md 0 0;
     font-size: 16px;
+  }
+}
+
+.model-card {
+  background: #fff;
+  border-radius: $border-radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-lg;
+
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      color: $text-primary;
+    }
+
+    .model-actions {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  .model-name {
+    font-weight: 500;
+    color: $text-primary;
+  }
+
+  .pagination-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: $spacing-md;
   }
 }
 
