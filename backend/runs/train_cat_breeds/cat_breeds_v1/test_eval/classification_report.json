@@ -1,0 +1,68 @@
+{
+  "total_images": 231,
+  "correct": 218,
+  "accuracy": 0.9437,
+  "avg_confidence": 0.9037,
+  "per_breed": {
+    "Abyssinian": {
+      "correct": 19,
+      "total": 21,
+      "accuracy": 90.48
+    },
+    "Bengal": {
+      "correct": 19,
+      "total": 21,
+      "accuracy": 90.48
+    },
+    "Birman": {
+      "correct": 23,
+      "total": 26,
+      "accuracy": 88.46
+    },
+    "Bombay": {
+      "correct": 21,
+      "total": 21,
+      "accuracy": 100.0
+    },
+    "British_Shorthair": {
+      "correct": 11,
+      "total": 11,
+      "accuracy": 100.0
+    },
+    "Egyptian_Mau": {
+      "correct": 13,
+      "total": 13,
+      "accuracy": 100.0
+    },
+    "Maine_Coon": {
+      "correct": 18,
+      "total": 18,
+      "accuracy": 100.0
+    },
+    "Persian": {
+      "correct": 19,
+      "total": 20,
+      "accuracy": 95.0
+    },
+    "Ragdoll": {
+      "correct": 15,
+      "total": 18,
+      "accuracy": 83.33
+    },
+    "Russian_Blue": {
+      "correct": 26,
+      "total": 27,
+      "accuracy": 96.3
+    },
+    "Siamese": {
+      "correct": 19,
+      "total": 20,
+      "accuracy": 95.0
+    },
+    "Sphynx": {
+      "correct": 15,
+      "total": 15,
+      "accuracy": 100.0
+    }
+  }
+}

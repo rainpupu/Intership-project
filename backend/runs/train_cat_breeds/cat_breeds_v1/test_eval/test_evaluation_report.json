@@ -1,0 +1,166 @@
+{
+  "evaluation_time": "2026-07-15 15:39",
+  "model": "runs/train_cat_breeds/cat_breeds_v1/weights/best.pt",
+  "test_set": {
+    "total_images": 1443,
+    "labeled_images": 231
+  },
+  "classification_accuracy": {
+    "correct": 218,
+    "total": 231,
+    "accuracy": "94.37%",
+    "avg_confidence": 0.9037
+  },
+  "per_breed_accuracy": {
+    "Abyssinian": {
+      "correct": 19,
+      "total": 21,
+      "accuracy": "90.5%"
+    },
+    "Bengal": {
+      "correct": 19,
+      "total": 21,
+      "accuracy": "90.5%"
+    },
+    "Birman": {
+      "correct": 23,
+      "total": 26,
+      "accuracy": "88.5%"
+    },
+    "Bombay": {
+      "correct": 21,
+      "total": 21,
+      "accuracy": "100.0%"
+    },
+    "British_Shorthair": {
+      "correct": 11,
+      "total": 11,
+      "accuracy": "100.0%"
+    },
+    "Egyptian_Mau": {
+      "correct": 13,
+      "total": 13,
+      "accuracy": "100.0%"
+    },
+    "Maine_Coon": {
+      "correct": 18,
+      "total": 18,
+      "accuracy": "100.0%"
+    },
+    "Persian": {
+      "correct": 19,
+      "total": 20,
+      "accuracy": "95.0%"
+    },
+    "Ragdoll": {
+      "correct": 15,
+      "total": 18,
+      "accuracy": "83.3%"
+    },
+    "Russian_Blue": {
+      "correct": 26,
+      "total": 27,
+      "accuracy": "96.3%"
+    },
+    "Siamese": {
+      "correct": 19,
+      "total": 20,
+      "accuracy": "95.0%"
+    },
+    "Sphynx": {
+      "correct": 15,
+      "total": 15,
+      "accuracy": "100.0%"
+    }
+  },
+  "wrong_predictions": [
+    {
+      "image": "Abyssinian_221",
+      "ground_truth": "Abyssinian",
+      "predicted": "Egyptian_Mau",
+      "confidence": 0.929
+    },
+    {
+      "image": "Abyssinian_8",
+      "ground_truth": "Abyssinian",
+      "predicted": "Egyptian_Mau",
+      "confidence": 0.643
+    },
+    {
+      "image": "Bengal_133",
+      "ground_truth": "Bengal",
+      "predicted": "British_Shorthair",
+      "confidence": 0.553
+    },
+    {
+      "image": "Bengal_180",
+      "ground_truth": "Bengal",
+      "predicted": "Egyptian_Mau",
+      "confidence": 0.881
+    },
+    {
+      "image": "Birman_133",
+      "ground_truth": "Birman",
+      "predicted": "Siamese",
+      "confidence": 0.661
+    },
+    {
+      "image": "Birman_94",
+      "ground_truth": "Birman",
+      "predicted": "Siamese",
+      "confidence": 0.865
+    },
+    {
+      "image": "Birman_98",
+      "ground_truth": "Birman",
+      "predicted": "Ragdoll",
+      "confidence": 0.801
+    },
+    {
+      "image": "Persian_89",
+      "ground_truth": "Persian",
+      "predicted": "Ragdoll",
+      "confidence": 0.791
+    },
+    {
+      "image": "Ragdoll_170",
+      "ground_truth": "Ragdoll",
+      "predicted": "Birman",
+      "confidence": 0.665
+    },
+    {
+      "image": "Ragdoll_58",
+      "ground_truth": "Ragdoll",
+      "predicted": "Persian",
+      "confidence": 0.389
+    },
+    {
+      "image": "Ragdoll_93",
+      "ground_truth": "Ragdoll",
+      "predicted": "Birman",
+      "confidence": 0.918
+    },
+    {
+      "image": "Russian_Blue_237",
+      "ground_truth": "Russian_Blue",
+      "predicted": "British_Shorthair",
+      "confidence": 0.879
+    },
+    {
+      "image": "Siamese_24",
+      "ground_truth": "Siamese",
+      "predicted": "Russian_Blue",
+      "confidence": 0.446
+    }
+  ],
+  "val_metrics_reference": {
+    "mAP50": 0.97976,
+    "mAP50_95": 0.86131
+  },
+  "output_files": {
+    "classification_report": "classification_report.json",
+    "per_breed_accuracy_chart": "per_breed_accuracy.png",
+    "label_verification": "label_verification.png",
+    "prediction_grid": "prediction_grid.png"
+  }
+}
