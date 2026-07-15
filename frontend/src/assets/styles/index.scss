@@ -1,0 +1,74 @@
+@use './variables' as *;
+@use './mixins' as *;
+@use './reset';
+
+:root {
+  --color-bg: #{$color-bg};
+  --color-card: #{$color-card};
+  --color-primary: #{$color-primary};
+  --color-primary-light: #{$color-primary-light};
+  --color-pink: #{$color-pink};
+  --color-yellow: #{$color-yellow};
+  --color-blue: #{$color-blue};
+  --color-text: #{$color-text};
+  --color-text-secondary: #{$color-text-secondary};
+}
+
+.page-title {
+  margin: 0;
+  color: $color-text;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.page-subtitle {
+  margin: 10px 0 0;
+  color: $color-text-secondary;
+  line-height: 1.7;
+}
+
+.section-title {
+  margin: 0 0 18px;
+  color: $color-text;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.soft-card {
+  @include card-shell;
+}
+
+.glass-card {
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.66);
+  box-shadow: $shadow-soft;
+  backdrop-filter: blur(18px);
+}
+
+.paw-dot {
+  position: relative;
+
+  &::after {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 34px;
+    height: 34px;
+    color: rgba(251, 146, 60, 0.22);
+    content: '🐾';
+    font-size: 26px;
+    transform: rotate(18deg);
+  }
+}
+
+.el-button--primary {
+  --el-button-bg-color: #{$color-primary};
+  --el-button-border-color: #{$color-primary};
+  --el-button-hover-bg-color: #{$color-primary-dark};
+  --el-button-hover-border-color: #{$color-primary-dark};
+}
+
+.el-tag {
+  border-radius: 999px;
+}

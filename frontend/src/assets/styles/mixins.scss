@@ -1,0 +1,28 @@
+@use './variables' as *;
+
+@mixin card-shell($radius: $radius-md) {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  box-shadow: $shadow-soft;
+}
+
+@mixin hover-lift {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover {
+    border-color: rgba(251, 146, 60, 0.35);
+    box-shadow: $shadow-hover;
+    transform: translateY(-4px);
+  }
+}
+
+@mixin page-bg {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(254, 215, 170, 0.62), transparent 28%),
+    radial-gradient(circle at 85% 4%, rgba(251, 207, 232, 0.36), transparent 26%),
+    linear-gradient(180deg, #fff7ed 0%, #fffaf3 58%, #fff7ed 100%);
+}
