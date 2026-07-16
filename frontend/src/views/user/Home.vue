@@ -24,10 +24,10 @@
     </section>
 
     <section class="stats-grid">
-      <StatisticCard label="已入库猫咪" :value="stats.totalCats" hint="持续更新数字档案" icon="🐾" />
-      <StatisticCard label="待领养猫咪" :value="stats.adoptionOpen" hint="等待新的家" icon="💛" />
-      <StatisticCard label="今日识别次数" :value="stats.todayRecognitions" hint="来自校园观测点" icon="📷" />
-      <StatisticCard label="重点关注猫咪" :value="stats.focusCats" hint="需要健康或行为复查" icon="🩺" />
+      <StatisticCard label="已入库猫咪" :value="stats.totalCats" hint="持续更新数字档案" icon="🐾" to="/cats" />
+      <StatisticCard label="待领养猫咪" :value="stats.adoptionOpen" hint="等待新的家" icon="💛" :to="{ path: '/cats', query: { filter: '待领养' } }" />
+      <StatisticCard label="今日识别次数" :value="stats.todayRecognitions" hint="来自校园观测点" icon="📷" to="/recognition" />
+      <StatisticCard label="重点关注猫咪" :value="stats.focusCats" hint="需要健康或行为复查" icon="🩺" :to="{ path: '/cats', query: { filter: '重点关注' } }" />
     </section>
 
     <section class="content-grid">
