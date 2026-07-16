@@ -22,7 +22,6 @@ dist/
 node_modules/
 frontend/dist/
 frontend/.nuxt/
-*.tsbuildinfo
 
 # OS
 .DS_Store
@@ -47,4 +46,8 @@ cookies.txt
 backend/data
 backend/logs
 backend/uv.lock
+backend/static/
+backend/test_cat.jpg
+backend/requirements.txt
+backend/models/
 docs/
