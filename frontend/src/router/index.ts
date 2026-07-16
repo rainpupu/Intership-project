@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { ElMessage } from 'element-plus';
 import { routes } from '@/router/routes';
+import { useAppStore } from '@/stores/app';
 import { useUserStore } from '@/stores/user';
 import type { UserRole } from '@/types/user';
 
@@ -13,10 +15,19 @@ const router = createRouter({
   },
 });
 
-router.beforeEach((to) => {
+router.beforeEach((to, from) => {
+  const appStore = useAppStore();
   const userStore = useUserStore();
   const requiresAuth = Boolean(to.matched.some((record) => record.meta.requiresAuth));
   const roleRules = to.matched.flatMap((record) => (record.meta.roles || []) as UserRole[]);
+
+  if (to.name === 'UserProfile' && from.fullPath !== to.fullPath) {
+    appStore.setProfileReturnPath(from.fullPath || '/');
+  }
+
+  if ((to.name === 'Login' || to.name === 'Register') && userStore.isLoggedIn) {
+    return userStore.isAdmin ? '/admin/dashboard' : '/recognition';
+  }
 
   if (!requiresAuth) {
     return true;
@@ -32,6 +43,7 @@ router.beforeEach((to) => {
   }
 
   if (roleRules.length > 0 && userStore.profile && !roleRules.includes(userStore.profile.role)) {
+    ElMessage.warning('当前账号无权访问该页面');
     return userStore.isAdmin ? '/admin/dashboard' : '/recognition';
   }
 

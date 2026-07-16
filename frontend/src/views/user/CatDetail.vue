@@ -1,6 +1,8 @@
 <template>
   <PageContainer>
-    <template v-if="cat">
+    <DataState v-if="loading" type="loading" :rows="8" />
+    <DataState v-else-if="errorMessage" type="error" :description="errorMessage" action-text="重新加载" @retry="fetchDetail" />
+    <template v-else-if="cat">
       <RouterLink to="/cats" class="back-link">← 返回猫咪图鉴</RouterLink>
 
       <section class="detail-grid">
@@ -87,6 +89,7 @@ import { useRoute } from 'vue-router';
 import { getCatDetail, getCatObservations } from '@/api/cat';
 import CatStatusCard from '@/components/cat/CatStatusCard.vue';
 import CatTimeline from '@/components/cat/CatTimeline.vue';
+import DataState from '@/components/common/DataState.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import PageContainer from '@/components/common/PageContainer.vue';
 import type { Cat, Observation } from '@/types/cat';
@@ -96,13 +99,25 @@ const route = useRoute();
 const cat = ref<Cat>();
 const observations = ref<Observation[]>([]);
 const activeImage = ref('');
+const loading = ref(false);
+const errorMessage = ref('');
 
-onMounted(async () => {
+async function fetchDetail() {
   const id = String(route.params.id);
-  cat.value = await getCatDetail(id);
-  observations.value = await getCatObservations(id);
-  activeImage.value = cat.value?.coverImage || '';
-});
+  loading.value = true;
+  errorMessage.value = '';
+  try {
+    cat.value = await getCatDetail(id);
+    observations.value = await getCatObservations(id);
+    activeImage.value = cat.value?.coverImage || '';
+  } catch {
+    errorMessage.value = '猫咪详情加载失败，请稍后重试。';
+  } finally {
+    loading.value = false;
+  }
+}
+
+onMounted(fetchDetail);
 </script>
 
 <style scoped lang="scss">

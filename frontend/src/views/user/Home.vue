@@ -37,15 +37,6 @@
           <CatCard v-for="cat in recommendedCats" :key="cat.id" :cat="cat" />
         </div>
       </div>
-
-      <aside class="assistant-entry glass-card">
-        <span>🤖</span>
-        <h2>AI 助手入口</h2>
-        <p>根据猫咪性格、健康状态和领养条件，为你推荐更合适的领养选择。</p>
-        <RouterLink to="/chat">
-          <el-button type="primary" round>开始咨询</el-button>
-        </RouterLink>
-      </aside>
     </section>
   </PageContainer>
 </template>
@@ -160,10 +151,7 @@ h1 span {
 }
 
 .content-grid {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 24px;
-  align-items: start;
+  display: block;
 }
 
 .cat-row {
@@ -172,28 +160,8 @@ h1 span {
   gap: 18px;
 }
 
-.assistant-entry {
-  padding: 26px;
-  border-radius: 24px;
-}
-
-.assistant-entry span {
-  font-size: 42px;
-}
-
-.assistant-entry h2 {
-  margin: 12px 0 10px;
-  color: $color-text;
-}
-
-.assistant-entry p {
-  color: $color-text-secondary;
-  line-height: 1.7;
-}
-
 @media (max-width: 980px) {
-  .hero,
-  .content-grid {
+  .hero {
     grid-template-columns: 1fr;
   }
 

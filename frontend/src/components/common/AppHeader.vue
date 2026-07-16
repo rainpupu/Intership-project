@@ -32,6 +32,7 @@
         </button>
         <template #dropdown>
           <el-dropdown-menu>
+            <el-dropdown-item command="profile">个人信息</el-dropdown-item>
             <el-dropdown-item command="recognition">我的识别</el-dropdown-item>
             <el-dropdown-item v-if="userStore.isAdmin" command="admin">管理端</el-dropdown-item>
             <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
@@ -66,6 +67,11 @@ async function handleCommand(command: string) {
 
   if (command === 'admin') {
     await router.push('/admin/dashboard');
+    return;
+  }
+
+  if (command === 'profile') {
+    await router.push('/profile');
     return;
   }
 
@@ -144,6 +150,8 @@ async function handleCommand(command: string) {
 .header-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
   gap: 10px;
 }
 
@@ -183,7 +191,16 @@ async function handleCommand(command: string) {
   }
 
   .app-header {
+    align-items: flex-start;
+    flex-direction: column;
     padding: 0 18px;
+    padding-block: 14px;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
 }
 </style>

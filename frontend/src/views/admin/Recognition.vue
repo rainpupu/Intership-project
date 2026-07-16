@@ -60,7 +60,19 @@
           <p>管理员通过 `getRecognitionRecords({ scope: 'all' })` 查看所有用户上传记录。</p>
         </div>
       </div>
-      <el-table :data="records" row-key="id">
+      <DataState
+        v-if="recordsLoading"
+        type="loading"
+        :rows="4"
+      />
+      <DataState
+        v-else-if="recordsError"
+        type="error"
+        :description="recordsError"
+        action-text="重新加载"
+        @retry="fetchRecords"
+      />
+      <el-table v-else :data="records" row-key="id">
         <el-table-column label="图片" width="100">
           <template #default="{ row }">
             <img class="record-image" :src="row.image" :alt="row.catName" />
@@ -82,58 +94,59 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
-import { ElMessage, type UploadFile } from 'element-plus';
-import {
-  analyzeEncounter,
-  confirmExistingCat,
-  createNewCat,
-  getRecognitionCandidates,
-  getRecognitionRecords,
-} from '@/api/recognition';
+import { onMounted, ref } from 'vue';
+import { ElMessage } from 'element-plus';
+import { getRecognitionRecords } from '@/api/recognition';
 import CandidateCard from '@/components/recognition/CandidateCard.vue';
+import DataState from '@/components/common/DataState.vue';
 import DetectionPreview from '@/components/recognition/DetectionPreview.vue';
 import UploadPanel from '@/components/recognition/UploadPanel.vue';
-import type { RecognitionAnalysis, RecognitionCandidate, RecognitionRecord } from '@/types/recognition';
+import { useRecognitionFlow } from '@/composables/useRecognitionFlow';
+import type { RecognitionRecord } from '@/types/recognition';
 import { formatDateTime, formatPercent } from '@/utils/formatter';
 
-const activeStep = ref(1);
-const candidates = ref<RecognitionCandidate[]>([]);
 const records = ref<RecognitionRecord[]>([]);
-const analysis = reactive<RecognitionAnalysis>({
-  confidence: 0,
-  healthHints: [],
-  behaviorHints: [],
-  summary: '',
-});
-
-const topCandidate = computed(() => candidates.value[0]);
-
-function handleUploadChange(files: UploadFile[]) {
-  activeStep.value = files.length > 0 ? 2 : 1;
-}
+const recordsLoading = ref(false);
+const recordsError = ref('');
+const {
+  activeStep,
+  analysis,
+  candidates,
+  topCandidate,
+  confirmTopCandidate,
+  createNewCatProfile,
+  handleUploadChange,
+  loadRecognitionPreview,
+} = useRecognitionFlow();
 
 async function confirmExisting() {
-  if (!topCandidate.value) {
-    return;
+  const confirmed = await confirmTopCandidate();
+  if (confirmed) {
+    ElMessage.success('已确认匹配已有猫，等待保存记录接口接入。');
   }
-
-  await confirmExistingCat(topCandidate.value.catId);
-  activeStep.value = 4;
-  ElMessage.success('已确认匹配已有猫，等待保存记录接口接入。');
 }
 
 async function createNew() {
-  await createNewCat();
-  activeStep.value = 4;
+  await createNewCatProfile();
   ElMessage.success('已进入创建新猫档案流程占位。');
 }
 
 onMounted(async () => {
-  candidates.value = await getRecognitionCandidates();
-  records.value = await getRecognitionRecords({ scope: 'all' });
-  Object.assign(analysis, await analyzeEncounter());
+  await fetchRecords();
+  await loadRecognitionPreview();
 });
+
+async function fetchRecords() {
+  recordsLoading.value = true;
+  recordsError.value = '';
+  try {
+    records.value = await getRecognitionRecords({ scope: 'all' });
+  } catch {
+    recordsError.value = '全平台识别记录加载失败，请稍后重试。';
+  } finally {
+    recordsLoading.value = false;
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -163,6 +176,7 @@ onMounted(async () => {
 .panel,
 .records-card {
   padding: 20px;
+  overflow: hidden;
 }
 
 .candidate-list {

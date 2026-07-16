@@ -1,14 +1,15 @@
-import { mockCats, mockObservations } from '@/api/mock';
+import { mockResolve } from '@/api/request';
+import { mockCats, mockObservations } from '@/mock';
 import type { Cat, Observation } from '@/types/cat';
 
 export function getCatList(): Promise<Cat[]> {
-  return Promise.resolve(mockCats);
+  return mockResolve(mockCats);
 }
 
 export function getCatDetail(id: string): Promise<Cat | undefined> {
-  return Promise.resolve(mockCats.find((cat) => cat.id === id));
+  return mockResolve(mockCats.find((cat) => cat.id === id));
 }
 
 export function getCatObservations(id: string): Promise<Observation[]> {
-  return Promise.resolve(mockObservations.filter((item) => item.catId === id));
+  return mockResolve(mockObservations.filter((item) => item.catId === id));
 }

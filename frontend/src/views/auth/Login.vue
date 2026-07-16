@@ -8,13 +8,14 @@
         <div class="role-tips">
           <span>普通用户示例：user / 任意密码</span>
           <span>管理员示例：admin / 任意密码</span>
+          <span>总管理员示例：superadmin / 任意密码</span>
         </div>
       </div>
 
       <el-form ref="formRef" class="auth-card" :model="form" :rules="rules" label-position="top">
         <h2>登录</h2>
         <el-form-item label="账号" prop="username">
-          <el-input v-model="form.username" size="large" placeholder="输入 user 或 admin" />
+          <el-input v-model="form.username" size="large" placeholder="输入 user、admin 或 superadmin" />
         </el-form-item>
         <el-form-item label="密码" prop="password">
           <el-input v-model="form.password" size="large" type="password" show-password placeholder="请输入密码" />
@@ -62,9 +63,9 @@ async function handleLogin() {
 
   try {
     const profile = await userStore.login(form);
-    ElMessage.success(profile.role === 'admin' ? '管理员登录成功' : '用户登录成功');
+    ElMessage.success(profile.role === 'user' ? '用户登录成功' : '管理员登录成功');
     const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '';
-    await router.push(redirect || (profile.role === 'admin' ? '/admin/dashboard' : '/recognition'));
+    await router.push(redirect || (profile.role === 'user' ? '/recognition' : '/admin/dashboard'));
   } finally {
     loading.value = false;
   }

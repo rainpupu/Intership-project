@@ -15,7 +15,7 @@
             <h2 class="section-title">上传图片识别</h2>
             <p>当前不会真实上传文件，后续会替换为 FastAPI 文件上传接口。</p>
           </div>
-          <el-button type="primary" round :loading="analyzing" @click="handleAnalyze">开始识别</el-button>
+          <el-button type="primary" round :loading="analyzing" @click="analyzeSelectedImages">开始识别</el-button>
         </div>
         <UploadPanel @change="handleUploadChange" />
       </div>
@@ -38,7 +38,24 @@
           <p>这里通过 `getRecognitionRecords({ scope: 'mine', userId })` 获取，后端接入后按账号隔离数据。</p>
         </div>
       </div>
-      <el-table :data="records" row-key="id">
+      <DataState
+        v-if="recordsLoading"
+        type="loading"
+        :rows="4"
+      />
+      <DataState
+        v-else-if="recordsError"
+        type="error"
+        :description="recordsError"
+        action-text="重新加载"
+        @retry="fetchMineRecords"
+      />
+      <EmptyState
+        v-else-if="records.length === 0"
+        title="暂无识别记录"
+        description="上传猫咪图片并完成识别后，记录会显示在这里。"
+      />
+      <el-table v-else :data="records" row-key="id">
         <el-table-column label="识别图片" width="110">
           <template #default="{ row }">
             <img class="record-image" :src="row.image" :alt="row.catName" />
@@ -59,69 +76,51 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
-import { ElMessage, type UploadFile } from 'element-plus';
-import {
-  analyzeEncounter,
-  getRecognitionCandidates,
-  getRecognitionRecords,
-  uploadEncounterImages,
-} from '@/api/recognition';
+import { onMounted, ref } from 'vue';
+import { getRecognitionRecords } from '@/api/recognition';
 import PageContainer from '@/components/common/PageContainer.vue';
+import DataState from '@/components/common/DataState.vue';
+import EmptyState from '@/components/common/EmptyState.vue';
 import CandidateCard from '@/components/recognition/CandidateCard.vue';
 import DetectionPreview from '@/components/recognition/DetectionPreview.vue';
 import UploadPanel from '@/components/recognition/UploadPanel.vue';
+import { useRecognitionFlow } from '@/composables/useRecognitionFlow';
 import { useUserStore } from '@/stores/user';
-import type { RecognitionAnalysis, RecognitionCandidate, RecognitionRecord } from '@/types/recognition';
+import type { RecognitionRecord } from '@/types/recognition';
 import { formatDateTime, formatPercent } from '@/utils/formatter';
 
 const userStore = useUserStore();
-const selectedFiles = ref<UploadFile[]>([]);
-const analyzing = ref(false);
-const candidates = ref<RecognitionCandidate[]>([]);
 const records = ref<RecognitionRecord[]>([]);
-const analysis = reactive<RecognitionAnalysis>({
-  confidence: 0,
-  healthHints: [],
-  behaviorHints: [],
-  summary: '',
-});
-
-const topCandidate = computed(() => candidates.value[0]);
-
-function handleUploadChange(files: UploadFile[]) {
-  selectedFiles.value = files;
-}
-
-async function handleAnalyze() {
-  if (selectedFiles.value.length === 0) {
-    ElMessage.warning('请先选择至少一张图片');
-    return;
-  }
-
-  analyzing.value = true;
-  try {
-    const rawFiles = selectedFiles.value.map((item) => item.raw).filter(Boolean) as File[];
-    await uploadEncounterImages(rawFiles);
-    candidates.value = await getRecognitionCandidates();
-    Object.assign(analysis, await analyzeEncounter());
-    ElMessage.success('识别完成，当前为 Mock 结果');
-  } finally {
-    analyzing.value = false;
-  }
-}
+const recordsLoading = ref(false);
+const recordsError = ref('');
+const {
+  analysis,
+  analyzing,
+  candidates,
+  topCandidate,
+  analyzeSelectedImages,
+  handleUploadChange,
+  loadRecognitionPreview,
+} = useRecognitionFlow();
 
 async function fetchMineRecords() {
-  records.value = await getRecognitionRecords({
-    scope: 'mine',
-    userId: userStore.profile?.id,
-  });
+  recordsLoading.value = true;
+  recordsError.value = '';
+  try {
+    records.value = await getRecognitionRecords({
+      scope: 'mine',
+      userId: userStore.profile?.id,
+    });
+  } catch {
+    recordsError.value = '个人识别记录加载失败，请稍后重试。';
+  } finally {
+    recordsLoading.value = false;
+  }
 }
 
 onMounted(async () => {
   await fetchMineRecords();
-  candidates.value = await getRecognitionCandidates();
-  Object.assign(analysis, await analyzeEncounter());
+  await loadRecognitionPreview();
 });
 </script>
 
@@ -147,6 +146,7 @@ onMounted(async () => {
 .panel,
 .records-card {
   padding: 20px;
+  overflow: hidden;
 }
 
 .panel-head {

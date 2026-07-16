@@ -72,3 +72,11 @@
 .el-tag {
   border-radius: 999px;
 }
+
+.el-table {
+  border-radius: 16px;
+}
+
+.el-table .cell {
+  word-break: break-word;
+}

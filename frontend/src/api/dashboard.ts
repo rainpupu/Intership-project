@@ -1,4 +1,5 @@
-import { mockCats, mockRecognitionRecords } from '@/api/mock';
+import { mockResolve } from '@/api/request';
+import { mockCats, mockRecognitionRecords } from '@/mock';
 import type { Cat } from '@/types/cat';
 import type { RecognitionRecord } from '@/types/recognition';
 
@@ -17,7 +18,7 @@ export interface DashboardOverview {
 }
 
 export function getDashboardOverview(): Promise<DashboardOverview> {
-  return Promise.resolve({
+  return mockResolve({
     stats: {
       totalCats: mockCats.length,
       todayRecognitions: 12,

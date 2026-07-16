@@ -1,3 +1,5 @@
+import { mockResolve } from '@/api/request';
+
 export interface AgentMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -10,7 +12,7 @@ export function sendAgentMessage(content: string): Promise<AgentMessage> {
     ? '目前狸花弟弟和奶盖需要重点关注，建议优先复查健康状态并补充近照。'
     : '我已根据当前 Mock 档案为你整理建议：优先关注性格亲人、健康良好、待领养的猫咪。';
 
-  return Promise.resolve({
+  return mockResolve({
     id: `assistant-${Date.now()}`,
     role: 'assistant',
     content: reply,

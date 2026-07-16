@@ -11,3 +11,9 @@ request.interceptors.response.use(
 );
 
 export default request;
+
+export function mockResolve<T>(data: T, delay = 120): Promise<T> {
+  return new Promise((resolve) => {
+    window.setTimeout(() => resolve(data), delay);
+  });
+}

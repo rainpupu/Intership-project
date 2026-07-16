@@ -14,7 +14,9 @@
       </el-radio-group>
     </section>
 
-    <div v-if="filteredCats.length" class="cat-grid">
+    <DataState v-if="loading" type="loading" :rows="8" />
+    <DataState v-else-if="errorMessage" type="error" :description="errorMessage" action-text="重新加载" @retry="fetchCats" />
+    <div v-else-if="filteredCats.length" class="cat-grid">
       <CatCard v-for="cat in filteredCats" :key="cat.id" :cat="cat" />
     </div>
     <EmptyState v-else title="暂无匹配猫咪" description="换一个筛选条件或搜索关键词试试。" />
@@ -25,6 +27,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { getCatList } from '@/api/cat';
 import CatCard from '@/components/cat/CatCard.vue';
+import DataState from '@/components/common/DataState.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import PageContainer from '@/components/common/PageContainer.vue';
 import type { Cat } from '@/types/cat';
@@ -33,6 +36,8 @@ const filters = ['全部', '待领养', '已领养', '重点关注', '幼猫', '
 const selectedFilter = ref('全部');
 const searchKeyword = ref('');
 const cats = ref<Cat[]>([]);
+const loading = ref(false);
+const errorMessage = ref('');
 
 const filteredCats = computed(() => {
   const keyword = searchKeyword.value.trim().toLowerCase();
@@ -53,9 +58,19 @@ const filteredCats = computed(() => {
   });
 });
 
-onMounted(async () => {
-  cats.value = await getCatList();
-});
+async function fetchCats() {
+  loading.value = true;
+  errorMessage.value = '';
+  try {
+    cats.value = await getCatList();
+  } catch {
+    errorMessage.value = '猫咪图鉴加载失败，请检查网络或稍后重试。';
+  } finally {
+    loading.value = false;
+  }
+}
+
+onMounted(fetchCats);
 </script>
 
 <style scoped lang="scss">

@@ -1,38 +1,39 @@
-import { mockAnalysis, mockCandidates, mockRecognitionRecords } from '@/api/mock';
+import { mockResolve } from '@/api/request';
+import { mockAnalysis, mockCandidates, mockRecognitionRecords } from '@/mock';
 import type { RecognitionAnalysis, RecognitionCandidate, RecognitionRecord } from '@/types/recognition';
 
 export function uploadEncounterImages(files: File[]): Promise<{ uploaded: number; taskId: string }> {
-  return Promise.resolve({
+  return mockResolve({
     uploaded: files.length,
     taskId: 'mock-recognition-task',
   });
 }
 
 export function analyzeEncounter(): Promise<RecognitionAnalysis> {
-  return Promise.resolve(mockAnalysis);
+  return mockResolve(mockAnalysis);
 }
 
 export function getRecognitionCandidates(): Promise<RecognitionCandidate[]> {
-  return Promise.resolve(mockCandidates);
+  return mockResolve(mockCandidates);
 }
 
 export function getRecognitionRecords(params?: { userId?: string; scope?: 'mine' | 'all' }): Promise<RecognitionRecord[]> {
   if (params?.scope === 'mine' && params.userId) {
-    return Promise.resolve(mockRecognitionRecords.filter((record) => record.userId === params.userId));
+    return mockResolve(mockRecognitionRecords.filter((record) => record.userId === params.userId));
   }
 
-  return Promise.resolve(mockRecognitionRecords);
+  return mockResolve(mockRecognitionRecords);
 }
 
 export function confirmExistingCat(catId: string): Promise<{ success: boolean; catId: string }> {
-  return Promise.resolve({
+  return mockResolve({
     success: true,
     catId,
   });
 }
 
 export function createNewCat(): Promise<{ success: boolean; catId: string }> {
-  return Promise.resolve({
+  return mockResolve({
     success: true,
     catId: 'new-cat-mock',
   });

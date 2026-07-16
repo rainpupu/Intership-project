@@ -7,6 +7,9 @@
       </div>
     </section>
 
+    <DataState v-if="loading" type="loading" :rows="8" />
+    <DataState v-else-if="errorMessage" type="error" :description="errorMessage" action-text="重新加载" @retry="fetchOverview" />
+    <template v-else>
     <section class="stats-grid">
       <StatisticCard label="猫咪总数" :value="overview.stats.totalCats" hint="已建立数字档案" icon="🐾" />
       <StatisticCard label="今日识别" :value="overview.stats.todayRecognitions" hint="来自上传任务" icon="📷" />
@@ -50,12 +53,14 @@
         </article>
       </div>
     </section>
+    </template>
   </main>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { getDashboardOverview, type DashboardOverview } from '@/api/dashboard';
+import DataState from '@/components/common/DataState.vue';
 import ChartCard from '@/components/dashboard/ChartCard.vue';
 import StatisticCard from '@/components/dashboard/StatisticCard.vue';
 import { formatDateTime, formatPercent } from '@/utils/formatter';
@@ -73,13 +78,25 @@ const overview = reactive<DashboardOverview>({
   focusCats: [],
   adoptionTrend: [],
 });
+const loading = ref(false);
+const errorMessage = ref('');
 
 const chartLabels = computed(() => overview.adoptionTrend.map((item) => item.date));
 const chartValues = computed(() => overview.adoptionTrend.map((item) => item.value));
 
-onMounted(async () => {
-  Object.assign(overview, await getDashboardOverview());
-});
+async function fetchOverview() {
+  loading.value = true;
+  errorMessage.value = '';
+  try {
+    Object.assign(overview, await getDashboardOverview());
+  } catch {
+    errorMessage.value = '管理端概览加载失败，请稍后重试。';
+  } finally {
+    loading.value = false;
+  }
+}
+
+onMounted(fetchOverview);
 </script>
 
 <style scoped lang="scss">

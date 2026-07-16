@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
-import { login, logout, register } from '@/api/auth';
-import type { LoginPayload, RegisterPayload, UserProfile } from '@/types/user';
+import { login, logout, register, updateUserProfile } from '@/api/auth';
+import type { LoginPayload, RegisterPayload, UpdateProfilePayload, UserProfile } from '@/types/user';
 import { getStorage, setStorage } from '@/utils/storage';
 
 interface UserState {
@@ -18,7 +18,8 @@ export const useUserStore = defineStore('user', {
   }),
   getters: {
     isLoggedIn: (state) => Boolean(state.token && state.profile),
-    isAdmin: (state) => state.profile?.role === 'admin',
+    isAdmin: (state) => state.profile?.role === 'admin' || state.profile?.role === 'super_admin',
+    isSuperAdmin: (state) => state.profile?.role === 'super_admin',
     isUser: (state) => state.profile?.role === 'user',
     displayName: (state) => state.profile?.nickname || '访客',
   },
@@ -38,6 +39,16 @@ export const useUserStore = defineStore('user', {
       const result = await register(payload);
       this.persistAuth(result);
       return result.profile;
+    },
+    async updateProfile(payload: UpdateProfilePayload) {
+      if (!this.profile) {
+        throw new Error('用户未登录');
+      }
+
+      const profile = await updateUserProfile(this.profile, payload);
+      this.profile = profile;
+      setStorage(AUTH_PROFILE_KEY, profile);
+      return profile;
     },
     async logout() {
       await logout();

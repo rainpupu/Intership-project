@@ -31,7 +31,17 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/user/UserRecognition.vue'),
         meta: {
           requiresAuth: true,
-          roles: ['user', 'admin'],
+          roles: ['user', 'admin', 'super_admin'],
+        },
+      },
+      {
+        path: 'profile',
+        name: 'UserProfile',
+        component: () => import('@/views/user/Profile.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['user', 'admin', 'super_admin'],
+          hideHeader: true,
         },
       },
       {
@@ -52,7 +62,7 @@ export const routes: RouteRecordRaw[] = [
     redirect: '/admin/dashboard',
     meta: {
       requiresAuth: true,
-      roles: ['admin'],
+      roles: ['admin', 'super_admin'],
     },
     children: [
       {
@@ -61,7 +71,7 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/admin/Dashboard.vue'),
         meta: {
           requiresAuth: true,
-          roles: ['admin'],
+          roles: ['admin', 'super_admin'],
         },
       },
       {
@@ -70,7 +80,7 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/admin/Recognition.vue'),
         meta: {
           requiresAuth: true,
-          roles: ['admin'],
+          roles: ['admin', 'super_admin'],
         },
       },
       {
@@ -79,7 +89,7 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/admin/CatManage.vue'),
         meta: {
           requiresAuth: true,
-          roles: ['admin'],
+          roles: ['admin', 'super_admin'],
         },
       },
     ],

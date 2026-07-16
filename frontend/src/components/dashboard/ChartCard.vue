@@ -13,7 +13,12 @@
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import * as echarts from 'echarts';
+import { LineChart } from 'echarts/charts';
+import { GridComponent, TooltipComponent } from 'echarts/components';
+import * as echarts from 'echarts/core';
+import { CanvasRenderer } from 'echarts/renderers';
+
+echarts.use([GridComponent, TooltipComponent, LineChart, CanvasRenderer]);
 
 const props = defineProps<{
   title: string;
@@ -23,7 +28,7 @@ const props = defineProps<{
 }>();
 
 const chartRef = ref<HTMLDivElement>();
-let chartInstance: echarts.ECharts | null = null;
+let chartInstance: echarts.EChartsType | null = null;
 
 function renderChart() {
   if (!chartRef.value) {
