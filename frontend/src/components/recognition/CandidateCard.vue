@@ -26,19 +26,21 @@ defineProps<{
 
 .candidate-card {
   display: grid;
-  grid-template-columns: 74px 1fr;
-  gap: 12px;
-  padding: 12px;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  padding: 14px 16px;
   border: 1px solid rgba(251, 146, 60, 0.18);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.78);
 }
 
 img {
-  width: 74px;
-  height: 74px;
+  width: 180px;
+  height: 124px;
   border-radius: 16px;
-  object-fit: cover;
+  object-fit: contain;
+  background: rgba(255, 247, 237, 0.82);
 }
 
 .title {
@@ -63,5 +65,18 @@ span {
   color: $color-primary-dark;
   font-size: 12px;
   font-weight: 700;
+}
+
+@media (max-width: 620px) {
+  .candidate-card {
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+  }
+
+  img {
+    width: 112px;
+    height: 92px;
+  }
 }
 </style>

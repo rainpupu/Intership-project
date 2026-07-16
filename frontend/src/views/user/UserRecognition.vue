@@ -13,7 +13,7 @@
         <div class="panel-head">
           <div>
             <h2 class="section-title">上传图片识别</h2>
-            <p>当前不会真实上传文件，后续会替换为 FastAPI 文件上传接口。</p>
+            <p>上传后调用本地 YOLO 模型识别。</p>
           </div>
           <el-button type="primary" round :loading="analyzing" @click="analyzeSelectedImages">开始识别</el-button>
         </div>
@@ -21,12 +21,16 @@
       </div>
 
       <div class="result-stack">
-        <DetectionPreview v-if="topCandidate" :image="topCandidate.image" :confidence="analysis.confidence" />
         <div class="soft-card panel">
           <h2 class="section-title">本次候选结果</h2>
-          <div class="candidate-list">
+          <div v-if="candidates.length" class="candidate-list">
             <CandidateCard v-for="candidate in candidates" :key="candidate.catId" :candidate="candidate" />
           </div>
+          <EmptyState
+            v-else
+            title="暂无候选结果"
+            description="上传图片并点击开始识别后，候选猫咪会显示在这里。"
+          />
         </div>
       </div>
     </section>
@@ -82,7 +86,6 @@ import PageContainer from '@/components/common/PageContainer.vue';
 import DataState from '@/components/common/DataState.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import CandidateCard from '@/components/recognition/CandidateCard.vue';
-import DetectionPreview from '@/components/recognition/DetectionPreview.vue';
 import UploadPanel from '@/components/recognition/UploadPanel.vue';
 import { useRecognitionFlow } from '@/composables/useRecognitionFlow';
 import { useUserStore } from '@/stores/user';
@@ -94,13 +97,10 @@ const records = ref<RecognitionRecord[]>([]);
 const recordsLoading = ref(false);
 const recordsError = ref('');
 const {
-  analysis,
   analyzing,
   candidates,
-  topCandidate,
   analyzeSelectedImages,
   handleUploadChange,
-  loadRecognitionPreview,
 } = useRecognitionFlow();
 
 async function fetchMineRecords() {
@@ -120,7 +120,6 @@ async function fetchMineRecords() {
 
 onMounted(async () => {
   await fetchMineRecords();
-  await loadRecognitionPreview();
 });
 </script>
 
@@ -137,7 +136,7 @@ onMounted(async () => {
 
 .recognition-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 410px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 22px;
   align-items: start;
   margin-bottom: 22px;

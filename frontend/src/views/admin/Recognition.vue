@@ -18,17 +18,26 @@
 
     <section class="recognition-grid">
       <div class="soft-card panel">
-        <h2 class="section-title">多图片上传</h2>
+        <div class="upload-head">
+          <div>
+            <h2 class="section-title">多图片上传</h2>
+            <p>上传后调用本地 YOLO 模型识别，当前不写入数据库。</p>
+          </div>
+          <el-button type="primary" round :loading="analyzing" @click="analyzeSelectedImages">开始识别</el-button>
+        </div>
         <UploadPanel @change="handleUploadChange" />
       </div>
 
-      <DetectionPreview v-if="topCandidate" :image="topCandidate.image" :confidence="analysis.confidence" />
-
       <div class="soft-card panel">
-        <h2 class="section-title">候选猫咪 Top 3</h2>
-        <div class="candidate-list">
+        <h2 class="section-title">最高置信度结果</h2>
+        <div v-if="candidates.length" class="candidate-list">
           <CandidateCard v-for="candidate in candidates" :key="candidate.catId" :candidate="candidate" />
         </div>
+        <EmptyState
+          v-else
+          title="暂无候选结果"
+          description="上传图片并点击开始识别后，候选猫咪会显示在这里。"
+        />
       </div>
 
       <div class="soft-card panel ai-report">
@@ -99,7 +108,7 @@ import { ElMessage } from 'element-plus';
 import { getRecognitionRecords } from '@/api/recognition';
 import CandidateCard from '@/components/recognition/CandidateCard.vue';
 import DataState from '@/components/common/DataState.vue';
-import DetectionPreview from '@/components/recognition/DetectionPreview.vue';
+import EmptyState from '@/components/common/EmptyState.vue';
 import UploadPanel from '@/components/recognition/UploadPanel.vue';
 import { useRecognitionFlow } from '@/composables/useRecognitionFlow';
 import type { RecognitionRecord } from '@/types/recognition';
@@ -111,12 +120,12 @@ const recordsError = ref('');
 const {
   activeStep,
   analysis,
+  analyzing,
   candidates,
-  topCandidate,
+  analyzeSelectedImages,
   confirmTopCandidate,
   createNewCatProfile,
   handleUploadChange,
-  loadRecognitionPreview,
 } = useRecognitionFlow();
 
 async function confirmExisting() {
@@ -133,7 +142,6 @@ async function createNew() {
 
 onMounted(async () => {
   await fetchRecords();
-  await loadRecognitionPreview();
 });
 
 async function fetchRecords() {
@@ -167,7 +175,7 @@ async function fetchRecords() {
 
 .recognition-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 0.9fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 22px;
   align-items: start;
   margin-bottom: 22px;
@@ -182,6 +190,20 @@ async function fetchRecords() {
 .candidate-list {
   display: grid;
   gap: 12px;
+}
+
+.upload-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.upload-head p {
+  margin: -8px 0 0;
+  color: $color-text-secondary;
+  line-height: 1.6;
 }
 
 .ai-report {
@@ -234,7 +256,6 @@ strong {
 }
 
 @media (max-width: 1100px) {
-  .recognition-grid,
   .hint-grid {
     grid-template-columns: 1fr;
   }

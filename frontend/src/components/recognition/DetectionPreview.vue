@@ -2,12 +2,13 @@
   <section class="preview">
     <div class="image-wrap">
       <img :src="image" alt="识别预览" />
-      <span class="box"></span>
-      <el-tag class="confidence" type="success">置信度 {{ confidenceText }}</el-tag>
     </div>
     <div class="caption">
-      <strong>AI 识别预览</strong>
-      <p>已检测到 1 只猫，系统正在比对历史档案与多角度参考图。</p>
+      <div class="caption-head">
+        <strong>AI 识别预览</strong>
+        <el-tag type="success" effect="light">置信度 {{ confidenceText }}</el-tag>
+      </div>
+      <p>展示 YOLO 检测结果缩略图，用于快速核对目标是否正确。</p>
     </div>
   </section>
 </template>
@@ -30,37 +31,38 @@ const confidenceText = computed(() => formatPercent(props.confidence));
 
 .preview {
   @include card-shell(22px);
-  overflow: hidden;
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
 }
 
 .image-wrap {
   position: relative;
-  aspect-ratio: 4 / 3;
-  background: $color-primary-light;
+  width: 116px;
+  height: 88px;
+  overflow: hidden;
+  border: 1px solid rgba(251, 146, 60, 0.16);
+  border-radius: 16px;
+  background: rgba(255, 247, 237, 0.82);
 }
 
 img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-}
-
-.box {
-  position: absolute;
-  inset: 22% 25% 17% 26%;
-  border: 3px solid #22c55e;
-  border-radius: 18px;
-  box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.08);
-}
-
-.confidence {
-  position: absolute;
-  top: 14px;
-  left: 14px;
+  object-fit: contain;
 }
 
 .caption {
-  padding: 16px;
+  min-width: 0;
+}
+
+.caption-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 strong {
@@ -71,5 +73,16 @@ p {
   margin: 8px 0 0;
   color: $color-text-secondary;
   line-height: 1.6;
+}
+
+@media (max-width: 620px) {
+  .preview {
+    grid-template-columns: 1fr;
+  }
+
+  .image-wrap {
+    width: 100%;
+    height: 150px;
+  }
 }
 </style>

@@ -2,9 +2,11 @@ export interface RecognitionCandidate {
   catId: string;
   name: string;
   image: string;
+  cropImage?: string;
   similarity: number;
   reason: string;
   status: string;
+  bbox?: number[];
 }
 
 export interface RecognitionAnalysis {
@@ -12,6 +14,14 @@ export interface RecognitionAnalysis {
   healthHints: string[];
   behaviorHints: string[];
   summary: string;
+}
+
+export interface RecognitionAnalyzeResponse {
+  candidates: RecognitionCandidate[];
+  analysis: RecognitionAnalysis;
+  uploadedImages: string[];
+  detectedCount: number;
+  elapsedMs: number;
 }
 
 export interface RecognitionRecord {

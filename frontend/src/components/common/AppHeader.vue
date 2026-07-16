@@ -6,7 +6,13 @@
     </RouterLink>
 
     <nav class="nav">
-      <RouterLink v-for="item in navItems" :key="item.path" :to="item.path" class="nav-link">
+      <RouterLink
+        v-for="item in navItems"
+        :key="item.path"
+        :to="item.path"
+        class="nav-link"
+        :class="{ 'is-active': isNavActive(item.path) }"
+      >
         {{ item.label }}
       </RouterLink>
     </nav>
@@ -45,9 +51,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 
+const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 
@@ -57,6 +64,14 @@ const navItems = computed(() => [
   { label: 'AI 助手', path: '/chat' },
   { label: '我的识别', path: '/recognition' },
 ]);
+
+function isNavActive(path: string) {
+  if (path === '/') {
+    return route.path === '/';
+  }
+
+  return route.path === path || route.path.startsWith(`${path}/`);
+}
 
 async function handleCommand(command: string) {
   if (command === 'logout') {
@@ -131,11 +146,11 @@ async function handleCommand(command: string) {
   font-size: 14px;
   font-weight: 700;
 
-  &.router-link-active {
+  &.is-active {
     color: $color-primary-dark;
   }
 
-  &.router-link-active::after {
+  &.is-active::after {
     position: absolute;
     right: 0;
     bottom: -12px;

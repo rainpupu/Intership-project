@@ -12,6 +12,15 @@ npm install
 npm run dev
 ```
 
+本地 YOLO 识别联调时，需要先启动后端：
+
+```bash
+cd ../backend
+python main.py
+```
+
+Vite 已配置 `/api` 和 `/static` 代理到 `http://localhost:8888`。
+
 ## 已实现页面
 
 - `/` 首页
@@ -47,6 +56,8 @@ npm run dev
 - 使用 `superadmin / 任意密码` 登录为总管理员，可访问 `/admin/*`，并预留全平台账号管理接口。
 
 后续接入 FastAPI 时，可替换 `src/api/auth.ts` 和 `src/api/recognition.ts` 内部实现，页面和状态层无需大改。
+
+当前 `src/api/recognition.ts` 已接入后端 `POST /api/recognition/analyze`，可通过上传图片调用本地 YOLO 模型；识别历史、确认已有猫和创建新猫档案仍保持 Mock，因为本阶段未接数据库。
 
 ## 账号与权限接口预留
 

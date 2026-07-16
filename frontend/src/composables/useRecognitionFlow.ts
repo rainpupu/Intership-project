@@ -29,7 +29,7 @@ export function useRecognitionFlow() {
   }
 
   async function loadRecognitionPreview() {
-    candidates.value = await getRecognitionCandidates();
+    candidates.value = (await getRecognitionCandidates()).slice(0, 1);
     Object.assign(analysis, await analyzeEncounter());
   }
 
@@ -42,10 +42,11 @@ export function useRecognitionFlow() {
     analyzing.value = true;
     try {
       const rawFiles = selectedFiles.value.map((item) => item.raw).filter(Boolean) as File[];
-      await uploadEncounterImages(rawFiles);
-      await loadRecognitionPreview();
+      const result = await uploadEncounterImages(rawFiles);
+      candidates.value = result.candidates.slice(0, 1);
+      Object.assign(analysis, result.analysis);
       activeStep.value = 3;
-      ElMessage.success('识别完成，当前为 Mock 结果');
+      ElMessage.success(result.detectedCount > 0 ? 'YOLO 识别完成' : '识别完成，但未检测到猫咪');
       return true;
     } finally {
       analyzing.value = false;
