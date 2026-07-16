@@ -1,14 +1,6 @@
 """
 Pydantic 请求/响应模型
-用于 API 接口的数据验证和序列化
-
-分层原则：
-- Create 模型：创建资源时的请求体
-- Update 模型：更新资源时的请求体（所有字段可选）
-- Response 模型：API 返回的响应体（过滤敏感字段）
-- List 模型：分页列表查询的参数和响应
 """
-
 # 通用模型
 from app.entity.schemas.common import ApiResponse, PageParams, PageResponse
 
@@ -24,16 +16,13 @@ from app.entity.schemas.auth import (
     RoleResponse,
     RoleCreate,
     PermissionResponse,
-)
-
-# 训练模块
-from app.entity.schemas.training import (
-    CreateTrainingRequest,
-    ValidateModelRequest,
-    DatasetValidateRequest,
-    DatasetSplitRequest,
-    GenerateYamlRequest,
-    CreateSceneRequest,
+    # 新增：对齐前端
+    UserProfileResponse,
+    LoginResponse,
+    UpdateProfileRequest,
+    CreateAdminRequest,
+    UpdateUserRoleRequest,
+    UserListQuery,
 )
 
 # 检测模块
@@ -44,13 +33,6 @@ from app.entity.schemas.detection import (
     AnalyzeRequest,
     CandidateCat,
     AnalyzeResponse,
-)
-
-# 对话模块
-from app.entity.schemas.chat import (
-    CreateSessionRequest,
-    SendMessageRequest,
-    SessionResponse,
 )
 
 __all__ = [
@@ -69,16 +51,13 @@ __all__ = [
     "RoleResponse",
     "RoleCreate",
     "PermissionResponse",
-    # 训练
-    "CreateTrainingRequest",
-    "ValidateModelRequest",
-    "DatasetValidateRequest",
-    "DatasetSplitRequest",
-    "GenerateYamlRequest",
-    "CreateSceneRequest",
-    "DatasetUploadRequest",
-    "AutoLabelRequest",
-    "DatasetInfo",
+    # 新增对齐前端
+    "UserProfileResponse",
+    "LoginResponse",
+    "UpdateProfileRequest",
+    "CreateAdminRequest",
+    "UpdateUserRoleRequest",
+    "UserListQuery",
     # 检测
     "DetectionResultItem",
     "DetectionResponse",
@@ -86,8 +65,4 @@ __all__ = [
     "AnalyzeRequest",
     "CandidateCat",
     "AnalyzeResponse",
-    # 对话
-    "CreateSessionRequest",
-    "SendMessageRequest",
-    "SessionResponse",
 ]

@@ -49,9 +49,9 @@ def init_redis():
 
 
 def init_seed():
-    """初始化种子数据（检测场景等）"""
+    """初始化种子数据（角色、管理员）"""
     from app.database.session import SessionLocal, Base, engine
-    from app.database.seed import seed_scenes
+    from app.database.seed import seed_roles_and_admin
 
     # 创建所有数据库表（如果不存在）
     logger.info('正在创建数据库表...')
@@ -60,7 +60,7 @@ def init_seed():
 
     db = SessionLocal()
     try:
-        seed_scenes(db)
+        seed_roles_and_admin(db)
     except Exception as e:
         logger.error(f"种子数据初始化失败: {e}")
     finally:
@@ -88,7 +88,38 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
+    swagger_ui_parameters={
+        "persistAuthorization": True,  # 刷新页面后保留 Token
+    },
 )
+
+# ── 注册 OpenAPI 认证方案（Swagger 显示 Authorize 按钮） ──
+from fastapi.openapi.utils import get_openapi
+from fastapi.security import HTTPBearer
+
+security_scheme = HTTPBearer()
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="VisAgent",
+        version="0.1.0",
+        description="基于 YOLOv11 的目标检测智能体平台 API",
+        routes=app.routes,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "description": "输入 JWT Token（格式：<token>，不需要加 Bearer 前缀）",
+        }
+    }
+    openapi_schema["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
 
 # ── 注册异常处理器 ──────────────────────────────────
 app.add_exception_handler(AppException, app_exception_handler)
