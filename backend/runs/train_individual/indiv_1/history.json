@@ -1,14 +1,14 @@
 {
-  "best_rank1": 0.7294938917975567,
-  "final_rank1": 0.7225130890052356,
-  "final_rank5": 0.7783595113438045,
-  "final_mAP": 0.49716196334856655,
+  "best_rank1": 0.8826291079812206,
+  "final_rank1": 0.8685446009389671,
+  "final_rank5": 0.9671361502347418,
+  "final_mAP": 0.5850536690862058,
   "config": {
     "epochs": 100,
     "batch": 64,
     "lr": 0.0003,
     "dim": 512,
-    "train_cats": 228,
-    "test_cats": 57
+    "train_cats": 102,
+    "test_cats": 25
   }
 }

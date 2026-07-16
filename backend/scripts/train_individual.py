@@ -323,12 +323,12 @@ def train(
     for f in folders:
         paths = sorted([str(p) for p in f.iterdir()
                        if p.suffix.lower() in ('.jpg','.jpeg','.png')])
-        if len(paths) >= 3:
+        if len(paths) >= 5:
             cid = len(valid)
             cat_to_paths[cid] = paths
             valid.append((cid, f.name, len(paths)))
 
-    print(f"  有效猫 (≥3张): {len(valid)}")
+    print(f"  有效猫 (≥5张): {len(valid)}")
     for cid, name, cnt in valid:
         print(f"    {name}: {cnt} 张")
 
