@@ -16,6 +16,19 @@ from app.entity.schemas.auth import (
     UserResponse,
     UserUpdate,
 )
+from app.entity.schemas.cat import (
+    BatchCatIdsRequest,
+    BatchMarkCatsRequest,
+    BatchToggleFocusRequest,
+    CatAuditRecordResponse,
+    CatCreate,
+    CatObservationCreate,
+    CatObservationResponse,
+    CatOperationResult,
+    CatResponse,
+    CatUpdate,
+    ToggleFocusRequest,
+)
 from app.entity.schemas.common import ApiResponse, PageParams, PageResponse
 from app.entity.schemas.detection import (
     AnalyzeRequest,
@@ -46,6 +59,17 @@ __all__ = [
     "RoleResponse",
     "RoleCreate",
     "PermissionResponse",
+    "BatchCatIdsRequest",
+    "BatchMarkCatsRequest",
+    "BatchToggleFocusRequest",
+    "CatAuditRecordResponse",
+    "CatCreate",
+    "CatObservationCreate",
+    "CatObservationResponse",
+    "CatOperationResult",
+    "CatResponse",
+    "CatUpdate",
+    "ToggleFocusRequest",
     "DetectionResultItem",
     "DetectionResponse",
     "SceneResponse",

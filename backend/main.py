@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.api.auth import router as auth_router
+from app.api.cats import router as cats_router
 from app.api.recognition import router as recognition_router
 from app.config.settings import settings
 from app.database.seed import seed_roles_and_admin
@@ -31,6 +32,7 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.include_router(auth_router)
+app.include_router(cats_router)
 app.include_router(recognition_router)
 
 
@@ -50,6 +52,7 @@ def root():
         "message": "CatTrace Agent backend is running",
         "docs": "/docs",
         "auth": "/api/auth",
+        "cats": "/api/cats",
         "recognition": "/api/recognition/analyze",
     }
 
