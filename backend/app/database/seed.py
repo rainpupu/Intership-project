@@ -1,91 +1,77 @@
-from __future__ import annotations
-
-from sqlalchemy.orm import Session
-
+# -*- coding: utf-8 -*-
+"""
+数据库种子数据模块
+在应用启动时自动检查并创建默认角色和超级管理员
+"""
+from app.core.logger import get_logger
 from app.core.security import hash_password
-from app.entity.db_models import Role, User, UserRole
+
+logger = get_logger("seed")
 
 
-def seed_roles_and_admin(db: Session) -> None:
+def seed_roles_and_admin(db_session) -> None:
+    """
+    初始化默认角色和超级管理员账号
+
+    - 创建默认角色：user、admin、super_admin
+    - 创建默认超级管理员：superadmin / admin123
+    - 创建默认普通管理员：admin / admin123
+    """
+    from app.entity.db_models import User, Role
+
+    # ── 创建默认角色 ──────────────────────────────────
     default_roles = [
-        {
-            "name": "user",
-            "display_name": "普通用户",
-            "description": "注册用户，可上传识别图片，查看自己的记录",
-            "is_system": True,
-        },
-        {
-            "name": "admin",
-            "display_name": "管理员",
-            "description": "平台管理员，处理识别任务和猫咪档案管理",
-            "is_system": True,
-        },
-        {
-            "name": "super_admin",
-            "display_name": "超级管理员",
-            "description": "总管理员，管理账号和权限",
-            "is_system": True,
-        },
+        {"name": "user", "display_name": "普通用户", "description": "注册用户，可上传识别图片，查看自己的记录", "is_system": True},
+        {"name": "admin", "display_name": "管理员", "description": "平台管理员，处理识别任务和猫咪档案管理", "is_system": True},
+        {"name": "super_admin", "display_name": "超级管理员", "description": "总管理员，管理账号和权限", "is_system": True},
     ]
 
     for role_data in default_roles:
-        existing = db.query(Role).filter(Role.name == role_data["name"]).first()
+        existing = db_session.query(Role).filter(Role.name == role_data["name"]).first()
         if not existing:
-            db.add(Role(**role_data))
+            role = Role(**role_data)
+            db_session.add(role)
+            logger.info(f"创建默认角色: {role_data['display_name']}")
 
-    db.commit()
+    db_session.commit()
 
+    # ── 创建默认管理员 ────────────────────────────────
     default_users = [
         {
             "username": "superadmin",
-            "phone": "13900000000",
             "email": "superadmin@cattrace.local",
             "password": "admin123",
             "nickname": "总管理员",
             "role": "super_admin",
             "campus_role": "总管理员",
             "bio": "负责全平台账号、管理员职责和数据范围管理。",
-            "is_superuser": True,
         },
         {
             "username": "admin",
-            "phone": "13800000000",
             "email": "admin@cattrace.local",
             "password": "admin123",
             "nickname": "平台管理员",
             "role": "admin",
             "campus_role": "平台管理员",
             "bio": "负责平台数据审核、识别任务和猫咪档案管理。",
-            "is_superuser": False,
         },
     ]
 
     for user_data in default_users:
-        user = db.query(User).filter(User.username == user_data["username"]).first()
-        if not user:
+        existing = db_session.query(User).filter(User.username == user_data["username"]).first()
+        if not existing:
             user = User(
                 username=user_data["username"],
                 email=user_data["email"],
-                phone=user_data["phone"],
                 hashed_password=hash_password(user_data["password"]),
                 nickname=user_data["nickname"],
                 role=user_data["role"],
                 campus_role=user_data["campus_role"],
                 bio=user_data["bio"],
-                is_superuser=user_data["is_superuser"],
+                is_superuser=(user_data["role"] == "super_admin"),
             )
-            db.add(user)
-            db.commit()
-            db.refresh(user)
-        elif not user.phone:
-            user.phone = user_data["phone"]
-            db.commit()
-            db.refresh(user)
+            db_session.add(user)
+            logger.info(f"创建默认用户: {user_data['username']} ({user_data['role']})")
 
-        role = db.query(Role).filter(Role.name == user_data["role"]).first()
-        if role:
-            relation = db.query(UserRole).filter(UserRole.user_id == user.id, UserRole.role_id == role.id).first()
-            if not relation:
-                db.add(UserRole(user_id=user.id, role_id=role.id))
-
-    db.commit()
+    db_session.commit()
+    logger.info("种子数据初始化完成")

@@ -24,7 +24,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { getCatList } from '@/api/cat';
 import CatCard from '@/components/cat/CatCard.vue';
 import DataState from '@/components/common/DataState.vue';
@@ -32,8 +33,13 @@ import EmptyState from '@/components/common/EmptyState.vue';
 import PageContainer from '@/components/common/PageContainer.vue';
 import type { Cat } from '@/types/cat';
 
+const route = useRoute();
+const router = useRouter();
 const filters = ['全部', '待领养', '已领养', '重点关注', '幼猫', '亲人'];
-const selectedFilter = ref('全部');
+
+/** 从 URL query 参数读取初始筛选条件 */
+const q = route.query.filter as string | undefined;
+const selectedFilter = ref<string>(q && filters.includes(q) ? q : '全部');
 const searchKeyword = ref('');
 const cats = ref<Cat[]>([]);
 const loading = ref(false);
@@ -71,6 +77,11 @@ async function fetchCats() {
 }
 
 onMounted(fetchCats);
+
+// 筛选条件变更时同步到 URL query 参数
+watch(selectedFilter, (val) => {
+  router.replace({ query: val === '全部' ? {} : { filter: val } });
+});
 </script>
 
 <style scoped lang="scss">
