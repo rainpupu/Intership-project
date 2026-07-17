@@ -353,38 +353,71 @@ class ChatMessage(Base):
 
 
 # ══════════════════════════════════════════════════════════════
-# 五、猫咪识别 — 出现事件与个体档案
+# 五、猫咪识别 — 个体档案、出现事件、观察记录、领养
 # ══════════════════════════════════════════════════════════════
 
+class Cat(Base):
+    """猫咪个体档案表（成员4 设计）"""
+    __tablename__ = "cats"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    code = Column(String(20), unique=True, nullable=False, index=True, comment="猫咪编号，如 CAT-20240001")
+    name = Column(String(50), nullable=False, comment="猫咪名称")
+    coat_color = Column(String(20), nullable=False, comment="花色：橘白/玳瑁/三花/纯黑/乳白")
+    age_stage = Column(String(10), nullable=False, comment="年龄阶段：幼猫/成年/老年")
+    gender = Column(String(6), nullable=False, comment="性别：公/母/未知")
+    personality_tags = Column(String(100), nullable=False, comment="性格标签，逗号分隔")
+    adoption_status = Column(String(10), nullable=False, default="待领养", comment="领养状态：待领养/观察中/已领养/领养中")
+    last_seen_at = Column(DateTime, nullable=False, comment="最近出现日期")
+    cover_image_url = Column(String(255), nullable=False, comment="封面图 URL")
+    description = Column(Text, nullable=True, comment="简介")
+    created_at = Column(DateTime, default=datetime.now, comment="创建时间")
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, comment="更新时间")
+
+    # 关联
+    encounters = relationship("Encounter", back_populates="cat")
+    observations = relationship("Observation", back_populates="cat", cascade="all, delete-orphan")
+    identity_candidates = relationship("IdentityCandidate", back_populates="candidate_cat", cascade="all, delete-orphan")
+    adoption_applications = relationship("AdoptionApplication", back_populates="cat", cascade="all, delete-orphan")
+    support_orders = relationship("SupportOrder", back_populates="cat", cascade="all, delete-orphan")
+
+
 class Encounter(Base):
-    """猫咪出现事件表 — 一次目击/发现中可能有多张照片"""
+    """猫咪出现事件表 — 合并成员3（视觉识别）与成员4（猫咪管理）"""
     __tablename__ = "encounters"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    cat_id = Column(Integer, ForeignKey("cats.id"), nullable=False, index=True, comment="关联猫咪")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True, comment="记录人")
     title = Column(String(200), nullable=True, comment="事件标题")
     description = Column(Text, nullable=True, comment="事件描述")
-    location = Column(String(200), nullable=True, comment="发现地点")
-    status = Column(String(20), default="pending", comment="状态：pending/analyzing/completed/failed")
+    location = Column(String(200), nullable=False, comment="发现地点")
+    occurred_at = Column(DateTime, nullable=False, comment="出现时间")
+    status = Column(String(20), default="待审核", comment="状态：待审核/已确认/已驳回/analyzing/completed/failed")
     result_analysis = Column(JSON, nullable=True, comment="识别结果快照")
 
     created_at = Column(DateTime, default=datetime.now, index=True)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
     # 关联
+    cat = relationship("Cat", back_populates="encounters")
     images = relationship("EncounterImage", back_populates="encounter", cascade="all, delete-orphan")
+    observations = relationship("Observation", back_populates="encounter")
+    identity_candidates = relationship("IdentityCandidate", back_populates="encounter", cascade="all, delete-orphan")
 
 
 class EncounterImage(Base):
-    """出现事件中的单张图片"""
+    """出现事件中的单张图片 — 合并成员3与成员4"""
     __tablename__ = "encounter_images"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     encounter_id = Column(Integer, ForeignKey("encounters.id"), nullable=False, index=True)
-    original_url = Column(String(500), nullable=False, comment="原始图片 MinIO URL")
-    cropped_url = Column(String(500), nullable=True, comment="裁剪后的猫咪区域 MinIO URL")
+    image_url = Column(String(500), nullable=False, comment="原图 URL")
+    cropped_url = Column(String(500), nullable=True, comment="裁剪后的猫咪区域 URL")
+    embedding = Column(Text, nullable=True, comment="特征向量（JSON 字符串）")
     bbox = Column(JSON, nullable=True, comment="检测到的猫咪边界框 [x1,y1,x2,y2]")
-    embedding = Column(JSON, nullable=True, comment="特征向量（pgvector 兼容，暂用 JSON 存储）")
+    is_reference = Column(Boolean, default=False, comment="是否作为识别参考图")
+    quality_score = Column(Float, nullable=True, comment="图片质量评分")
     width = Column(Integer, nullable=True, comment="图片宽度")
     height = Column(Integer, nullable=True, comment="图片高度")
 
@@ -394,45 +427,74 @@ class EncounterImage(Base):
     encounter = relationship("Encounter", back_populates="images")
 
 
-class Cat(Base):
-    """猫咪个体档案表"""
-    __tablename__ = "cats"
+class Observation(Base):
+    """猫咪观察记录表（成员4）"""
+    __tablename__ = "cat_observations"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(100), nullable=False, comment="猫咪名字")
-    gender = Column(String(10), nullable=True, comment="性别：male/female/unknown")
-    age_estimate = Column(String(20), nullable=True, comment="预估年龄：kitten/adult/senior")
-    breed = Column(String(100), nullable=True, comment="品种")
-    color = Column(String(100), nullable=True, comment="毛色")
-    description = Column(Text, nullable=True, comment="描述")
-    status = Column(String(20), default="active", comment="状态：active/adopted/lost/deceased")
-    ref_image_url = Column(String(500), nullable=True, comment="参考照片 MinIO URL")
-    embedding = Column(JSON, nullable=True, comment="参考照片的特征向量")
-
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    cat_id = Column(Integer, ForeignKey("cats.id"), nullable=False, index=True, comment="关联猫咪")
+    encounter_id = Column(Integer, ForeignKey("encounters.id"), nullable=True, comment="关联出现事件（可选）")
+    observed_at = Column(DateTime, nullable=False, comment="观察日期")
+    mood_status = Column(String(10), nullable=False, comment="情绪状态：放松/正常/警惕/活泼/紧张/虚弱")
+    visible_health_status = Column(String(10), nullable=False, comment="健康状况：良好/需观察/异常")
+    notes = Column(Text, nullable=True, comment="观察备注")
+    created_at = Column(DateTime, default=datetime.now, comment="创建时间")
 
     # 关联
-    adoptions = relationship("Adoption", back_populates="cat")
+    cat = relationship("Cat", back_populates="observations")
+    encounter = relationship("Encounter", back_populates="observations")
 
 
-class Adoption(Base):
-    """领养记录表"""
-    __tablename__ = "adoptions"
+class IdentityCandidate(Base):
+    """身份识别候选结果表（成员4）"""
+    __tablename__ = "identity_candidates"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    cat_id = Column(Integer, ForeignKey("cats.id"), nullable=False, index=True)
-    adopter_name = Column(String(100), nullable=False, comment="领养人姓名")
-    adopter_phone = Column(String(20), nullable=True, comment="领养人电话")
-    adopter_email = Column(String(100), nullable=True, comment="领养人邮箱")
-    status = Column(String(20), default="pending", comment="状态：pending/approved/rejected/completed")
-    notes = Column(Text, nullable=True, comment="备注")
-
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    encounter_id = Column(Integer, ForeignKey("encounters.id"), nullable=False, index=True, comment="所属事件")
+    candidate_cat_id = Column(Integer, ForeignKey("cats.id"), nullable=False, index=True, comment="候选猫咪")
+    similarity_score = Column(Float, nullable=False, comment="相似度分数")
+    ranking = Column(Integer, nullable=False, comment="排名：1/2/3")
+    evidence_image_url = Column(String(255), nullable=True, comment="匹配证据图 URL")
+    created_at = Column(DateTime, default=datetime.now, comment="创建时间")
 
     # 关联
-    cat = relationship("Cat", back_populates="adoptions")
+    encounter = relationship("Encounter", back_populates="identity_candidates")
+    candidate_cat = relationship("Cat", back_populates="identity_candidates")
+
+
+class AdoptionApplication(Base):
+    """领养申请表（成员4）"""
+    __tablename__ = "adoption_applications"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True, comment="申请用户")
+    cat_id = Column(Integer, ForeignKey("cats.id"), nullable=False, index=True, comment="申请领养的猫咪")
+    applicant_name = Column(String(50), nullable=False, comment="申请人姓名")
+    phone = Column(String(20), nullable=False, comment="联系电话")
+    address = Column(Text, nullable=True, comment="家庭住址")
+    reason = Column(Text, nullable=True, comment="领养理由")
+    status = Column(String(20), nullable=False, default="待审核", comment="状态：待审核/已通过/已拒绝")
+    created_at = Column(DateTime, default=datetime.now, comment="创建时间")
+
+    # 关联
+    cat = relationship("Cat", back_populates="adoption_applications")
+
+
+class SupportOrder(Base):
+    """云养猫支持订单表（成员4）"""
+    __tablename__ = "support_orders"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True, comment="用户")
+    cat_id = Column(Integer, ForeignKey("cats.id"), nullable=False, index=True, comment="支持的猫咪")
+    item_name = Column(String(50), nullable=False, comment="物资名称")
+    quantity = Column(Integer, default=1, comment="数量")
+    amount = Column(Float, default=0, comment="金额")
+    status = Column(String(20), nullable=False, default="待支付", comment="状态：待支付/已支付/已发货/已完成")
+    created_at = Column(DateTime, default=datetime.now, comment="创建时间")
+
+    # 关联
+    cat = relationship("Cat", back_populates="support_orders")
 
 
 # ══════════════════════════════════════════════════════════════

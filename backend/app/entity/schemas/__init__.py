@@ -35,6 +35,17 @@ from app.entity.schemas.detection import (
     AnalyzeResponse,
 )
 
+# 猫咪管理
+from app.entity.schemas.cat import (
+    CatBrief,
+    CatResponse,
+    CatDetailResponse,
+    ObservationResponse,
+    EncounterResponse,
+    AdoptionApplicationResponse,
+    AttentionCatResponse,
+)
+
 __all__ = [
     # 通用
     "ApiResponse",
@@ -65,4 +76,12 @@ __all__ = [
     "AnalyzeRequest",
     "CandidateCat",
     "AnalyzeResponse",
+    # 猫咪管理
+    "CatBrief",
+    "CatResponse",
+    "CatDetailResponse",
+    "ObservationResponse",
+    "EncounterResponse",
+    "AdoptionApplicationResponse",
+    "AttentionCatResponse",
 ]
