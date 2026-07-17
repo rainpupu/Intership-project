@@ -14,6 +14,7 @@ from app.api.chat import router as chat_router
 from app.api.dashboard import router as dashboard_router
 from app.api.camera import router as camera_router
 from app.api.knowledge import router as knowledge_router
+from app.api.cats import router as cats_router
 from app.core.logger import setup_logger, get_logger
 from app.core.exceptions import (
     AppException,
@@ -155,6 +156,7 @@ app.include_router(chat_router)
 app.include_router(dashboard_router)
 app.include_router(camera_router)
 app.include_router(knowledge_router)
+app.include_router(cats_router)
 app.include_router(encounter_router)
 
 
