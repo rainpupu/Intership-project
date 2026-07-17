@@ -1,5 +1,8 @@
 fastapi
 uvicorn[standard]
 python-multipart
+sqlalchemy
+python-jose
+bcrypt
 ultralytics
 opencv-python

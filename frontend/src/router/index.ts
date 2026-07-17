@@ -26,7 +26,7 @@ router.beforeEach((to, from) => {
   }
 
   if ((to.name === 'Login' || to.name === 'Register') && userStore.isLoggedIn) {
-    return userStore.isAdmin ? '/admin/dashboard' : '/recognition';
+    return '/';
   }
 
   if (!requiresAuth) {
@@ -44,7 +44,7 @@ router.beforeEach((to, from) => {
 
   if (roleRules.length > 0 && userStore.profile && !roleRules.includes(userStore.profile.role)) {
     ElMessage.warning('当前账号无权访问该页面');
-    return userStore.isAdmin ? '/admin/dashboard' : '/recognition';
+    return '/';
   }
 
   return true;

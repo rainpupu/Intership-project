@@ -18,17 +18,15 @@ export interface LoginPayload {
 }
 
 export interface RegisterPayload {
-  username: string;
+  phone: string;
   password: string;
-  nickname: string;
 }
 
 export interface CreateAdminPayload {
-  username: string;
+  phone: string;
   password: string;
   nickname: string;
   email: string;
-  phone?: string;
   campusRole: string;
 }
 

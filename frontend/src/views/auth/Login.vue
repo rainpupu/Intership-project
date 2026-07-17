@@ -4,18 +4,18 @@
       <div class="auth-copy">
         <el-tag effect="plain">CatTrace Agent 账号系统</el-tag>
         <h1>欢迎回来</h1>
-        <p>管理员登录后进入全平台管理端；普通用户登录后可以上传图片识别，并只查看自己的上传记录。</p>
+        <p>登录后回到首页，你可以从导航进入个人识别、猫咪图鉴或管理端。</p>
         <div class="role-tips">
-          <span>普通用户示例：user / 任意密码</span>
-          <span>管理员示例：admin / 任意密码</span>
-          <span>总管理员示例：superadmin / 任意密码</span>
+          <span>普通用户：使用注册手机号登录</span>
+          <span>管理员：使用总管理员创建的手机号账号登录</span>
+          <span>总管理员测试：superadmin / admin123</span>
         </div>
       </div>
 
       <el-form ref="formRef" class="auth-card" :model="form" :rules="rules" label-position="top">
         <h2>登录</h2>
         <el-form-item label="账号" prop="username">
-          <el-input v-model="form.username" size="large" placeholder="输入 user、admin 或 superadmin" />
+          <el-input v-model="form.username" size="large" placeholder="请输入手机号账号" />
         </el-form-item>
         <el-form-item label="密码" prop="password">
           <el-input v-model="form.password" size="large" type="password" show-password placeholder="请输入密码" />
@@ -36,7 +36,8 @@
 import { reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import type { FormInstance, FormRules } from 'element-plus';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import type { AxiosError } from 'axios';
 import PageContainer from '@/components/common/PageContainer.vue';
 import { useUserStore } from '@/stores/user';
 import type { LoginPayload } from '@/types/user';
@@ -48,14 +49,31 @@ const formRef = ref<FormInstance>();
 const loading = ref(false);
 
 const form = reactive<LoginPayload>({
-  username: 'user',
+  username: '',
   password: '',
 });
 
 const rules: FormRules<LoginPayload> = {
-  username: [{ required: true, message: '请输入账号', trigger: 'blur' }],
+  username: [{ required: true, message: '请输入手机号账号', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
 };
+
+interface AuthErrorDetail {
+  code?: string;
+  message?: string;
+}
+
+function getAuthErrorDetail(error: unknown): AuthErrorDetail {
+  const axiosError = error as AxiosError<{ detail?: AuthErrorDetail | string }>;
+  const detail = axiosError.response?.data?.detail;
+  if (typeof detail === 'object' && detail) {
+    return detail;
+  }
+
+  return {
+    message: typeof detail === 'string' ? detail : '登录失败，请稍后重试',
+  };
+}
 
 async function handleLogin() {
   await formRef.value?.validate();
@@ -65,7 +83,27 @@ async function handleLogin() {
     const profile = await userStore.login(form);
     ElMessage.success(profile.role === 'user' ? '用户登录成功' : '管理员登录成功');
     const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '';
-    await router.push(redirect || (profile.role === 'user' ? '/recognition' : '/admin/dashboard'));
+    await router.push(redirect || '/');
+  } catch (error) {
+    const detail = getAuthErrorDetail(error);
+    if (detail.code === 'PHONE_NOT_REGISTERED') {
+      await ElMessageBox.alert('该手机号未注册账号，请先完成注册。', '账号不存在', {
+        confirmButtonText: '去注册',
+        type: 'warning',
+      });
+      await router.push('/register');
+      return;
+    }
+
+    if (detail.code === 'INVALID_PASSWORD') {
+      await ElMessageBox.alert('该手机号已经注册过，但密码不正确。请检查密码后重新输入。', '密码错误', {
+        confirmButtonText: '知道了',
+        type: 'error',
+      });
+      return;
+    }
+
+    ElMessage.error(detail.message || '登录失败，请稍后重试');
   } finally {
     loading.value = false;
   }

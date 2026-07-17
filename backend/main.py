@@ -4,7 +4,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from app.api.auth import router as auth_router
 from app.api.recognition import router as recognition_router
+from app.config.settings import settings
+from app.database.seed import seed_roles_and_admin
+from app.database.session import Base, SessionLocal, engine
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -12,24 +16,32 @@ STATIC_DIR = BASE_DIR / "static"
 STATIC_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(
-    title="CatTrace Agent Backend",
-    version="0.1.0",
-    description="CatTrace Agent YOLO recognition API without database integration.",
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
+    description="CatTrace Agent auth and YOLO recognition API.",
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.include_router(auth_router)
 app.include_router(recognition_router)
+
+
+@app.on_event("startup")
+def init_auth_database():
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        seed_roles_and_admin(db)
+    finally:
+        db.close()
 
 
 @app.get("/")
@@ -37,6 +49,8 @@ def root():
     return {
         "message": "CatTrace Agent backend is running",
         "docs": "/docs",
+        "auth": "/api/auth",
+        "recognition": "/api/recognition/analyze",
     }
 
 

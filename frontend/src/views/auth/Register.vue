@@ -4,16 +4,13 @@
       <div class="auth-copy">
         <el-tag effect="plain">普通用户注册</el-tag>
         <h1>加入校园守护</h1>
-        <p>注册后可上传猫咪图片进行识别，后续后端接入后会按账号隔离个人上传记录和识别历史。</p>
+        <p>使用手机号创建账号，注册后先补全昵称和邮箱，再开始上传猫咪图片进行识别。</p>
       </div>
 
       <el-form ref="formRef" class="auth-card" :model="form" :rules="rules" label-position="top">
         <h2>创建账号</h2>
-        <el-form-item label="昵称" prop="nickname">
-          <el-input v-model="form.nickname" size="large" placeholder="例如：东门志愿者" />
-        </el-form-item>
-        <el-form-item label="账号" prop="username">
-          <el-input v-model="form.username" size="large" placeholder="请输入账号" />
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="form.phone" size="large" placeholder="请输入 11 位手机号" maxlength="11" />
         </el-form-item>
         <el-form-item label="密码" prop="password">
           <el-input v-model="form.password" size="large" type="password" show-password placeholder="至少 6 位" />
@@ -34,7 +31,8 @@
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import type { FormInstance, FormRules } from 'element-plus';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import type { AxiosError } from 'axios';
 import PageContainer from '@/components/common/PageContainer.vue';
 import { useUserStore } from '@/stores/user';
 import type { RegisterPayload } from '@/types/user';
@@ -45,14 +43,15 @@ const formRef = ref<FormInstance>();
 const loading = ref(false);
 
 const form = reactive<RegisterPayload>({
-  username: '',
+  phone: '',
   password: '',
-  nickname: '',
 });
 
 const rules: FormRules<RegisterPayload> = {
-  nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
-  username: [{ required: true, message: '请输入账号', trigger: 'blur' }],
+  phone: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入有效的 11 位手机号', trigger: 'blur' },
+  ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
     { min: 6, message: '密码至少 6 位', trigger: 'blur' },
@@ -65,8 +64,26 @@ async function handleRegister() {
 
   try {
     await userStore.register(form);
-    ElMessage.success('注册成功，已进入个人识别中心');
-    await router.push('/recognition');
+    ElMessage.success('注册成功，请完善个人信息');
+    await router.push({
+      path: '/profile',
+      query: {
+        setup: '1',
+      },
+    });
+  } catch (error) {
+    const axiosError = error as AxiosError<{ detail?: { code?: string; message?: string } | string }>;
+    const detail = axiosError.response?.data?.detail;
+    if (typeof detail === 'object' && detail?.code === 'PHONE_REGISTERED') {
+      await ElMessageBox.alert('该手机号已经注册过，请直接登录。', '手机号已注册', {
+        confirmButtonText: '去登录',
+        type: 'warning',
+      });
+      await router.push('/login');
+      return;
+    }
+
+    ElMessage.error(typeof detail === 'object' ? detail.message || '注册失败' : detail || '注册失败');
   } finally {
     loading.value = false;
   }

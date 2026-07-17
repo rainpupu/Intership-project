@@ -92,6 +92,15 @@ export const routes: RouteRecordRaw[] = [
           roles: ['admin', 'super_admin'],
         },
       },
+      {
+        path: 'users',
+        name: 'AdminUserManage',
+        component: () => import('@/views/admin/UserManage.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['super_admin'],
+        },
+      },
     ],
   },
 ];

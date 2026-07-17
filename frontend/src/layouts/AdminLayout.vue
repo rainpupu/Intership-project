@@ -35,17 +35,26 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 
 const router = useRouter();
 const userStore = useUserStore();
 
-const menuItems = [
-  { label: '数据概览', path: '/admin/dashboard', icon: '📊' },
-  { label: '识别任务', path: '/admin/recognition', icon: '🧠' },
-  { label: '猫咪管理', path: '/admin/cats', icon: '🐾' },
-];
+const menuItems = computed(() => {
+  const items = [
+    { label: '数据概览', path: '/admin/dashboard', icon: '📊' },
+    { label: '识别任务', path: '/admin/recognition', icon: '🧠' },
+    { label: '猫咪管理', path: '/admin/cats', icon: '🐾' },
+  ];
+
+  if (userStore.isSuperAdmin) {
+    items.push({ label: '账号管理', path: '/admin/users', icon: '👤' });
+  }
+
+  return items;
+});
 
 async function handleLogout() {
   await userStore.logout();
@@ -169,7 +178,7 @@ nav {
   }
 
   nav {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .admin-topbar,

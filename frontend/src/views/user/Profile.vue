@@ -1,13 +1,15 @@
 <template>
   <PageContainer>
-    <button class="back-button" type="button" aria-label="返回上一页" @click="goBack">
+    <button v-if="!isSetupMode" class="back-button" type="button" aria-label="返回上一页" @click="goBack">
       ←
     </button>
 
     <section class="profile-head">
       <div>
-        <h1 class="page-title">个人信息</h1>
-        <p class="page-subtitle">维护账号头像和基础资料。当前为前端 Mock 保存，后续可直接替换为 FastAPI 用户资料接口。</p>
+        <h1 class="page-title">{{ isSetupMode ? '完善个人信息' : '个人信息' }}</h1>
+        <p class="page-subtitle">
+          {{ isSetupMode ? '请补充昵称和邮箱，手机号已作为账号自动填充。' : '维护账号头像和基础资料。' }}
+        </p>
       </div>
       <el-tag size="large" effect="plain">{{ roleLabel }}</el-tag>
     </section>
@@ -40,18 +42,25 @@
               <el-input v-model="form.nickname" size="large" placeholder="请输入昵称" />
             </el-form-item>
             <el-form-item label="身份说明" prop="campusRole">
-              <el-input v-model="form.campusRole" size="large" placeholder="例如：东门志愿者 / 管理员" />
+              <el-select v-model="form.campusRole" size="large" placeholder="请选择身份说明">
+                <el-option
+                  v-for="option in campusRoleOptions"
+                  :key="option"
+                  :label="option"
+                  :value="option"
+                />
+              </el-select>
             </el-form-item>
             <el-form-item label="邮箱" prop="email">
               <el-input v-model="form.email" size="large" placeholder="请输入邮箱" />
             </el-form-item>
             <el-form-item label="手机号" prop="phone">
-              <el-input v-model="form.phone" size="large" placeholder="请输入手机号" />
+              <el-input v-model="form.phone" size="large" disabled placeholder="注册手机号自动填充" />
             </el-form-item>
           </div>
         </div>
 
-        <div class="form-section">
+        <div v-if="!isSetupMode" class="form-section">
           <h2 class="section-title">头像与简介</h2>
           <el-form-item label="头像 URL" prop="avatar">
             <el-input v-model="form.avatar" size="large" placeholder="可粘贴图片 URL，或选择本地头像生成预览" />
@@ -69,8 +78,10 @@
         </div>
 
         <div class="actions">
-          <el-button round @click="resetForm">重置</el-button>
-          <el-button type="primary" round :loading="saving" @click="saveProfile">保存资料</el-button>
+          <el-button v-if="!isSetupMode" round @click="resetForm">重置</el-button>
+          <el-button type="primary" round :loading="saving" @click="saveProfile">
+            {{ isSetupMode ? '保存并开始使用' : '保存资料' }}
+          </el-button>
         </div>
       </el-form>
     </section>
@@ -79,9 +90,10 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import type { FormInstance, FormRules, UploadFile } from 'element-plus';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import type { AxiosError } from 'axios';
 import PageContainer from '@/components/common/PageContainer.vue';
 import { useAppStore } from '@/stores/app';
 import { useUserStore } from '@/stores/user';
@@ -90,8 +102,10 @@ import type { UpdateProfilePayload } from '@/types/user';
 const userStore = useUserStore();
 const appStore = useAppStore();
 const router = useRouter();
+const route = useRoute();
 const formRef = ref<FormInstance>();
 const saving = ref(false);
+const isSetupMode = computed(() => route.query.setup === '1');
 
 const form = reactive<UpdateProfilePayload>({
   nickname: '',
@@ -104,13 +118,23 @@ const form = reactive<UpdateProfilePayload>({
 const defaultAvatar = 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=200&q=80';
 
 const roleLabel = computed(() => (userStore.isAdmin ? '管理员' : '普通用户'));
+const campusRoleOptions = computed(() => (
+  userStore.isAdmin
+    ? ['平台管理员', '审核管理员', '猫咪档案管理员']
+    : ['校园志愿者', '社区志愿者', '喂养记录员', '领养意向人']
+));
 
 const rules: FormRules<UpdateProfilePayload> = {
   nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
+  campusRole: [{ required: true, message: '请选择身份说明', trigger: 'change' }],
   avatar: [
-    { required: true, message: '请设置头像', trigger: 'blur' },
     {
       validator: (_rule, value: string, callback) => {
+        if (!value) {
+          callback();
+          return;
+        }
+
         if (value.startsWith('http') || value.startsWith('data:image/')) {
           callback();
           return;
@@ -121,7 +145,10 @@ const rules: FormRules<UpdateProfilePayload> = {
       trigger: 'blur',
     },
   ],
-  email: [{ type: 'email', message: '请输入有效邮箱', trigger: 'blur' }],
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入有效邮箱', trigger: 'blur' },
+  ],
 };
 
 function syncFormFromStore() {
@@ -131,11 +158,11 @@ function syncFormFromStore() {
 
   Object.assign(form, {
     nickname: userStore.profile.nickname,
-    avatar: userStore.profile.avatar,
+    avatar: userStore.profile.avatar || defaultAvatar,
     email: userStore.profile.email,
     phone: userStore.profile.phone,
-    campusRole: userStore.profile.campusRole,
-    bio: userStore.profile.bio,
+    campusRole: userStore.profile.campusRole || (userStore.isAdmin ? '平台管理员' : ''),
+    bio: userStore.profile.bio || '关注校园流浪猫，希望帮助它们建立稳定档案。',
   });
 }
 
@@ -175,12 +202,30 @@ async function goBack() {
 }
 
 async function saveProfile() {
-  await formRef.value?.validate();
+  if (!form.avatar) {
+    form.avatar = defaultAvatar;
+  }
+
+  try {
+    await formRef.value?.validate();
+  } catch {
+    ElMessage.warning('请先填写昵称、有效邮箱并选择身份说明');
+    return;
+  }
+
   saving.value = true;
 
   try {
     await userStore.updateProfile({ ...form });
     ElMessage.success('个人信息已更新');
+    if (isSetupMode.value) {
+      await router.push('/');
+    }
+  } catch (error) {
+    const axiosError = error as AxiosError<{ detail?: { message?: string } | string }>;
+    const detail = axiosError.response?.data?.detail;
+    const message = typeof detail === 'object' ? detail?.message : detail;
+    ElMessage.error(message || '个人信息保存失败，请稍后重试');
   } finally {
     saving.value = false;
   }
