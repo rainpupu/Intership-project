@@ -1,0 +1,30 @@
+{
+  "training_completed": "2026-07-18 15:48:39",
+  "elapsed_time_seconds": 3506.72,
+  "elapsed_time_str": "0h 58m 26s",
+  "epochs": 100,
+  "best_metrics": {
+    "precision": {
+      "value": 0.9693,
+      "epoch": 30
+    },
+    "recall": {
+      "value": 0.9525,
+      "epoch": 45
+    },
+    "mAP50": {
+      "value": 0.9781,
+      "epoch": 37
+    },
+    "mAP50-95": {
+      "value": 0.8838,
+      "epoch": 82
+    }
+  },
+  "final_metrics": {
+    "precision": 0.9611,
+    "recall": 0.9319,
+    "mAP50": 0.97,
+    "mAP50-95": 0.8776
+  }
+}

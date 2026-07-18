@@ -61,6 +61,7 @@ BREED_NAMES = [
     "Abyssinian", "Bengal", "Birman", "Bombay",
     "British_Shorthair", "Egyptian_Mau", "Maine_Coon",
     "Persian", "Ragdoll", "Russian_Blue", "Siamese", "Sphynx",
+    "三花", "奶牛", "橘猫", "狸花&彩狸", "白猫",
 ]
 
 # ============================================================
@@ -353,7 +354,15 @@ def train_yolo(
     print(f"{'='*60}")
     print(f"  模型:      {model_name}")
     print(f"  数据集:    {data}")
-    print(f"  品种数:    12 (猫品种)")
+    # 从 data.yaml 读取实际品种数
+    import yaml
+    try:
+        with open(data, "r", encoding="utf-8") as f:
+            data_cfg = yaml.safe_load(f)
+        nc = data_cfg.get("nc", "?")
+    except Exception:
+        nc = "?"
+    print(f"  品种数:    {nc} (猫品种)")
     print(f"  训练轮数:  {epochs}")
     print(f"  批次大小:  {batch}")
     print(f"  图像尺寸:  {img_size}")
