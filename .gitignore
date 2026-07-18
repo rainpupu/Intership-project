@@ -52,4 +52,6 @@ backend/requirements.txt
 backend/models/
 !backend/models/health/
 !backend/models/emotion/
+!backend/models/cat_breeds/
+backend/runs/train_cat_breeds/cat_breeds_v2/weights/
 docs/
