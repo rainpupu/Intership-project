@@ -50,4 +50,5 @@ backend/static/
 backend/test_cat.jpg
 backend/requirements.txt
 backend/models/
+!backend/models/health/
 docs/
