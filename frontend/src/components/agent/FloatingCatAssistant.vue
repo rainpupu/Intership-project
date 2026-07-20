@@ -93,20 +93,20 @@ async function scrollToBottom() {
 }
 
 
-function fmt(t) {
+function fmt(t: string) {
   if (!t) return '';
   let s = t;
   s = s.replace(/\t/g, '');
   s = s.replace(/\r/g, '');
   // Tables
-  s = s.replace(/((?:\|.+\|\n)+)/g, function(m) {
+  s = s.replace(/((?:\|.+\|\n)+)/g, function(m: string) {
     var lines = m.trim().split('\n');
     var h = '<table>';
     for (var i = 0; i < lines.length; i++) {
       if (lines[i].match(/^\|[-:\s|]+\|$/)) continue;
-      var cells = lines[i].split('|').filter(function(c) { return c.trim(); });
+      var cells = lines[i].split('|').filter(function(c: string) { return c.trim(); });
       var tag = i === 0 ? 'th' : 'td';
-      h += '<tr>' + cells.map(function(c) { return '<' + tag + '>' + c.trim() + '</' + tag + '>'; }).join('') + '</tr>';
+      h += '<tr>' + cells.map(function(c: string) { return '<' + tag + '>' + c.trim() + '</' + tag + '>'; }).join('') + '</tr>';
     }
     h += '</table>';
     return h;
@@ -139,20 +139,21 @@ async function send() {
   sending.value = true;
 
   const id = `float-assistant-${Date.now()}`;
-  const msg: AgentMessage = { id, role: 'assistant', content: '', createdAt: new Date().toISOString() };
+  const thinkingText = '正在思考...';
+  const msg: AgentMessage = { id, role: 'assistant', content: thinkingText, createdAt: new Date().toISOString() };
   messages.value.push(msg);
 
   try {
     await sendAgentMessageStream(content, {
-      onToken(token) {
-        msg.content += token;
+      onToken(token: string) {
+        msg.content = msg.content === thinkingText ? token : msg.content + token;
         messages.value = [...messages.value];
       },
       onDone() {
         sending.value = false;
         scrollToBottom();
       },
-      onError(err) {
+      onError(err: string) {
         msg.content = '出错了: ' + err;
         sending.value = false;
       },

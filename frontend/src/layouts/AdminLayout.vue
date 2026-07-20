@@ -1,7 +1,7 @@
 <template>
   <div class="admin-layout">
     <aside class="sidebar">
-      <RouterLink class="brand" to="/">
+      <RouterLink class="brand" to="/admin/dashboard">
         <span>🐱</span>
         <strong>CatTrace Agent</strong>
       </RouterLink>
@@ -10,6 +10,14 @@
         <RouterLink v-for="item in menuItems" :key="item.path" :to="item.path" class="menu-link">
           <span>{{ item.icon }}</span>
           {{ item.label }}
+          <el-badge
+            v-if="item.path === '/admin/clues'"
+            :value="pendingClueCount"
+            :hidden="pendingClueCount === 0"
+            class="menu-badge"
+          >
+            <span class="badge-anchor"></span>
+          </el-badge>
         </RouterLink>
       </nav>
     </aside>
@@ -21,10 +29,15 @@
           <span>管理员可查看全平台识别记录、猫咪档案和运营数据</span>
         </div>
         <div class="topbar-actions">
-          <span class="role-badge">管理员：{{ userStore.displayName }}</span>
-          <RouterLink to="/">
-            <el-button round>返回用户端</el-button>
+          <RouterLink class="admin-avatar-link" to="/admin/clues" title="待审核线索">
+            <el-badge :value="pendingClueCount" :hidden="pendingClueCount === 0">
+              <img class="admin-avatar" :src="userStore.profile?.avatar" :alt="userStore.displayName" />
+            </el-badge>
           </RouterLink>
+          <span class="role-badge">管理员：{{ userStore.displayName }}</span>
+          <el-button type="primary" round :loading="impersonating" @click="handleImpersonation">
+            模拟用户
+          </el-button>
           <el-button round @click="handleLogout">退出</el-button>
         </div>
       </header>
@@ -35,17 +48,25 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { ElMessage } from 'element-plus';
+import { createSelfImpersonation } from '@/api/auth';
+import { getRequestErrorMessage } from '@/api/request';
+import { getPendingClueCount } from '@/api/recognition';
 import { useUserStore } from '@/stores/user';
 
 const router = useRouter();
+const route = useRoute();
 const userStore = useUserStore();
+const pendingClueCount = ref(0);
+const impersonating = ref(false);
 
 const menuItems = computed(() => {
   const items = [
     { label: '数据概览', path: '/admin/dashboard', icon: '📊' },
     { label: '识别任务', path: '/admin/recognition', icon: '🧠' },
+    { label: '线索审核', path: '/admin/clues', icon: '🔔' },
     { label: '猫咪管理', path: '/admin/cats', icon: '🐾' },
   ];
 
@@ -60,6 +81,58 @@ async function handleLogout() {
   await userStore.logout();
   await router.push('/login');
 }
+
+async function handleImpersonation() {
+  const popup = window.open('', '_blank');
+  if (!popup) {
+    ElMessage.warning('浏览器阻止了新窗口，请允许弹出窗口后重试');
+    return;
+  }
+
+  popup.document.write('<p style="font-family: sans-serif; padding: 24px;">正在打开模拟用户视图...</p>');
+  impersonating.value = true;
+  try {
+    const result = await createSelfImpersonation();
+    const params = new URLSearchParams({
+      token: result.token,
+      profile: JSON.stringify(result.profile),
+    });
+    popup.location.href = `${window.location.origin}/impersonate#${params.toString()}`;
+    ElMessage.success('已打开当前管理员的专属模拟用户窗口');
+  } catch (error) {
+    popup.close();
+    ElMessage.error(getRequestErrorMessage(error, '模拟用户窗口创建失败'));
+  } finally {
+    impersonating.value = false;
+  }
+}
+
+async function refreshPendingClueCount() {
+  if (!userStore.isAdmin) {
+    pendingClueCount.value = 0;
+    return;
+  }
+
+  try {
+    pendingClueCount.value = await getPendingClueCount();
+  } catch {
+    pendingClueCount.value = 0;
+  }
+}
+
+onMounted(() => {
+  refreshPendingClueCount();
+  window.addEventListener('cattrace:pending-clues-updated', refreshPendingClueCount);
+});
+
+watch(
+  () => route.fullPath,
+  () => refreshPendingClueCount(),
+);
+
+onBeforeUnmount(() => {
+  window.removeEventListener('cattrace:pending-clues-updated', refreshPendingClueCount);
+});
 </script>
 
 <style scoped lang="scss">
@@ -120,6 +193,16 @@ nav {
   }
 }
 
+.menu-badge {
+  margin-left: auto;
+}
+
+.badge-anchor {
+  display: block;
+  width: 1px;
+  height: 1px;
+}
+
 .admin-main {
   min-width: 0;
 }
@@ -157,6 +240,20 @@ nav {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.admin-avatar-link {
+  display: inline-flex;
+  align-items: center;
+}
+
+.admin-avatar {
+  width: 38px;
+  height: 38px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 10px 20px rgba(251, 146, 60, 0.14);
 }
 
 .role-badge {

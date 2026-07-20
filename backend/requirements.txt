@@ -8,3 +8,7 @@ ultralytics
 opencv-python
 torch
 torchvision
+langchain-core
+langchain-openai
+langgraph
+openai

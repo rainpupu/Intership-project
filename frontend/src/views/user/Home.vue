@@ -33,7 +33,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
 import { getCatList } from '@/api/cat';
-import { getDashboardOverview } from '@/api/dashboard';
+import { getHomeStats } from '@/api/dashboard';
 import CatCard from '@/components/cat/CatCard.vue';
 import PageContainer from '@/components/common/PageContainer.vue';
 import StatisticCard from '@/components/dashboard/StatisticCard.vue';
@@ -51,9 +51,9 @@ const featuredCat = computed(() => cats.value[0]);
 const recommendedCats = computed(() => cats.value.filter((cat) => cat.adoptionStatus === '待领养').slice(0, 3));
 
 onMounted(async () => {
-  cats.value = await getCatList();
-  const overview = await getDashboardOverview();
-  Object.assign(stats, overview.stats);
+  const [catList, homeStats] = await Promise.all([getCatList(), getHomeStats()]);
+  cats.value = catList;
+  Object.assign(stats, homeStats);
 });
 </script>
 

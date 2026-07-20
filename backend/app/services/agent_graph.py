@@ -1,6 +1,5 @@
 """LangGraph Agent 图（Supervisor 多 Agent 协作模式）"""
 
-import json
 import threading
 from typing import Annotated, Optional
 
@@ -25,7 +24,6 @@ from app.services.agent_tools import (
     get_recent_encounters,
     recommend_adoption_cats,
     get_attention_cats,
-    query_knowledge_base,
 )
 
 
@@ -66,8 +64,8 @@ def get_llm() -> ChatOpenAI:
 
 STATUS_TOOLS = [get_attention_cats, get_cat_profile, get_cat_observations, get_recent_encounters]
 QUERY_TOOLS = [search_cats, get_cat_profile, get_recent_encounters, get_cat_observations]
-ADOPTION_TOOLS = [recommend_adoption_cats, get_cat_profile, get_cat_observations, query_knowledge_base]
-KNOWLEDGE_TOOLS = [query_knowledge_base]
+ADOPTION_TOOLS = [recommend_adoption_cats, get_cat_profile, get_cat_observations]
+KNOWLEDGE_TOOLS = []
 
 
 # ======== Agent 缓存 ========
@@ -124,6 +122,39 @@ async def supervisor_node(state: AgentState) -> dict:
 
 # ======== 专业 Agent 节点 ========
 
+def _latest_user_text(messages: list) -> str:
+    for message in reversed(messages):
+        if isinstance(message, HumanMessage):
+            return str(message.content or "")
+        if getattr(message, "type", "") == "human":
+            return str(getattr(message, "content", "") or "")
+    return ""
+
+
+def _contains_any(text: str, keywords: tuple[str, ...]) -> bool:
+    return any(keyword in text for keyword in keywords)
+
+
+def _route_by_keywords(text: str) -> str:
+    normalized = text.strip().lower()
+    if not normalized:
+        return "knowledge_qa_agent"
+    if _contains_any(normalized, ("推荐", "适合养", "想养猫", "adopt")) and _contains_any(normalized, ("领养", "收养", "猫咪", "猫")):
+        return "adoption_agent"
+    if _contains_any(normalized, ("领养", "收养", "云领养")) and not _contains_any(normalized, ("推荐", "哪只", "哪一只", "适合")):
+        return "knowledge_qa_agent"
+    if _contains_any(normalized, ("健康", "状态", "情绪", "心情", "关注", "异常", "生病", "受伤", "最近怎么样", "需要注意")):
+        return "cat_status_agent"
+    if _contains_any(normalized, ("档案", "查询", "搜索", "查找", "名字", "叫什么", "哪只", "几只", "出现过", "在哪里", "地点")):
+        return "cat_query_agent"
+    return "knowledge_qa_agent"
+
+
+async def supervisor_node(state: AgentState) -> dict:
+    """Route locally to avoid an extra LLM call before answering."""
+    return {"next_agent": _route_by_keywords(_latest_user_text(state["messages"]))}
+
+
 async def _run_agent(state: AgentState, agent_name: str, system_prompt: str, tools: list) -> dict:
     agent = _get_cached_agent(agent_name, system_prompt, tools)
     messages = state["messages"]
@@ -132,6 +163,14 @@ async def _run_agent(state: AgentState, agent_name: str, system_prompt: str, too
     ai_messages = [m for m in result["messages"] if isinstance(m, AIMessage)]
     response_content = ai_messages[-1].content if ai_messages else "处理完成。"
 
+    return {"messages": [AIMessage(content=response_content)]}
+
+
+async def _run_direct_agent(state: AgentState, system_prompt: str) -> dict:
+    llm = get_llm()
+    messages = [SystemMessage(content=system_prompt)] + list(state["messages"])
+    response = await llm.ainvoke(messages)
+    response_content = response.content if isinstance(response, AIMessage) else str(response.content)
     return {"messages": [AIMessage(content=response_content)]}
 
 
@@ -148,7 +187,7 @@ async def adoption_agent_node(state: AgentState) -> dict:
 
 
 async def knowledge_qa_agent_node(state: AgentState) -> dict:
-    return await _run_agent(state, "knowledge_qa", KNOWLEDGE_QA_SYSTEM_PROMPT, KNOWLEDGE_TOOLS)
+    return await _run_direct_agent(state, KNOWLEDGE_QA_SYSTEM_PROMPT)
 
 
 # ======== 路由函数 ========

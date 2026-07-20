@@ -25,6 +25,13 @@
           <h2 class="section-title">本次候选结果</h2>
           <div v-if="candidates.length" class="candidate-list">
             <CandidateCard v-for="candidate in candidates" :key="candidate.catId" :candidate="candidate" />
+            <div v-if="latestRecognizedRecord && canSubmitClue(latestRecognizedRecord)" class="clue-cta">
+              <div>
+                <strong>这是校园里拍到的猫吗？</strong>
+                <p>填写地点后提交为校园猫线索，管理员确认后才会写入猫咪档案。</p>
+              </div>
+              <el-button type="primary" round @click="openClueDialog(latestRecognizedRecord)">提交校园线索</el-button>
+            </div>
           </div>
           <EmptyState
             v-else
@@ -76,14 +83,59 @@
         <el-table-column label="时间" min-width="160">
           <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
         </el-table-column>
+        <el-table-column label="操作" width="140">
+          <template #default="{ row }">
+            <el-button v-if="canSubmitClue(row)" link type="primary" @click="openClueDialog(row)">
+              提交线索
+            </el-button>
+            <span v-else class="muted-action">-</span>
+          </template>
+        </el-table-column>
       </el-table>
     </section>
+
+    <el-dialog v-model="clueDialogVisible" title="提交校园猫线索" width="520px">
+      <div v-if="selectedRecord" class="clue-preview">
+        <img :src="selectedRecord.image" :alt="selectedRecord.catName" />
+        <div>
+          <strong>{{ selectedRecord.catName }}</strong>
+          <p>健康：{{ selectedRecord.healthStatus || '待确认' }} · 心情：{{ selectedRecord.moodStatus || '待确认' }}</p>
+        </div>
+      </div>
+      <el-form label-width="92px">
+        <el-form-item label="拍摄地点" required>
+          <el-input v-model="clueForm.location" placeholder="例如：图书馆北门、三号楼花坛" />
+        </el-form-item>
+        <el-form-item label="拍摄时间">
+          <el-date-picker
+            v-model="clueForm.observedAt"
+            type="datetime"
+            value-format="YYYY-MM-DDTHH:mm:ss"
+            placeholder="默认当前时间"
+            style="width: 100%"
+          />
+        </el-form-item>
+        <el-form-item label="补充说明">
+          <el-input
+            v-model="clueForm.userRemark"
+            type="textarea"
+            :rows="3"
+            placeholder="例如：看起来受伤、经常在这里出现、疑似同一只猫"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="clueDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submittingClue" @click="handleSubmitClue">提交线索</el-button>
+      </template>
+    </el-dialog>
   </PageContainer>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { getRecognitionRecords } from '@/api/recognition';
+import { computed, onMounted, reactive, ref } from 'vue';
+import { ElMessage } from 'element-plus';
+import { getRecognitionRecords, submitCampusClue } from '@/api/recognition';
 import PageContainer from '@/components/common/PageContainer.vue';
 import DataState from '@/components/common/DataState.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
@@ -98,12 +150,28 @@ const userStore = useUserStore();
 const records = ref<RecognitionRecord[]>([]);
 const recordsLoading = ref(false);
 const recordsError = ref('');
+const clueDialogVisible = ref(false);
+const submittingClue = ref(false);
+const selectedRecord = ref<RecognitionRecord | null>(null);
+const clueForm = reactive({
+  location: '',
+  observedAt: '',
+  userRemark: '',
+});
 const {
   analyzing,
   candidates,
   analyzeSelectedImages,
   handleUploadChange,
 } = useRecognitionFlow();
+
+const latestRecognizedRecord = computed(() => {
+  return records.value.find((record) => record.status === '个人识别') || null;
+});
+
+function canSubmitClue(record: RecognitionRecord) {
+  return !['线索待审核', '已确认', '已建档', '未检测到'].includes(record.status);
+}
 
 async function fetchMineRecords() {
   recordsLoading.value = true;
@@ -123,6 +191,36 @@ async function handleAnalyze() {
   const success = await analyzeSelectedImages();
   if (success) {
     await fetchMineRecords();
+  }
+}
+
+function openClueDialog(record: RecognitionRecord) {
+  selectedRecord.value = record;
+  clueForm.location = record.location && record.location !== '用户上传' ? record.location : '';
+  clueForm.observedAt = new Date().toISOString().slice(0, 19);
+  clueForm.userRemark = record.userRemark || '';
+  clueDialogVisible.value = true;
+}
+
+async function handleSubmitClue() {
+  if (!selectedRecord.value) return;
+  if (!clueForm.location.trim()) {
+    ElMessage.warning('请填写校园拍摄地点');
+    return;
+  }
+
+  submittingClue.value = true;
+  try {
+    await submitCampusClue(selectedRecord.value.id, {
+      location: clueForm.location.trim(),
+      observedAt: clueForm.observedAt || undefined,
+      userRemark: clueForm.userRemark.trim() || undefined,
+    });
+    clueDialogVisible.value = false;
+    ElMessage.success('校园猫线索已提交，等待管理员确认');
+    await fetchMineRecords();
+  } finally {
+    submittingClue.value = false;
   }
 }
 
@@ -178,6 +276,43 @@ onMounted(async () => {
 .candidate-list {
   display: grid;
   gap: 12px;
+}
+
+.clue-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(251, 146, 60, 0.2);
+  border-radius: 16px;
+  background: rgba(255, 247, 237, 0.78);
+}
+
+.clue-cta p,
+.clue-preview p {
+  margin: 5px 0 0;
+  color: $color-text-secondary;
+  font-size: 13px;
+}
+
+.clue-preview {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.clue-preview img {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+
+.muted-action {
+  color: $color-text-secondary;
 }
 
 .record-image {

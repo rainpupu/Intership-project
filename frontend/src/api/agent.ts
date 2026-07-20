@@ -107,7 +107,7 @@ export async function sendAgentMessageStream(
 }
 
 // 向后兼容
-export function sendAgentMessage(content: string): Promise<AgentMessage> {
+export function sendAgentMessage(_content: string): Promise<AgentMessage> {
   return Promise.resolve({
     id: `legacy-${Date.now()}`,
     role: 'assistant',

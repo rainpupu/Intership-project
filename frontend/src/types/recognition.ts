@@ -44,11 +44,30 @@ export interface RecognitionRecord {
   id: string;
   userId: string;
   image: string;
+  catId?: string | null;
   catName: string;
   similarity: number;
+  modelType?: 'breed' | 'individual' | 'new';
+  breedName?: string;
+  breedConfidence?: number;
+  identityStatus?: string;
+  bestIdentityMatch?: {
+    catId: string;
+    name: string;
+    image: string;
+    similarity: number;
+  } | null;
   healthStatus?: string;
   moodStatus?: string;
   location: string;
+  observedAt?: string;
+  userRemark?: string;
   createdAt: string;
   status: string;
+}
+
+export interface SubmitCampusCluePayload {
+  location: string;
+  observedAt?: string;
+  userRemark?: string;
 }

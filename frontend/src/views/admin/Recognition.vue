@@ -119,15 +119,16 @@
     </section>
 
     <el-dialog v-model="createDialogVisible" title="创建新猫档案" width="520px">
-      <div v-if="topCandidate" class="prefill-card">
-        <img :src="topCandidate.cropImage || topCandidate.image" :alt="topCandidate.name" />
+      <div v-if="createDialogPreview" class="prefill-card">
+        <img :src="createDialogPreview.image" :alt="createDialogPreview.name" />
         <div>
           <strong>AI 已预填基础信息</strong>
-            <p>候选类型：{{ topCandidate.modelType === 'new' ? '疑似新猫' : topCandidate.status }}</p>
-            <p>品种/外观候选：{{ topCandidate.breedName || topCandidate.name }}</p>
-            <p>健康状态：{{ topCandidate.healthStatus || '待人工确认' }}</p>
-            <p>心情状态：{{ topCandidate.moodStatus || '待人工确认' }}</p>
-            <p>置信度：{{ formatPercent(topCandidate.similarity) }}</p>
+            <p>候选类型：{{ createDialogPreview.status }}</p>
+            <p>品种/外观候选：{{ createDialogPreview.name }}</p>
+            <p>健康状态：{{ createDialogPreview.healthStatus || '待人工确认' }}</p>
+            <p>心情状态：{{ createDialogPreview.moodStatus || '待人工确认' }}</p>
+            <p>置信度：{{ formatPercent(createDialogPreview.similarity) }}</p>
+            <p v-if="createDialogPreview.userRemark">用户备注：{{ createDialogPreview.userRemark }}</p>
         </div>
       </div>
       <el-form label-width="92px">
@@ -159,7 +160,7 @@
       <div class="records-head">
         <div>
           <h2 class="section-title">全平台最近识别记录</h2>
-          <p>管理员通过 `getRecognitionRecords({ scope: 'all' })` 查看所有用户上传记录。</p>
+          <p>这里展示全平台识别历史；用户提交的校园线索请到“线索审核”页面处理。</p>
         </div>
       </div>
       <DataState
@@ -188,8 +189,11 @@
         <el-table-column prop="healthStatus" label="健康" width="110" />
         <el-table-column prop="moodStatus" label="心情" width="110" />
         <el-table-column prop="location" label="地点" min-width="170" />
+        <el-table-column label="拍摄时间" min-width="160">
+          <template #default="{ row }">{{ formatDateTime(row.observedAt || row.createdAt) }}</template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" width="110" />
-        <el-table-column label="时间" min-width="160">
+        <el-table-column label="上传时间" min-width="160">
           <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
         </el-table-column>
       </el-table>
@@ -236,6 +240,20 @@ const {
 } = useRecognitionFlow();
 
 const topCandidate = computed(() => candidates.value[0]);
+const createDialogPreview = computed(() => {
+  if (topCandidate.value) {
+    return {
+      image: topCandidate.value.cropImage || topCandidate.value.image,
+      name: topCandidate.value.breedName || topCandidate.value.name,
+      similarity: topCandidate.value.similarity,
+      status: topCandidate.value.modelType === 'new' ? '疑似新猫' : topCandidate.value.status,
+      healthStatus: topCandidate.value.healthStatus,
+      moodStatus: topCandidate.value.moodStatus,
+      userRemark: '',
+    };
+  }
+  return null;
+});
 const identityResultTitle = computed(() => {
   if (!topCandidate.value) return '等待识别结果';
   if (topCandidate.value.modelType === 'individual') return '已匹配已有猫咪档案';
@@ -362,7 +380,8 @@ async function fetchRecords() {
   recordsLoading.value = true;
   recordsError.value = '';
   try {
-    records.value = await getRecognitionRecords({ scope: 'all' });
+    const allRecords = await getRecognitionRecords({ scope: 'all' });
+    records.value = allRecords.filter((record) => record.status !== '线索待审核');
   } catch {
     recordsError.value = '全平台识别记录加载失败，请稍后重试。';
   } finally {
@@ -430,6 +449,14 @@ async function fetchRecords() {
 .records-head p {
   color: $color-text-secondary;
   line-height: 1.8;
+}
+
+.records-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
 }
 
 .identity-result {

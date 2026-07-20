@@ -151,7 +151,14 @@ class IndividualRecognitionService:
             raise HTTPException(status_code=400, detail="该识别记录没有可登记的个体特征")
 
         image_url = candidate.get("cropImage") or candidate.get("image") or record.image
-        self._apply_status_observation(db, cat, record, candidate, current_user, location=None)
+        self._apply_status_observation(
+            db,
+            cat,
+            record,
+            candidate,
+            current_user,
+            location=self._record_location_for_observation(record),
+        )
         db.add(
             CatIdentityEmbedding(
                 cat_id=cat.id,
@@ -189,8 +196,8 @@ class IndividualRecognitionService:
         breed_name = candidate.get("breedName") or "未知品种"
         health_status = candidate.get("healthStatus") or record.health_status
         mood_status = candidate.get("moodStatus") or record.mood_status
-        observed_at = record.created_at or datetime.now()
-        last_seen_location = (payload.get("last_seen_location") or "").strip() or None
+        observed_at = record.observed_at or record.created_at or datetime.now()
+        last_seen_location = (payload.get("last_seen_location") or "").strip() or self._record_location_for_observation(record)
         similarity = float(candidate.get("similarity") or record.similarity or 0)
         auto_name = self._build_default_name(db)
         name = (payload.get("name") or "").strip() or auto_name
@@ -234,7 +241,7 @@ class IndividualRecognitionService:
                 mood_status=mood_status,
                 health_status=health_status,
                 observed_at=observed_at,
-                description="由识别流程自动补充健康和心情信息，地点由管理员人工填写。",
+                description=self._build_observation_description(record),
                 created_by_id=current_user.id,
             )
         )
@@ -307,7 +314,7 @@ class IndividualRecognitionService:
     ) -> None:
         health_status = candidate.get("healthStatus") or record.health_status
         mood_status = candidate.get("moodStatus") or record.mood_status
-        observed_at = record.created_at or datetime.now()
+        observed_at = record.observed_at or record.created_at or datetime.now()
 
         if health_status:
             cat.health_status = health_status
@@ -325,10 +332,23 @@ class IndividualRecognitionService:
                     mood_status=mood_status,
                     health_status=health_status,
                     observed_at=observed_at,
-                    description="由识别流程自动补充健康和心情信息，地点由管理员人工填写。",
+                    description=self._build_observation_description(record),
                     created_by_id=current_user.id,
                 )
             )
+
+    def _record_location_for_observation(self, record: RecognitionRecord) -> str | None:
+        if record.location and record.location != "用户上传":
+            return record.location
+        return None
+
+    def _build_observation_description(self, record: RecognitionRecord) -> str:
+        parts = ["由识别流程补充健康和心情信息。"]
+        if record.status == "线索待审核":
+            parts.append("该记录来自用户提交的校园猫线索，已由管理员确认。")
+        if record.user_remark:
+            parts.append(f"用户备注：{record.user_remark}")
+        return "".join(parts)
 
     def _generate_cat_code(self, db: Session) -> str:
         prefix = datetime.now().strftime("cat-%Y%m%d%H%M%S")

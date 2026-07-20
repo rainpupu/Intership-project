@@ -13,20 +13,21 @@
     <section class="stats-grid">
       <StatisticCard label="猫咪总数" :value="overview.stats.totalCats" hint="已建立数字档案" icon="🐾" />
       <StatisticCard label="今日识别" :value="overview.stats.todayRecognitions" hint="来自上传任务" icon="📷" />
-      <StatisticCard label="待审核事件" :value="overview.stats.pendingEvents" hint="等待管理员确认" icon="📝" />
-      <StatisticCard label="领养申请" :value="overview.stats.adoptionApplications" hint="待沟通与回访" icon="💌" />
+      <StatisticCard label="待跟进事件" :value="overview.stats.pendingEvents" hint="重点关注或需复查" icon="📝" />
+      <StatisticCard label="开放领养" :value="overview.stats.adoptionOpen" hint="状态为待领养" icon="💌" />
     </section>
 
     <section class="dashboard-grid">
       <ChartCard
-        title="领养申请趋势"
-        description="当前为 Mock 示例数据，后续对接 dashboard 接口。"
+        title="最近 7 天识别趋势"
+        description="来自真实识别历史记录。"
         :labels="chartLabels"
         :values="chartValues"
       />
 
       <div class="soft-card panel">
         <h2 class="section-title">最近识别记录</h2>
+        <EmptyState v-if="overview.recentRecognitions.length === 0" title="暂无识别记录" description="完成猫咪识别后，最近记录会显示在这里。" />
         <div class="record-list">
           <article v-for="record in overview.recentRecognitions" :key="record.id">
             <img :src="record.image" :alt="record.catName" />
@@ -42,6 +43,7 @@
 
     <section class="soft-card panel">
       <h2 class="section-title">重点关注猫咪</h2>
+      <EmptyState v-if="overview.focusCats.length === 0" title="暂无重点关注猫咪" description="被标记、重点关注或需复查的猫咪会显示在这里。" />
       <div class="focus-list">
         <article v-for="cat in overview.focusCats" :key="cat.id">
           <img :src="cat.coverImage" :alt="cat.name" />
@@ -61,6 +63,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { getDashboardOverview, type DashboardOverview } from '@/api/dashboard';
 import DataState from '@/components/common/DataState.vue';
+import EmptyState from '@/components/common/EmptyState.vue';
 import ChartCard from '@/components/dashboard/ChartCard.vue';
 import StatisticCard from '@/components/dashboard/StatisticCard.vue';
 import { formatDateTime, formatPercent } from '@/utils/formatter';
@@ -76,13 +79,13 @@ const overview = reactive<DashboardOverview>({
   },
   recentRecognitions: [],
   focusCats: [],
-  adoptionTrend: [],
+  recognitionTrend: [],
 });
 const loading = ref(false);
 const errorMessage = ref('');
 
-const chartLabels = computed(() => overview.adoptionTrend.map((item) => item.date));
-const chartValues = computed(() => overview.adoptionTrend.map((item) => item.value));
+const chartLabels = computed(() => overview.recognitionTrend.map((item) => item.date));
+const chartValues = computed(() => overview.recognitionTrend.map((item) => item.value));
 
 async function fetchOverview() {
   loading.value = true;

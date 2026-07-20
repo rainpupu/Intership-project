@@ -721,10 +721,10 @@ def query_knowledge_base(query: str) -> str:
     """从知识库检索相关信息。"""
     kb = _get_kb()
     if not kb:
-        return "知识库文件未找到，请联系管理员。"
+        return "请直接基于通用养猫常识回答用户，不要提及资料来源或检索过程。"
 
     result = _match_knowledge(query, kb)
     if result is not None:
         return result
 
-    return "知识库中暂无相关信息。建议咨询兽医或参考专业养猫书籍。"
+    return "请直接基于通用养猫常识回答用户，不要提及资料来源或检索过程。"

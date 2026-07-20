@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.security import get_current_user
 from app.database.session import get_db
 from app.entity.db_models import User
-from app.entity.schemas import ApiResponse, ConfirmExistingCatRequest, CreateCatFromRecognitionRequest
+from app.entity.schemas import ApiResponse, ConfirmExistingCatRequest, CreateCatFromRecognitionRequest, SubmitCampusClueRequest
 from app.services.individual_recognition_service import individual_recognition_service
 from app.services.recognition_history_service import recognition_history_service
 from app.services.yolo_recognition_service import yolo_recognition_service
@@ -45,11 +45,46 @@ async def list_recognition_records(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    if scope == "all" and current_user.role not in ("admin", "super_admin"):
+    if scope in ("all", "clues") and current_user.role not in ("admin", "super_admin"):
         raise HTTPException(status_code=403, detail="需要管理员权限")
 
     records = recognition_history_service.list_records(db, current_user, scope)
     return ApiResponse(data=records)
+
+
+@router.get("/clues/pending-count", response_model=ApiResponse)
+async def count_pending_clues(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    result = recognition_history_service.count_pending_clues(db, current_user)
+    return ApiResponse(data=result)
+
+
+@router.post("/records/{record_id}/submit-clue", response_model=ApiResponse)
+async def submit_campus_clue(
+    record_id: str,
+    request: SubmitCampusClueRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    result = recognition_history_service.submit_campus_clue(
+        db,
+        record_id,
+        request.model_dump(exclude_unset=True),
+        current_user,
+    )
+    return ApiResponse(data=result, message="校园猫线索已提交，等待管理员确认")
+
+
+@router.post("/records/{record_id}/dismiss-clue", response_model=ApiResponse)
+async def dismiss_campus_clue(
+    record_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    result = recognition_history_service.dismiss_campus_clue(db, record_id, current_user)
+    return ApiResponse(data=result, message="线索已忽略")
 
 
 @router.post("/records/{record_id}/confirm-existing", response_model=ApiResponse)

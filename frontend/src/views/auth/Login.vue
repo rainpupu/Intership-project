@@ -75,6 +75,14 @@ function getAuthErrorDetail(error: unknown): AuthErrorDetail {
   };
 }
 
+function resolveLoginRedirect(role: string, redirect: string) {
+  if (role === 'admin' || role === 'super_admin') {
+    return redirect.startsWith('/admin') ? redirect : '/admin/dashboard';
+  }
+
+  return redirect && !redirect.startsWith('/admin') ? redirect : '/';
+}
+
 async function handleLogin() {
   await formRef.value?.validate();
   loading.value = true;
@@ -86,7 +94,7 @@ async function handleLogin() {
       duration: 1000,
     });
     const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '';
-    await router.push(redirect || '/');
+    await router.push(resolveLoginRedirect(profile.role, redirect));
   } catch (error) {
     const detail = getAuthErrorDetail(error);
     if (detail.code === 'PHONE_NOT_REGISTERED') {

@@ -105,3 +105,10 @@ export async function updateUserRole(payload: UpdateUserRolePayload): Promise<Us
   );
   return normalizeProfile(response.data);
 }
+
+export async function createSelfImpersonation(): Promise<AuthResult> {
+  const response = await request.post<ApiResponse<BackendAuthResult>, ApiResponse<BackendAuthResult>>(
+    '/auth/impersonation/self',
+  );
+  return normalizeAuthResult(response.data);
+}

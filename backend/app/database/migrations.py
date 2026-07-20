@@ -24,3 +24,7 @@ def ensure_runtime_columns(engine: Engine) -> None:
             connection.execute(text("ALTER TABLE recognition_records ADD COLUMN health_status VARCHAR(100)"))
         if "mood_status" not in existing_columns:
             connection.execute(text("ALTER TABLE recognition_records ADD COLUMN mood_status VARCHAR(100)"))
+        if "observed_at" not in existing_columns:
+            connection.execute(text("ALTER TABLE recognition_records ADD COLUMN observed_at DATETIME"))
+        if "user_remark" not in existing_columns:
+            connection.execute(text("ALTER TABLE recognition_records ADD COLUMN user_remark TEXT"))

@@ -1,7 +1,12 @@
-import { mockResolve } from '@/api/request';
-import { mockCats, mockRecognitionRecords } from '@/mock';
+import request from '@/api/request';
 import type { Cat } from '@/types/cat';
 import type { RecognitionRecord } from '@/types/recognition';
+
+interface ApiResponse<T> {
+  code: number;
+  message: string;
+  data: T;
+}
 
 export interface DashboardOverview {
   stats: {
@@ -14,29 +19,24 @@ export interface DashboardOverview {
   };
   recentRecognitions: RecognitionRecord[];
   focusCats: Cat[];
-  adoptionTrend: Array<{ date: string; value: number }>;
+  recognitionTrend: Array<{ date: string; value: number }>;
+}
+
+export interface HomeStats {
+  totalCats: number;
+  adoptionOpen: number;
+  todayRecognitions: number;
+  focusCats: number;
 }
 
 export function getDashboardOverview(): Promise<DashboardOverview> {
-  return mockResolve({
-    stats: {
-      totalCats: mockCats.length,
-      todayRecognitions: 12,
-      pendingEvents: 4,
-      adoptionApplications: 8,
-      adoptionOpen: mockCats.filter((cat) => cat.adoptionStatus === '待领养').length,
-      focusCats: mockCats.filter((cat) => cat.isFocus).length,
-    },
-    recentRecognitions: mockRecognitionRecords,
-    focusCats: mockCats.filter((cat) => cat.isFocus),
-    adoptionTrend: [
-      { date: '周一', value: 2 },
-      { date: '周二', value: 3 },
-      { date: '周三', value: 4 },
-      { date: '周四', value: 4 },
-      { date: '周五', value: 6 },
-      { date: '周六', value: 7 },
-      { date: '周日', value: 8 },
-    ],
-  });
+  return request
+    .get<ApiResponse<DashboardOverview>, ApiResponse<DashboardOverview>>('/dashboard/overview')
+    .then((response) => response.data);
+}
+
+export function getHomeStats(): Promise<HomeStats> {
+  return request
+    .get<ApiResponse<HomeStats>, ApiResponse<HomeStats>>('/dashboard/home-stats')
+    .then((response) => response.data);
 }

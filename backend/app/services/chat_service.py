@@ -1,13 +1,92 @@
 """对话服务：管理会话与流式消息"""
 
 import json
+import re
 import time
 from dataclasses import dataclass, field
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator
 
-from langchain_core.messages import AIMessage, HumanMessage
+try:
+    from langchain_core.messages import AIMessage, HumanMessage
+except ModuleNotFoundError:  # pragma: no cover - optional agent dependency
+    @dataclass
+    class HumanMessage:
+        content: str
 
-from app.services.agent_graph import get_agent_graph
+    @dataclass
+    class AIMessage:
+        content: str
+
+
+def _content_to_text(content: Any) -> str:
+    if content is None:
+        return ""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts: list[str] = []
+        for item in content:
+            if isinstance(item, str):
+                parts.append(item)
+            elif isinstance(item, dict):
+                text = item.get("text") or item.get("content") or ""
+                if text:
+                    parts.append(str(text))
+        return "".join(parts)
+    return str(content)
+
+
+def _extract_ai_content(payload: Any) -> str:
+    if payload is None:
+        return ""
+
+    if isinstance(payload, AIMessage):
+        return _content_to_text(payload.content)
+
+    if isinstance(payload, dict):
+        for key in ("chunk", "output"):
+            text = _extract_ai_content(payload.get(key))
+            if text:
+                return text
+
+        messages = payload.get("messages")
+        if isinstance(messages, list):
+            for message in reversed(messages):
+                text = _extract_ai_content(message)
+                if text:
+                    return text
+
+        for value in payload.values():
+            text = _extract_ai_content(value)
+            if text:
+                return text
+
+    if isinstance(payload, list):
+        for item in reversed(payload):
+            text = _extract_ai_content(item)
+            if text:
+                return text
+
+    return ""
+
+
+def _fallback_reply(user_message: str) -> str:
+    text = user_message.strip()
+    if any(word in text for word in ("你好", "您好", "hello", "Hello", "嗨")):
+        return "你好，我是 CatTrace AI 助手。你可以问我校园猫档案、近期健康状态、领养建议，或者猫咪照护常识。"
+    return "我暂时没有生成有效回复。你可以换一种说法，直接说明想查询猫咪档案、健康状态、领养建议或猫咪照护知识。"
+
+
+def _sanitize_agent_response(content: str) -> str:
+    text = content.strip()
+    patterns = (
+        r"^知识库中(?:暂未|暂无|没有|未)?(?:查询到|检索到|找到)?相关(?:内容|信息)[，,。；;：:\s]*(?:不过|但是|但)?",
+        r"^平台知识库中(?:暂未|暂无|没有|未)?(?:查询到|检索到|找到)?相关(?:内容|信息)[，,。；;：:\s]*(?:不过|但是|但)?",
+        r"^根据知识库(?:检索|查询)?(?:结果)?[，,。；;：:\s]*",
+    )
+    for pattern in patterns:
+        text = re.sub(pattern, "", text, count=1)
+    return text.strip() or content.strip()
 
 
 @dataclass
@@ -101,8 +180,16 @@ class ChatService:
             "current_task": None,
         }
 
-        graph = get_agent_graph()
+        try:
+            from app.services.agent_graph import get_agent_graph
+            graph = get_agent_graph()
+        except ModuleNotFoundError as exc:
+            message = f"智能体依赖未安装：{exc.name}。请根据 backend/pyproject.toml 安装 LangChain/LangGraph 相关依赖。"
+            yield f"data: {json.dumps({'type': 'error', 'content': message}, ensure_ascii=False)}\n\n"
+            return
+
         full_response = ""
+        final_response = ""
 
         try:
             async for event in graph.astream_events(
@@ -117,16 +204,22 @@ class ChatService:
                     # 跳过 Supervisor 的决策 JSON，不向前端推送
                     metadata = event.get("metadata", {})
                     if metadata.get("langgraph_node") == "supervisor":
-                        if hasattr(event["data"]["chunk"], "content") and event["data"]["chunk"].content:
-                            full_response += event["data"]["chunk"].content
                         continue
                     chunk = event["data"]["chunk"]
                     if hasattr(chunk, "content") and chunk.content:
-                        token = chunk.content
+                        token = _content_to_text(chunk.content)
                         full_response += token
                         yield f"data: {json.dumps({'type': 'token', 'content': token}, ensure_ascii=False)}\n\n"
 
                 # 工具开始调用
+                elif event_kind in {"on_chain_stream", "on_chain_end"}:
+                    metadata = event.get("metadata", {})
+                    if metadata.get("langgraph_node") == "supervisor":
+                        continue
+                    content = _extract_ai_content(event.get("data"))
+                    if content:
+                        final_response = _sanitize_agent_response(content)
+
                 elif event_kind == "on_tool_start":
                     tool_name = event.get("name", "unknown")
                     tool_input = event["data"].get("input", {})
@@ -150,6 +243,14 @@ class ChatService:
             return
 
         # 保存 AI 回复
+        if not full_response and final_response:
+            full_response = final_response
+            yield f"data: {json.dumps({'type': 'token', 'content': final_response}, ensure_ascii=False)}\n\n"
+
+        if not full_response:
+            full_response = _fallback_reply(user_message)
+            yield f"data: {json.dumps({'type': 'token', 'content': full_response}, ensure_ascii=False)}\n\n"
+
         if full_response:
             self._message_counter += 1
             ai_msg = ChatMessage(

@@ -43,6 +43,7 @@ from app.entity.schemas.recognition import (
     CreateCatFromRecognitionRequest,
     RecognitionRecordListQuery,
     RecognitionRecordResponse,
+    SubmitCampusClueRequest,
 )
 
 __all__ = [
@@ -84,6 +85,7 @@ __all__ = [
     "AnalyzeResponse",
     "RecognitionRecordListQuery",
     "RecognitionRecordResponse",
+    "SubmitCampusClueRequest",
     "ConfirmExistingCatRequest",
     "CreateCatFromRecognitionRequest",
 ]

@@ -26,7 +26,18 @@ router.beforeEach((to, from) => {
   }
 
   if ((to.name === 'Login' || to.name === 'Register') && userStore.isLoggedIn) {
-    return '/';
+    return userStore.isAdmin ? '/admin/dashboard' : '/';
+  }
+
+  if (to.name === 'ImpersonationEntry') {
+    return true;
+  }
+
+  if (userStore.isLoggedIn && userStore.isAdmin && !to.path.startsWith('/admin')) {
+    if (to.fullPath !== '/') {
+      ElMessage.warning('管理员账号只能进入管理端，请使用模拟用户功能查看用户端页面');
+    }
+    return '/admin/dashboard';
   }
 
   if (!requiresAuth) {

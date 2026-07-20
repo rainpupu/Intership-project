@@ -7,7 +7,7 @@ const request = axios.create({
 });
 
 request.interceptors.request.use((config) => {
-  const rawToken = localStorage.getItem('cattrace_token');
+  const rawToken = sessionStorage.getItem('cattrace_token') || localStorage.getItem('cattrace_token');
   let token = rawToken || '';
 
   if (rawToken) {

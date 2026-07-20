@@ -142,6 +142,8 @@ class RecognitionRecord(Base):
     mood_status = Column(String(100), nullable=True)
     location = Column(String(200), default="用户上传", nullable=False)
     status = Column(String(50), default="已识别", nullable=False, index=True)
+    observed_at = Column(DateTime, nullable=True)
+    user_remark = Column(Text, nullable=True)
     analysis_summary = Column(Text, nullable=True)
     detected_count = Column(Integer, default=0, nullable=False)
     elapsed_ms = Column(Integer, default=0, nullable=False)

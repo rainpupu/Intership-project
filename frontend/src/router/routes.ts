@@ -2,6 +2,11 @@ import type { RouteRecordRaw } from 'vue-router';
 
 export const routes: RouteRecordRaw[] = [
   {
+    path: '/impersonate',
+    name: 'ImpersonationEntry',
+    component: () => import('@/views/auth/ImpersonationEntry.vue'),
+  },
+  {
     path: '/',
     component: () => import('@/layouts/UserLayout.vue'),
     children: [
@@ -31,7 +36,7 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/user/UserRecognition.vue'),
         meta: {
           requiresAuth: true,
-          roles: ['user', 'admin', 'super_admin'],
+          roles: ['user'],
         },
       },
       {
@@ -40,7 +45,7 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/user/Profile.vue'),
         meta: {
           requiresAuth: true,
-          roles: ['user', 'admin', 'super_admin'],
+          roles: ['user'],
           hideHeader: true,
         },
       },
@@ -78,6 +83,15 @@ export const routes: RouteRecordRaw[] = [
         path: 'recognition',
         name: 'AdminRecognition',
         component: () => import('@/views/admin/Recognition.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['admin', 'super_admin'],
+        },
+      },
+      {
+        path: 'clues',
+        name: 'AdminClueReview',
+        component: () => import('@/views/admin/ClueReview.vue'),
         meta: {
           requiresAuth: true,
           roles: ['admin', 'super_admin'],
