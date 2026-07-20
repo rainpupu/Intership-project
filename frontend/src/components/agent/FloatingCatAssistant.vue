@@ -14,7 +14,7 @@
 
       <div ref="messageListRef" class="message-list">
         <div v-for="message in messages" :key="message.id" class="message" :class="message.role">
-          <span>{{ message.content }}</span>
+          <span v-html="fmt(message.content)"></span>
         </div>
       </div>
 
@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref } from 'vue';
-import { sendAgentMessage, type AgentMessage } from '@/api/agent';
+import { sendAgentMessageStream, type AgentMessage } from '@/api/agent';
 import juziGrooming from '@/assets/images/pet/juzi-grooming.webp';
 import juziPlaying from '@/assets/images/pet/juzi-playing.webp';
 import juziResting from '@/assets/images/pet/juzi-resting.webp';
@@ -60,34 +60,10 @@ interface CatBehavior {
 }
 
 const behaviors: CatBehavior[] = [
-  {
-    key: 'walking',
-    label: '巡逻中',
-    text: '橘子正在页面边角散步',
-    chatHint: '橘子巡逻回来，可以继续咨询',
-    image: juziWalking,
-  },
-  {
-    key: 'playing',
-    label: '玩耍中',
-    text: '橘子正在追毛线球',
-    chatHint: '橘子玩得正开心，也能帮你查猫咪',
-    image: juziPlaying,
-  },
-  {
-    key: 'resting',
-    label: '休息中',
-    text: '橘子在打盹，轻点叫醒',
-    chatHint: '橘子醒来啦，可以帮你整理建议',
-    image: juziResting,
-  },
-  {
-    key: 'grooming',
-    label: '舔毛中',
-    text: '橘子正在认真整理毛毛',
-    chatHint: '橘子整理好毛发，也整理好档案',
-    image: juziGrooming,
-  },
+  { key: 'walking', label: '巡逻中', text: '橘子正在页面边角散步', chatHint: '橘子巡逻回来，可以继续咨询', image: juziWalking },
+  { key: 'playing', label: '玩耍中', text: '橘子正在追毛线球', chatHint: '橘子玩得正开心，也能帮你查猫咪', image: juziPlaying },
+  { key: 'resting', label: '休息中', text: '橘子在打盹，轻点叫醒', chatHint: '橘子醒来啦，可以帮你整理建议', image: juziResting },
+  { key: 'grooming', label: '舔毛中', text: '橘子正在认真整理毛毛', chatHint: '橘子整理好毛发，也整理好档案', image: juziGrooming },
 ];
 
 const quickQuestions = ['推荐新手猫咪', '哪些需要关注', '领养注意事项'];
@@ -97,34 +73,51 @@ const isOpen = ref(false);
 const sending = ref(false);
 const messageListRef = ref<HTMLDivElement>();
 const messages = ref<AgentMessage[]>([
-  {
-    id: 'float-welcome',
-    role: 'assistant',
-    content: '我是右下角的橘子助手，可以帮你快速查看猫咪状态、领养建议和重点关注名单。',
-    createdAt: new Date().toISOString(),
-  },
+  { id: 'float-welcome', role: 'assistant', content: '我是右下角的橘子助手，可以帮你快速查看猫咪状态、领养建议和重点关注名单。', createdAt: new Date().toISOString() },
 ]);
 
 const currentBehavior = computed(() => behaviors[behaviorIndex.value]);
 
 const behaviorTimer = window.setInterval(() => {
-  if (!isOpen.value) {
-    behaviorIndex.value = (behaviorIndex.value + 1) % behaviors.length;
-  }
+  if (!isOpen.value) { behaviorIndex.value = (behaviorIndex.value + 1) % behaviors.length; }
 }, 6200);
 
 function toggleOpen() {
   isOpen.value = !isOpen.value;
-  if (isOpen.value) {
-    void scrollToBottom();
-  }
+  if (isOpen.value) { scrollToBottom(); }
 }
 
 async function scrollToBottom() {
   await nextTick();
-  if (messageListRef.value) {
-    messageListRef.value.scrollTop = messageListRef.value.scrollHeight;
-  }
+  if (messageListRef.value) { messageListRef.value.scrollTop = messageListRef.value.scrollHeight; }
+}
+
+
+function fmt(t) {
+  if (!t) return '';
+  let s = t;
+  s = s.replace(/\t/g, '');
+  s = s.replace(/\r/g, '');
+  // Tables
+  s = s.replace(/((?:\|.+\|\n)+)/g, function(m) {
+    var lines = m.trim().split('\n');
+    var h = '<table>';
+    for (var i = 0; i < lines.length; i++) {
+      if (lines[i].match(/^\|[-:\s|]+\|$/)) continue;
+      var cells = lines[i].split('|').filter(function(c) { return c.trim(); });
+      var tag = i === 0 ? 'th' : 'td';
+      h += '<tr>' + cells.map(function(c) { return '<' + tag + '>' + c.trim() + '</' + tag + '>'; }).join('') + '</tr>';
+    }
+    h += '</table>';
+    return h;
+  });
+  s = s.replace(/\n{3,}/g, '\n\n');
+  s = s.replace(/### (.+)/g, '<h4>$1</h4>');
+  s = s.replace(/## (.+)/g, '<h3>$1</h3>');
+  s = s.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  s = s.replace(/\n\n/g, '<br><br>');
+  s = s.replace(/\n/g, '<br>');
+  return s;
 }
 
 async function sendPreset(question: string) {
@@ -134,10 +127,7 @@ async function sendPreset(question: string) {
 
 async function send() {
   const content = draft.value.trim();
-
-  if (!content || sending.value) {
-    return;
-  }
+  if (!content || sending.value) return;
 
   messages.value.push({
     id: `float-user-${Date.now()}`,
@@ -148,17 +138,31 @@ async function send() {
   draft.value = '';
   sending.value = true;
 
+  const id = `float-assistant-${Date.now()}`;
+  const msg: AgentMessage = { id, role: 'assistant', content: '', createdAt: new Date().toISOString() };
+  messages.value.push(msg);
+
   try {
-    messages.value.push(await sendAgentMessage(content));
-    await scrollToBottom();
-  } finally {
+    await sendAgentMessageStream(content, {
+      onToken(token) {
+        msg.content += token;
+        messages.value = [...messages.value];
+      },
+      onDone() {
+        sending.value = false;
+        scrollToBottom();
+      },
+      onError(err) {
+        msg.content = '出错了: ' + err;
+        sending.value = false;
+      },
+    });
+  } catch (e) {
     sending.value = false;
   }
 }
 
-onBeforeUnmount(() => {
-  window.clearInterval(behaviorTimer);
-});
+onBeforeUnmount(() => { window.clearInterval(behaviorTimer); });
 </script>
 
 <style scoped lang="scss">
@@ -272,6 +276,28 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(251, 146, 60, 0.16);
   background: #fff7ed;
   color: $color-text;
+}
+
+.assistant :deep(table) {
+  width: 100%%;
+  margin: 6px 0;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.assistant :deep(th) {
+  padding: 6px 8px;
+  border: 1px solid rgba(251, 146, 60, 0.2);
+  background: rgba(251, 146, 60, 0.1);
+  text-align: left;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.assistant :deep(td) {
+  padding: 5px 8px;
+  border: 1px solid rgba(251, 146, 60, 0.12);
+  vertical-align: top;
 }
 
 .user span {

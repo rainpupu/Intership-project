@@ -2,7 +2,7 @@
   <section class="chat-panel">
     <div class="messages">
       <div v-for="message in messages" :key="message.id" class="message" :class="message.role">
-        <div class="bubble">{{ message.content }}</div>
+        <div class="bubble" v-html="fmt(message.content)"></div>
       </div>
     </div>
 
@@ -26,7 +26,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { sendAgentMessage, type AgentMessage } from '@/api/agent';
+import { sendAgentMessageStream, type AgentMessage } from '@/api/agent';
 
 const presetQuestions = [
   '推荐适合第一次养猫的猫咪',
@@ -44,6 +44,35 @@ const messages = ref<AgentMessage[]>([
   },
 ]);
 const draft = ref('');
+const sending = ref(false);
+
+
+function fmt(t) {
+  if (!t) return '';
+  let s = t;
+  s = s.replace(/\t/g, '');
+  s = s.replace(/\r/g, '');
+  // Tables
+  s = s.replace(/((?:\|.+\|\n)+)/g, function(m) {
+    var lines = m.trim().split('\n');
+    var h = '<table>';
+    for (var i = 0; i < lines.length; i++) {
+      if (lines[i].match(/^\|[-:\s|]+\|$/)) continue;
+      var cells = lines[i].split('|').filter(function(c) { return c.trim(); });
+      var tag = i === 0 ? 'th' : 'td';
+      h += '<tr>' + cells.map(function(c) { return '<' + tag + '>' + c.trim() + '</' + tag + '>'; }).join('') + '</tr>';
+    }
+    h += '</table>';
+    return h;
+  });
+  s = s.replace(/\n{3,}/g, '\n\n');
+  s = s.replace(/### (.+)/g, '<h4>$1</h4>');
+  s = s.replace(/## (.+)/g, '<h3>$1</h3>');
+  s = s.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  s = s.replace(/\n\n/g, '<br><br>');
+  s = s.replace(/\n/g, '<br>');
+  return s;
+}
 
 async function sendPreset(question: string) {
   draft.value = question;
@@ -52,10 +81,7 @@ async function sendPreset(question: string) {
 
 async function send() {
   const content = draft.value.trim();
-
-  if (!content) {
-    return;
-  }
+  if (!content || sending.value) return;
 
   messages.value.push({
     id: `user-${Date.now()}`,
@@ -64,7 +90,23 @@ async function send() {
     createdAt: new Date().toISOString(),
   });
   draft.value = '';
-  messages.value.push(await sendAgentMessage(content));
+  sending.value = true;
+
+  const id = `assistant-${Date.now()}`;
+  const msg: AgentMessage = { id, role: 'assistant', content: '', createdAt: new Date().toISOString() };
+  messages.value.push(msg);
+
+  await sendAgentMessageStream(content, {
+    onToken(token) {
+      msg.content += token;
+      messages.value = [...messages.value];
+    },
+    onDone() { sending.value = false; },
+    onError(err) {
+      msg.content = '出错了: ' + err;
+      sending.value = false;
+    },
+  });
 }
 </script>
 
@@ -112,6 +154,28 @@ async function send() {
 .assistant .bubble {
   border: 1px solid rgba(251, 146, 60, 0.18);
   background: rgba(255, 247, 237, 0.86);
+}
+
+.assistant .bubble :deep(table) {
+  width: 100%%;
+  margin: 8px 0;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.assistant .bubble :deep(th) {
+  padding: 8px 12px;
+  border: 1px solid rgba(251, 146, 60, 0.2);
+  background: rgba(251, 146, 60, 0.1);
+  text-align: left;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.assistant .bubble :deep(td) {
+  padding: 7px 12px;
+  border: 1px solid rgba(251, 146, 60, 0.12);
+  vertical-align: top;
 }
 
 .user .bubble {

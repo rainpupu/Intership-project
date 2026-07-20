@@ -8,8 +8,8 @@ from app.config.settings import settings
 from app.api.auth import router as auth_router
 from app.api.health import router as health_router
 from app.api.training import router as training_router
-from app.api.detection import router as detection_router
-from app.api.detection import encounter_router
+# from app.api.detection import router as detection_router  # 模块不存在
+# from app.api.detection import encounter_router  # 模块不存在
 from app.api.chat import router as chat_router
 from app.api.dashboard import router as dashboard_router
 from app.api.camera import router as camera_router
@@ -151,13 +151,13 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 app.include_router(auth_router)
 app.include_router(health_router)
 app.include_router(training_router)
-app.include_router(detection_router)
+# app.include_router(detection_router)  # 模块不存在
 app.include_router(chat_router)
 app.include_router(dashboard_router)
 app.include_router(camera_router)
 app.include_router(knowledge_router)
 app.include_router(cats_router)
-app.include_router(encounter_router)
+# app.include_router(encounter_router)  # 模块不存在
 
 
 @app.get("/")
