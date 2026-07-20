@@ -38,6 +38,12 @@ from app.entity.schemas.detection import (
     DetectionResultItem,
     SceneResponse,
 )
+from app.entity.schemas.recognition import (
+    ConfirmExistingCatRequest,
+    CreateCatFromRecognitionRequest,
+    RecognitionRecordListQuery,
+    RecognitionRecordResponse,
+)
 
 __all__ = [
     "ApiResponse",
@@ -76,4 +82,8 @@ __all__ = [
     "AnalyzeRequest",
     "CandidateCat",
     "AnalyzeResponse",
+    "RecognitionRecordListQuery",
+    "RecognitionRecordResponse",
+    "ConfirmExistingCatRequest",
+    "CreateCatFromRecognitionRequest",
 ]

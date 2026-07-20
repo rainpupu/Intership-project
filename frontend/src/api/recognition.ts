@@ -1,9 +1,15 @@
 import { mockResolve } from '@/api/request';
 import request from '@/api/request';
-import { mockAnalysis, mockCandidates, mockRecognitionRecords } from '@/mock';
+import { mockAnalysis, mockCandidates } from '@/mock';
 import type { RecognitionAnalyzeResponse, RecognitionAnalysis, RecognitionCandidate, RecognitionRecord } from '@/types/recognition';
 
 let latestAnalyzeResult: RecognitionAnalyzeResponse | null = null;
+
+interface ApiResponse<T> {
+  code: number;
+  message: string;
+  data: T;
+}
 
 export async function uploadEncounterImages(files: File[]): Promise<RecognitionAnalyzeResponse> {
   const formData = new FormData();
@@ -28,23 +34,58 @@ export function getRecognitionCandidates(): Promise<RecognitionCandidate[]> {
 }
 
 export function getRecognitionRecords(params?: { userId?: string; scope?: 'mine' | 'all' }): Promise<RecognitionRecord[]> {
-  if (params?.scope === 'mine' && params.userId) {
-    return mockResolve(mockRecognitionRecords.filter((record) => record.userId === params.userId));
-  }
-
-  return mockResolve(mockRecognitionRecords);
+  return request
+    .get<ApiResponse<RecognitionRecord[]>, ApiResponse<RecognitionRecord[]>>('/recognition/records', {
+      params: {
+        scope: params?.scope ?? 'mine',
+      },
+    })
+    .then((response) => response.data);
 }
 
 export function confirmExistingCat(catId: string): Promise<{ success: boolean; catId: string }> {
-  return mockResolve({
-    success: true,
-    catId,
-  });
+  const recordId = latestAnalyzeResult?.record?.id;
+  if (!recordId) {
+    return mockResolve({
+      success: false,
+      catId,
+    });
+  }
+
+  return request
+    .post<ApiResponse<{ success: boolean; catId: string }>, ApiResponse<{ success: boolean; catId: string }>>(
+      `/recognition/records/${recordId}/confirm-existing`,
+      {
+        cat_id: catId,
+      },
+    )
+    .then((response) => response.data);
 }
 
-export function createNewCat(): Promise<{ success: boolean; catId: string }> {
-  return mockResolve({
-    success: true,
-    catId: 'new-cat-mock',
-  });
+export function createNewCat(payload?: {
+  name?: string;
+  code?: string;
+  description?: string;
+  lastSeenLocation?: string;
+}): Promise<{ success: boolean; catId: string; name?: string; message?: string }> {
+  const recordId = latestAnalyzeResult?.record?.id;
+  if (!recordId) {
+    return mockResolve({
+      success: false,
+      catId: '',
+      message: '没有可创建档案的识别记录',
+    });
+  }
+
+  return request
+    .post<
+      ApiResponse<{ success: boolean; catId: string; name?: string; message?: string }>,
+      ApiResponse<{ success: boolean; catId: string; name?: string; message?: string }>
+    >(`/recognition/records/${recordId}/create-cat`, {
+      name: payload?.name,
+      code: payload?.code,
+      description: payload?.description,
+      last_seen_location: payload?.lastSeenLocation,
+    })
+    .then((response) => response.data);
 }

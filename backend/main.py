@@ -8,6 +8,7 @@ from app.api.auth import router as auth_router
 from app.api.cats import router as cats_router
 from app.api.recognition import router as recognition_router
 from app.config.settings import settings
+from app.database.migrations import ensure_runtime_columns
 from app.database.seed import seed_roles_and_admin
 from app.database.session import Base, SessionLocal, engine
 
@@ -39,6 +40,7 @@ app.include_router(recognition_router)
 @app.on_event("startup")
 def init_auth_database():
     Base.metadata.create_all(bind=engine)
+    ensure_runtime_columns(engine)
     db = SessionLocal()
     try:
         seed_roles_and_admin(db)

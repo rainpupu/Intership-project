@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, JSON, String, Text
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, JSON, String, Text
 from sqlalchemy.orm import relationship
 
 from app.database.session import Base
@@ -28,6 +28,7 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
     user_roles = relationship("UserRole", back_populates="user", cascade="all, delete-orphan")
+    recognition_records = relationship("RecognitionRecord", back_populates="user", cascade="all, delete-orphan")
 
 
 class Role(Base):
@@ -112,3 +113,39 @@ class CatAuditRecord(Base):
     operated_at = Column(DateTime, default=datetime.now, index=True)
 
     cat = relationship("Cat", back_populates="audit_records")
+
+
+class CatIdentityEmbedding(Base):
+    __tablename__ = "cat_identity_embeddings"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    cat_id = Column(Integer, ForeignKey("cats.id"), nullable=False, index=True)
+    embedding = Column(JSON, nullable=False)
+    image_url = Column(String(500), nullable=True)
+    source = Column(String(50), default="recognition", nullable=False)
+    created_by_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    created_at = Column(DateTime, default=datetime.now, index=True)
+
+    cat = relationship("Cat")
+
+
+class RecognitionRecord(Base):
+    __tablename__ = "recognition_records"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    image = Column(String(500), nullable=False)
+    cat_id = Column(String(100), nullable=True, index=True)
+    cat_name = Column(String(100), nullable=False)
+    similarity = Column(Float, default=0, nullable=False)
+    health_status = Column(String(100), nullable=True)
+    mood_status = Column(String(100), nullable=True)
+    location = Column(String(200), default="用户上传", nullable=False)
+    status = Column(String(50), default="已识别", nullable=False, index=True)
+    analysis_summary = Column(Text, nullable=True)
+    detected_count = Column(Integer, default=0, nullable=False)
+    elapsed_ms = Column(Integer, default=0, nullable=False)
+    candidates = Column(JSON, default=list)
+    created_at = Column(DateTime, default=datetime.now, index=True)
+
+    user = relationship("User", back_populates="recognition_records")

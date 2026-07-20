@@ -3,10 +3,25 @@ export interface RecognitionCandidate {
   name: string;
   image: string;
   cropImage?: string;
+  matchedImage?: string;
   similarity: number;
   reason: string;
   status: string;
   bbox?: number[];
+  modelType?: 'breed' | 'individual' | 'new';
+  breedName?: string;
+  breedConfidence?: number;
+  healthStatus?: string;
+  healthConfidence?: number;
+  moodStatus?: string;
+  moodConfidence?: number;
+  identityStatus?: string;
+  bestIdentityMatch?: {
+    catId: string;
+    name: string;
+    image: string;
+    similarity: number;
+  } | null;
 }
 
 export interface RecognitionAnalysis {
@@ -22,6 +37,7 @@ export interface RecognitionAnalyzeResponse {
   uploadedImages: string[];
   detectedCount: number;
   elapsedMs: number;
+  record?: RecognitionRecord;
 }
 
 export interface RecognitionRecord {
@@ -30,6 +46,8 @@ export interface RecognitionRecord {
   image: string;
   catName: string;
   similarity: number;
+  healthStatus?: string;
+  moodStatus?: string;
   location: string;
   createdAt: string;
   status: string;

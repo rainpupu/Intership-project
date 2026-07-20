@@ -1,23 +1,29 @@
 from __future__ import annotations
 
+import os
 import shutil
 import time
 import uuid
-import os
 from pathlib import Path
 from typing import Any
 
 import cv2
 from fastapi import UploadFile
+from sqlalchemy.orm import Session
+
+from app.services.individual_recognition_service import individual_recognition_service
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 MODEL_PATH = BASE_DIR / "models" / "cat_breeds" / "best.pt"
+HEALTH_MODEL_PATH = BASE_DIR / "models" / "health" / "best.pt"
+EMOTION_MODEL_PATH = BASE_DIR / "models" / "emotion" / "best.pt"
 STATIC_DIR = BASE_DIR / "static" / "recognition"
 UPLOAD_DIR = STATIC_DIR / "uploads"
 CROP_DIR = STATIC_DIR / "crops"
 ANNOTATED_DIR = STATIC_DIR / "annotated"
 CACHE_DIR = BASE_DIR / ".runtime_cache"
+IDENTITY_MATCH_THRESHOLD = 0.78
 
 for directory in (UPLOAD_DIR, CROP_DIR, ANNOTATED_DIR, CACHE_DIR / "ultralytics", CACHE_DIR / "torch"):
     directory.mkdir(parents=True, exist_ok=True)
@@ -30,7 +36,11 @@ os.environ.setdefault("TORCH_HOME", str(CACHE_DIR / "torch"))
 class YoloRecognitionService:
     def __init__(self) -> None:
         self._model = None
+        self._health_model = None
+        self._emotion_model = None
         self._class_names: dict[int, str] = {}
+        self._health_class_names: dict[int, str] = {}
+        self._emotion_class_names: dict[int, str] = {}
 
     def _ensure_model(self):
         if self._model is not None:
@@ -45,7 +55,37 @@ class YoloRecognitionService:
         self._class_names = dict(self._model.names)
         return self._model
 
-    async def analyze_uploads(self, files: list[UploadFile], base_url: str, conf_threshold: float = 0.25) -> dict[str, Any]:
+    def _ensure_health_model(self):
+        if self._health_model is not None:
+            return self._health_model
+        if not HEALTH_MODEL_PATH.exists():
+            return None
+
+        from ultralytics import YOLO
+
+        self._health_model = YOLO(str(HEALTH_MODEL_PATH))
+        self._health_class_names = dict(self._health_model.names)
+        return self._health_model
+
+    def _ensure_emotion_model(self):
+        if self._emotion_model is not None:
+            return self._emotion_model
+        if not EMOTION_MODEL_PATH.exists():
+            return None
+
+        from ultralytics import YOLO
+
+        self._emotion_model = YOLO(str(EMOTION_MODEL_PATH))
+        self._emotion_class_names = dict(self._emotion_model.names)
+        return self._emotion_model
+
+    async def analyze_uploads(
+        self,
+        files: list[UploadFile],
+        base_url: str,
+        conf_threshold: float = 0.25,
+        db: Session | None = None,
+    ) -> dict[str, Any]:
         model = self._ensure_model()
         started_at = time.perf_counter()
         detections: list[dict[str, Any]] = []
@@ -67,19 +107,52 @@ class YoloRecognitionService:
                 confidence = float(box.conf[0])
                 xyxy = [float(value) for value in box.xyxy[0].tolist()]
                 crop_path = self._save_crop(original, xyxy, image_path.stem, index)
+                breed_name = self._class_names.get(class_id, f"class_{class_id}")
 
-                image_detections.append(
-                    {
-                        "catId": f"breed-{class_id}",
-                        "name": self._class_names.get(class_id, f"class_{class_id}"),
-                        "image": "",
-                        "cropImage": self._to_url(base_url, crop_path),
-                        "similarity": round(confidence, 4),
-                        "reason": self._build_reason(confidence, xyxy),
-                        "status": "YOLO 品种识别结果",
-                        "bbox": [round(value, 2) for value in xyxy],
-                    }
+                detection = self._build_breed_detection(
+                    class_id=class_id,
+                    breed_name=breed_name,
+                    confidence=confidence,
+                    bbox=xyxy,
+                    crop_url=self._to_url(base_url, crop_path),
                 )
+
+                identity = (
+                    individual_recognition_service.identify_crop(db, crop_path, breed_name=breed_name)
+                    if db is not None
+                    else {"available": False, "matches": [], "embedding": None, "message": "未连接数据库，跳过个体匹配"}
+                )
+                if identity.get("embedding"):
+                    detection["identityEmbedding"] = identity["embedding"]
+                    detection["identityStatus"] = identity.get("message")
+
+                best_match = identity["matches"][0] if identity.get("matches") else None
+                match = best_match if best_match and best_match["similarity"] >= IDENTITY_MATCH_THRESHOLD else None
+                if match:
+                    detection.update(
+                        {
+                            "catId": match["catId"],
+                            "name": match["name"],
+                            "similarity": match["similarity"],
+                            "reason": self._build_identity_reason(match["similarity"], breed_name, confidence),
+                            "status": "个体识别匹配结果",
+                            "modelType": "individual",
+                            "matchedImage": match.get("image", ""),
+                        }
+                    )
+                elif identity.get("embedding"):
+                    detection.update(
+                        {
+                            "status": "疑似新猫，待管理员确认",
+                            "modelType": "new",
+                            "identityStatus": identity.get("message"),
+                            "bestIdentityMatch": best_match,
+                        }
+                    )
+
+                self._apply_post_identity_models(detection, crop_path)
+
+                image_detections.append(detection)
 
             if image_detections:
                 annotated_path = self._save_annotated(original, image_detections, image_path.stem)
@@ -97,8 +170,8 @@ class YoloRecognitionService:
             "candidates": top_candidates,
             "analysis": {
                 "confidence": best_confidence,
-                "healthHints": ["当前模型仅做猫咪品种与目标框识别，暂不判断健康状态。"],
-                "behaviorHints": ["未接入行为识别模型，姿态和情绪分析暂不输出结论。"],
+                "healthHints": self._build_health_hints(top_candidates),
+                "behaviorHints": self._build_behavior_hints(top_candidates),
                 "summary": self._build_summary(len(files), len(detections), elapsed_ms),
             },
             "uploadedImages": uploaded_images,
@@ -179,6 +252,104 @@ class YoloRecognitionService:
         cv2.imwrite(str(annotated_path), annotated)
         return annotated_path
 
+    def _build_breed_detection(
+        self,
+        class_id: int,
+        breed_name: str,
+        confidence: float,
+        bbox: list[float],
+        crop_url: str,
+    ) -> dict[str, Any]:
+        return {
+            "catId": f"breed-{class_id}",
+            "name": breed_name,
+            "image": "",
+            "cropImage": crop_url,
+            "similarity": round(confidence, 4),
+            "reason": self._build_reason(confidence, bbox),
+            "status": "YOLO 品种识别结果",
+            "bbox": [round(value, 2) for value in bbox],
+            "modelType": "breed",
+            "breedName": breed_name,
+            "breedConfidence": round(confidence, 4),
+        }
+
+    def _apply_post_identity_models(self, detection: dict[str, Any], crop_path: Path) -> None:
+        health = self._predict_best_label(
+            model=self._ensure_health_model(),
+            class_names=self._health_class_names,
+            image_path=crop_path,
+        )
+        emotion = self._predict_best_label(
+            model=self._ensure_emotion_model(),
+            class_names=self._emotion_class_names,
+            image_path=crop_path,
+        )
+
+        if health:
+            detection["healthStatus"] = self._map_health_label(health["label"])
+            detection["healthConfidence"] = health["confidence"]
+        if emotion:
+            detection["moodStatus"] = self._map_emotion_label(emotion["label"])
+            detection["moodConfidence"] = emotion["confidence"]
+
+    def _predict_best_label(self, model, class_names: dict[int, str], image_path: Path) -> dict[str, Any] | None:
+        if model is None:
+            return None
+        try:
+            result = model.predict(source=str(image_path), verbose=False)[0]
+        except Exception:
+            return None
+
+        best_label: str | None = None
+        best_confidence = 0.0
+        boxes = result.boxes if result.boxes is not None else []
+        for box in boxes:
+            confidence = float(box.conf[0])
+            if confidence > best_confidence:
+                class_id = int(box.cls[0])
+                best_label = class_names.get(class_id, f"class_{class_id}")
+                best_confidence = confidence
+
+        probs = getattr(result, "probs", None)
+        if best_label is None and probs is not None and getattr(probs, "top1", None) is not None:
+            class_id = int(probs.top1)
+            best_label = class_names.get(class_id, f"class_{class_id}")
+            best_confidence = float(probs.top1conf)
+
+        if best_label is None:
+            return None
+        return {"label": best_label, "confidence": round(best_confidence, 4)}
+
+    def _map_health_label(self, label: str) -> str:
+        return {
+            "Healthy": "健康良好",
+            "Sick": "需复查",
+        }.get(label, label)
+
+    def _map_emotion_label(self, label: str) -> str:
+        return {
+            "Anger": "生气",
+            "Beg": "讨食",
+            "Frightened": "紧张",
+            "Happy": "开心",
+            "Scare": "受惊",
+            "Sleepy": "困倦",
+            "Wonder": "好奇",
+        }.get(label, label)
+
+    def _build_health_hints(self, candidates: list[dict[str, Any]]) -> list[str]:
+        statuses = [candidate.get("healthStatus") for candidate in candidates if candidate.get("healthStatus")]
+        if statuses:
+            return [f"健康模型判断：{status}" for status in statuses[:3]]
+        return ["健康模型未输出明确结论，请结合人工观察补充。"]
+
+    def _build_behavior_hints(self, candidates: list[dict[str, Any]]) -> list[str]:
+        statuses = [candidate.get("moodStatus") for candidate in candidates if candidate.get("moodStatus")]
+        if statuses:
+            return [f"心情模型判断：{status}" for status in statuses[:3]]
+        return ["心情模型未输出明确结论，请结合现场行为补充。"]
+
     def _to_url(self, base_url: str, path: Path) -> str:
         relative = path.relative_to(BASE_DIR / "static").as_posix()
         return f"{base_url.rstrip('/')}/static/{relative}"
@@ -187,13 +358,16 @@ class YoloRecognitionService:
         x1, y1, x2, y2 = bbox
         width = max(0, x2 - x1)
         height = max(0, y2 - y1)
-        return f"YOLO 检测置信度 {confidence:.1%}，目标框约 {width:.0f}×{height:.0f}px。"
+        return f"YOLO 检测置信度 {confidence:.1%}，目标框约 {width:.0f}x{height:.0f}px。"
+
+    def _build_identity_reason(self, similarity: float, breed_name: str, breed_confidence: float) -> str:
+        return f"个体识别相似度 {similarity:.1%}；YOLO 品种候选为 {breed_name}（{breed_confidence:.1%}）。"
 
     def _build_summary(self, image_count: int, detection_count: int, elapsed_ms: float) -> str:
         if detection_count == 0:
             return f"已处理 {image_count} 张图片，暂未检测到猫咪目标。请尝试上传更清晰、主体更完整的猫咪照片。"
 
-        return f"已处理 {image_count} 张图片，检测到 {detection_count} 个猫咪目标，用时约 {elapsed_ms:.0f}ms。当前结果来自本地 YOLO 模型，未接入数据库身份匹配。"
+        return f"已处理 {image_count} 张图片，检测到 {detection_count} 个猫咪目标，用时约 {elapsed_ms:.0f}ms。当前结果来自 YOLO 检测和 ResNet50 + ArcFace 个体特征模型。"
 
 
 yolo_recognition_service = YoloRecognitionService()

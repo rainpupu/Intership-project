@@ -13,7 +13,7 @@ export function useRecognitionFlow() {
   const selectedFiles = ref<UploadFile[]>([]);
   const candidates = ref<RecognitionCandidate[]>([]);
   const analyzing = ref(false);
-  const activeStep = ref(1);
+  const activeStep = ref(0);
   const analysis = reactive<RecognitionAnalysis>({
     confidence: 0,
     healthHints: [],
@@ -25,7 +25,7 @@ export function useRecognitionFlow() {
 
   function handleUploadChange(files: UploadFile[]) {
     selectedFiles.value = files;
-    activeStep.value = files.length > 0 ? 2 : 1;
+    activeStep.value = files.length > 0 ? 1 : 0;
   }
 
   async function loadRecognitionPreview() {
@@ -45,7 +45,7 @@ export function useRecognitionFlow() {
       const result = await uploadEncounterImages(rawFiles);
       candidates.value = result.candidates.slice(0, 1);
       Object.assign(analysis, result.analysis);
-      activeStep.value = 3;
+      activeStep.value = 2;
       ElMessage.success(result.detectedCount > 0 ? 'YOLO 识别完成' : '识别完成，但未检测到猫咪');
       return true;
     } finally {
@@ -58,15 +58,25 @@ export function useRecognitionFlow() {
       ElMessage.warning('暂无可确认的候选猫咪');
       return false;
     }
+    if (topCandidate.value.modelType !== 'individual') {
+      ElMessage.warning('当前结果尚未匹配到已有猫咪档案，无法确认已有猫');
+      return false;
+    }
 
     await confirmExistingCat(topCandidate.value.catId);
     activeStep.value = 4;
     return true;
   }
 
-  async function createNewCatProfile() {
-    await createNewCat();
+  async function createNewCatProfile(payload?: {
+    name?: string;
+    code?: string;
+    description?: string;
+    lastSeenLocation?: string;
+  }) {
+    const result = await createNewCat(payload);
     activeStep.value = 4;
+    return result;
   }
 
   return {

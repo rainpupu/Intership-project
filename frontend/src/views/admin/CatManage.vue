@@ -195,6 +195,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { getRequestErrorMessage } from '@/api/request'
 import {
   getCatList,
   getCatAuditRecords,
@@ -263,8 +264,9 @@ const refreshCatList = async () => {
     catMarkMap.value = markMap
 
     selectedCats.value = []
-  } catch {
-    ElMessage.error('获取猫咪列表失败')
+  } catch (error) {
+    cats.value = []
+    ElMessage.error(getRequestErrorMessage(error, '获取猫咪列表失败'))
   } finally {
     listLoading.value = false
   }
@@ -354,8 +356,8 @@ const handleCreateCat = async () => {
     ElMessage.success(result.message ?? '猫咪档案创建成功')
     catDialogVisible.value = false
     await refreshCatList()
-  } catch (error: any) {
-    ElMessage.error(error?.response?.data?.detail ?? '新增猫咪档案失败')
+  } catch (error) {
+    ElMessage.error(getRequestErrorMessage(error, '新增猫咪档案失败'))
   } finally {
     catSubmitting.value = false
   }
@@ -461,7 +463,7 @@ const handleDeleteCat = async (row: Cat) => {
     await refreshCatList()
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('删除猫咪档案失败')
+      ElMessage.error(getRequestErrorMessage(error, '删除猫咪档案失败'))
     }
   }
 }
