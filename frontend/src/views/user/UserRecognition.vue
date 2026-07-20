@@ -15,7 +15,7 @@
             <h2 class="section-title">上传图片识别</h2>
             <p>上传后调用本地 YOLO 模型识别。</p>
           </div>
-          <el-button type="primary" round :loading="analyzing" @click="analyzeSelectedImages">开始识别</el-button>
+          <el-button type="primary" round :loading="analyzing" @click="handleAnalyze">开始识别</el-button>
         </div>
         <UploadPanel @change="handleUploadChange" />
       </div>
@@ -39,7 +39,7 @@
       <div class="panel-head">
         <div>
           <h2 class="section-title">我的历史识别记录</h2>
-          <p>这里通过 `getRecognitionRecords({ scope: 'mine', userId })` 获取，后端接入后按账号隔离数据。</p>
+          <p>这里通过当前登录账号加载历史识别记录，普通用户只能查看自己的数据。</p>
         </div>
       </div>
       <DataState
@@ -69,6 +69,8 @@
         <el-table-column label="相似度" width="110">
           <template #default="{ row }">{{ formatPercent(row.similarity) }}</template>
         </el-table-column>
+        <el-table-column prop="healthStatus" label="健康" width="110" />
+        <el-table-column prop="moodStatus" label="心情" width="110" />
         <el-table-column prop="location" label="上传/发现地点" min-width="170" />
         <el-table-column prop="status" label="状态" width="110" />
         <el-table-column label="时间" min-width="160">
@@ -109,12 +111,18 @@ async function fetchMineRecords() {
   try {
     records.value = await getRecognitionRecords({
       scope: 'mine',
-      userId: userStore.profile?.id,
     });
   } catch {
     recordsError.value = '个人识别记录加载失败，请稍后重试。';
   } finally {
     recordsLoading.value = false;
+  }
+}
+
+async function handleAnalyze() {
+  const success = await analyzeSelectedImages();
+  if (success) {
+    await fetchMineRecords();
   }
 }
 

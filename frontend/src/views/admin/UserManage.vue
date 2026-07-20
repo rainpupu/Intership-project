@@ -96,6 +96,7 @@ import { onMounted, reactive, ref } from 'vue';
 import type { FormInstance, FormRules } from 'element-plus';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { createAdmin, getUserList, updateUserRole } from '@/api/auth';
+import { getRequestErrorMessage } from '@/api/request';
 import type { CreateAdminPayload, UserListQuery, UserProfile, UserRole } from '@/types/user';
 
 const users = ref<UserProfile[]>([]);
@@ -153,6 +154,9 @@ async function fetchUsers() {
   loading.value = true;
   try {
     users.value = await getUserList({ ...query });
+  } catch (error) {
+    users.value = [];
+    ElMessage.error(getRequestErrorMessage(error, '获取账号列表失败'));
   } finally {
     loading.value = false;
   }
@@ -173,6 +177,8 @@ async function submitAdmin() {
       campusRole: '平台管理员',
     });
     await fetchUsers();
+  } catch (error) {
+    ElMessage.error(getRequestErrorMessage(error, '创建管理员失败'));
   } finally {
     creating.value = false;
   }
@@ -185,10 +191,15 @@ async function changeRole(user: UserProfile, role: Extract<UserRole, 'user' | 'a
     confirmButtonText: '确认',
     cancelButtonText: '取消',
   });
-  await updateUserRole({
-    userId: user.id,
-    role,
-  });
+  try {
+    await updateUserRole({
+      userId: user.id,
+      role,
+    });
+  } catch (error) {
+    ElMessage.error(getRequestErrorMessage(error, '角色更新失败'));
+    return;
+  }
   ElMessage.success('角色已更新');
   await fetchUsers();
 }

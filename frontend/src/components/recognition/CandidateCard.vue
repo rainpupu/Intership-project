@@ -6,6 +6,17 @@
         <strong>{{ candidate.name }}</strong>
         <el-tag size="small">{{ formatPercent(candidate.similarity) }}</el-tag>
       </div>
+      <div class="meta-tags">
+        <el-tag v-if="candidate.breedName" size="small" effect="plain">
+          {{ candidate.breedName }}
+        </el-tag>
+        <el-tag v-if="candidate.healthStatus" size="small" type="success" effect="plain">
+          {{ candidate.healthStatus }}
+        </el-tag>
+        <el-tag v-if="candidate.moodStatus" size="small" type="warning" effect="plain">
+          {{ candidate.moodStatus }}
+        </el-tag>
+      </div>
       <p>{{ candidate.reason }}</p>
       <span>{{ candidate.status }}</span>
     </div>
@@ -59,6 +70,13 @@ p {
   color: $color-text-secondary;
   font-size: 13px;
   line-height: 1.5;
+}
+
+.meta-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 span {

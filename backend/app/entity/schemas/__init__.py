@@ -1,87 +1,89 @@
-"""
-Pydantic 请求/响应模型
-"""
-# 通用模型
-from app.entity.schemas.common import ApiResponse, PageParams, PageResponse
-
-# 用户认证与权限
 from app.entity.schemas.auth import (
-    UserRegister,
-    UserLogin,
-    UserBrief,
+    ChangePassword,
+    CreateAdminRequest,
+    LoginResponse,
+    PermissionResponse,
+    RoleCreate,
+    RoleResponse,
     TokenResponse,
+    UpdateProfileRequest,
+    UpdateUserRoleRequest,
+    UserBrief,
+    UserLogin,
+    UserListQuery,
+    UserProfileResponse,
+    UserRegister,
     UserResponse,
     UserUpdate,
-    ChangePassword,
-    RoleResponse,
-    RoleCreate,
-    PermissionResponse,
-    # 新增：对齐前端
-    UserProfileResponse,
-    LoginResponse,
-    UpdateProfileRequest,
-    CreateAdminRequest,
-    UpdateUserRoleRequest,
-    UserListQuery,
 )
-
-# 检测模块
-from app.entity.schemas.detection import (
-    DetectionResultItem,
-    DetectionResponse,
-    SceneResponse,
-    AnalyzeRequest,
-    CandidateCat,
-    AnalyzeResponse,
-)
-
-# 猫咪管理
 from app.entity.schemas.cat import (
-    CatBrief,
+    BatchCatIdsRequest,
+    BatchMarkCatsRequest,
+    BatchToggleFocusRequest,
+    CatAuditRecordResponse,
+    CatCreate,
+    CatObservationCreate,
+    CatObservationResponse,
+    CatOperationResult,
     CatResponse,
-    CatDetailResponse,
-    ObservationResponse,
-    EncounterResponse,
-    AdoptionApplicationResponse,
-    AttentionCatResponse,
+    CatUpdate,
+    ToggleFocusRequest,
+)
+from app.entity.schemas.common import ApiResponse, PageParams, PageResponse
+from app.entity.schemas.detection import (
+    AnalyzeRequest,
+    AnalyzeResponse,
+    CandidateCat,
+    DetectionResponse,
+    DetectionResultItem,
+    SceneResponse,
+)
+from app.entity.schemas.recognition import (
+    ConfirmExistingCatRequest,
+    CreateCatFromRecognitionRequest,
+    RecognitionRecordListQuery,
+    RecognitionRecordResponse,
 )
 
 __all__ = [
-    # 通用
     "ApiResponse",
     "PageParams",
     "PageResponse",
-    # 认证
     "UserRegister",
     "UserLogin",
+    "LoginResponse",
     "UserBrief",
+    "UserProfileResponse",
     "TokenResponse",
     "UserResponse",
     "UserUpdate",
-    "ChangePassword",
-    "RoleResponse",
-    "RoleCreate",
-    "PermissionResponse",
-    # 新增对齐前端
-    "UserProfileResponse",
-    "LoginResponse",
     "UpdateProfileRequest",
+    "ChangePassword",
     "CreateAdminRequest",
     "UpdateUserRoleRequest",
     "UserListQuery",
-    # 检测
+    "RoleResponse",
+    "RoleCreate",
+    "PermissionResponse",
+    "BatchCatIdsRequest",
+    "BatchMarkCatsRequest",
+    "BatchToggleFocusRequest",
+    "CatAuditRecordResponse",
+    "CatCreate",
+    "CatObservationCreate",
+    "CatObservationResponse",
+    "CatOperationResult",
+    "CatResponse",
+    "CatUpdate",
+    "ToggleFocusRequest",
     "DetectionResultItem",
     "DetectionResponse",
     "SceneResponse",
     "AnalyzeRequest",
     "CandidateCat",
     "AnalyzeResponse",
-    # 猫咪管理
-    "CatBrief",
-    "CatResponse",
-    "CatDetailResponse",
-    "ObservationResponse",
-    "EncounterResponse",
-    "AdoptionApplicationResponse",
-    "AttentionCatResponse",
+    "RecognitionRecordListQuery",
+    "RecognitionRecordResponse",
+    "ConfirmExistingCatRequest",
+    "CreateCatFromRecognitionRequest",
 ]

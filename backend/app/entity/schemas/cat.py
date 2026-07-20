@@ -1,117 +1,120 @@
-"""
-猫咪管理相关 Schema — 对齐成员4 的 cats.py API
-"""
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
-# ══════════════════════════════════════════════════════════════
-# 猫咪档案
-# ══════════════════════════════════════════════════════════════
-
-class CatBrief(BaseModel):
-    """猫咪简要信息（嵌入在 Encounter 响应中）"""
-    id: int
-    code: str
+class CatBase(BaseModel):
+    code: Optional[str] = None
     name: str
-    coat_color: str
-    cover_image_url: str
-
-    model_config = {"from_attributes": True}
-
-
-class CatResponse(BaseModel):
-    """猫咪档案响应"""
-    id: int
-    code: str
-    name: str
-    coat_color: str
-    age_stage: str
-    gender: str
-    personality_tags: str
-    adoption_status: str
-    last_seen_at: Optional[datetime] = None
-    cover_image_url: str
+    cover_image: Optional[str] = Field(None, alias="coverImage")
+    gallery_images: list[str] = Field(default_factory=list, alias="galleryImages")
+    coat_color: Optional[str] = Field(None, alias="coatColor")
+    age_stage: Optional[str] = Field(None, alias="ageStage")
+    gender: Optional[str] = None
+    personality_tags: list[str] = Field(default_factory=list, alias="personalityTags")
+    health_status: Optional[str] = Field(None, alias="healthStatus")
+    mood_status: Optional[str] = Field(None, alias="moodStatus")
+    adoption_status: str = Field(default="暂不开放", alias="adoptionStatus")
+    last_seen_location: Optional[str] = Field(None, alias="lastSeenLocation")
+    last_seen_at: Optional[datetime] = Field(None, alias="lastSeenAt")
     description: Optional[str] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    is_focus: bool = Field(default=False, alias="isFocus")
 
-    model_config = {"from_attributes": True}
-
-
-class CatDetailResponse(CatResponse):
-    """猫咪详情（含观察记录和出现事件）"""
-    observations: list["ObservationResponse"] = []
-    encounters: list["EncounterResponse"] = []
+    model_config = {"populate_by_name": True}
 
 
-# ══════════════════════════════════════════════════════════════
-# 观察记录
-# ══════════════════════════════════════════════════════════════
-
-class ObservationResponse(BaseModel):
-    """观察记录响应"""
-    id: int
-    cat_id: int
-    encounter_id: Optional[int] = None
-    observed_at: datetime
-    mood_status: str
-    visible_health_status: str
-    notes: Optional[str] = None
-    created_at: Optional[datetime] = None
-
-    model_config = {"from_attributes": True}
+class CatCreate(CatBase):
+    pass
 
 
-# ══════════════════════════════════════════════════════════════
-# 出现事件
-# ══════════════════════════════════════════════════════════════
-
-class EncounterResponse(BaseModel):
-    """出现事件响应"""
-    id: int
-    cat_id: int
-    cat: Optional[CatBrief] = None
-    user_id: Optional[int] = None
-    title: Optional[str] = None
+class CatUpdate(BaseModel):
+    code: Optional[str] = None
+    name: Optional[str] = None
+    cover_image: Optional[str] = Field(None, alias="coverImage")
+    gallery_images: Optional[list[str]] = Field(None, alias="galleryImages")
+    coat_color: Optional[str] = Field(None, alias="coatColor")
+    age_stage: Optional[str] = Field(None, alias="ageStage")
+    gender: Optional[str] = None
+    personality_tags: Optional[list[str]] = Field(None, alias="personalityTags")
+    health_status: Optional[str] = Field(None, alias="healthStatus")
+    mood_status: Optional[str] = Field(None, alias="moodStatus")
+    adoption_status: Optional[str] = Field(None, alias="adoptionStatus")
+    last_seen_location: Optional[str] = Field(None, alias="lastSeenLocation")
+    last_seen_at: Optional[datetime] = Field(None, alias="lastSeenAt")
     description: Optional[str] = None
-    location: str
-    occurred_at: Optional[datetime] = None
-    status: str
-    result_analysis: Optional[dict] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    is_focus: Optional[bool] = Field(None, alias="isFocus")
 
-    model_config = {"from_attributes": True}
+    model_config = {"populate_by_name": True}
 
 
-# ══════════════════════════════════════════════════════════════
-# 领养
-# ══════════════════════════════════════════════════════════════
+class CatResponse(CatBase):
+    id: str
+    mark_type: Optional[str] = Field(None, alias="_markType")
+    mark_remark: Optional[str] = Field(None, alias="_markRemark")
+    created_at: datetime = Field(..., alias="createdAt")
+    updated_at: datetime = Field(..., alias="updatedAt")
 
-class AdoptionApplicationResponse(BaseModel):
-    """领养申请响应"""
-    id: int
-    user_id: int
-    cat_id: int
-    cat: Optional[CatBrief] = None
-    applicant_name: str
-    phone: str
-    address: Optional[str] = None
-    reason: Optional[str] = None
-    status: str
-    created_at: Optional[datetime] = None
-
-    model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True, "populate_by_name": True}
 
 
-# ══════════════════════════════════════════════════════════════
-# 猫咪关怀（关注/推荐）
-# ══════════════════════════════════════════════════════════════
+class CatObservationCreate(BaseModel):
+    location: Optional[str] = None
+    mood_status: Optional[str] = Field(None, alias="moodStatus")
+    health_status: Optional[str] = Field(None, alias="healthStatus")
+    observed_at: Optional[datetime] = Field(None, alias="observedAt")
+    description: Optional[str] = None
 
-class AttentionCatResponse(CatResponse):
-    """关注猫咪响应（含健康状态汇总）"""
-    latest_mood: Optional[str] = None
-    latest_health: Optional[str] = None
-    observation_count: int = 0
+    model_config = {"populate_by_name": True}
+
+
+class CatObservationResponse(CatObservationCreate):
+    id: str
+    cat_id: str = Field(..., alias="catId")
+    observed_at: datetime = Field(..., alias="observedAt")
+    created_at: datetime = Field(..., alias="createdAt")
+
+    model_config = {"from_attributes": True, "populate_by_name": True}
+
+
+class CatAuditRecordResponse(BaseModel):
+    id: str
+    cat_id: str = Field(..., alias="catId")
+    action: str
+    remark: str = ""
+    operator: str
+    operated_at: datetime = Field(..., alias="operatedAt")
+
+    model_config = {"from_attributes": True, "populate_by_name": True}
+
+
+class BatchMarkCatsRequest(BaseModel):
+    cat_ids: list[str] = Field(..., alias="catIds")
+    mark_type: str = Field(..., alias="markType")
+    remark: Optional[str] = None
+
+    model_config = {"populate_by_name": True}
+
+
+class BatchCatIdsRequest(BaseModel):
+    cat_ids: list[str] = Field(..., alias="catIds")
+
+    model_config = {"populate_by_name": True}
+
+
+class ToggleFocusRequest(BaseModel):
+    is_focus: bool = Field(..., alias="isFocus")
+
+    model_config = {"populate_by_name": True}
+
+
+class BatchToggleFocusRequest(BatchCatIdsRequest):
+    is_focus: bool = Field(..., alias="isFocus")
+
+
+class CatOperationResult(BaseModel):
+    success: bool
+    message: Optional[str] = None
+    id: Optional[str] = None

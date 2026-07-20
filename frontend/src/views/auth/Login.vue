@@ -81,7 +81,10 @@ async function handleLogin() {
 
   try {
     const profile = await userStore.login(form);
-    ElMessage.success(profile.role === 'user' ? '用户登录成功' : '管理员登录成功');
+    ElMessage.success({
+      message: profile.role === 'user' ? '用户登录成功' : '管理员登录成功',
+      duration: 1000,
+    });
     const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '';
     await router.push(redirect || '/');
   } catch (error) {

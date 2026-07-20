@@ -5,17 +5,6 @@
         <el-tag effect="plain" size="large">AI 视觉识别 · 流浪猫数字档案</el-tag>
         <h1>给每一只流浪猫<br />一个<span>温暖的家</span></h1>
         <p>通过视觉识别与 AI 智能体，为流浪猫建立持续更新的数字档案。</p>
-        <div class="hero-actions">
-          <RouterLink to="/cats">
-            <el-button type="primary" size="large" round>查看猫咪图鉴</el-button>
-          </RouterLink>
-          <RouterLink to="/admin/dashboard">
-            <el-button size="large" round>进入管理端</el-button>
-          </RouterLink>
-          <RouterLink to="/chat">
-            <el-button size="large" round>AI 助手</el-button>
-          </RouterLink>
-        </div>
       </div>
       <div class="hero-visual paw-dot">
         <img :src="featuredCat?.coverImage" alt="CatTrace 推荐猫咪" />
@@ -107,13 +96,6 @@ h1 span {
   color: $color-text-secondary;
   font-size: 17px;
   line-height: 1.8;
-}
-
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-top: 30px;
 }
 
 .hero-visual {

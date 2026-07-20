@@ -6,3 +6,5 @@ python-jose
 bcrypt
 ultralytics
 opencv-python
+torch
+torchvision

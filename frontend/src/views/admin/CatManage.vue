@@ -93,7 +93,7 @@
         </el-table-column>
 
         <!-- 操作列 -->
-        <el-table-column label="操作" width="180" fixed="right">
+        <el-table-column label="操作" width="240" fixed="right">
           <template #default="{ row }">
             <el-button type="text" size="small" @click="handleViewAudit(row)">
               审核记录
@@ -101,10 +101,67 @@
             <el-button type="text" size="small" @click="handleToggleFocus(row)">
               {{ row.isFocus ? '取消关注' : '关注' }}
             </el-button>
+            <el-button type="text" size="small" class="danger-action" @click="handleDeleteCat(row)">
+              删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
     </section>
+
+    <!-- 新增猫咪档案 -->
+    <el-dialog v-model="catDialogVisible" title="新增猫咪档案" width="640px">
+      <el-form :model="catForm" label-width="96px">
+        <el-form-item label="编号" required>
+          <el-input v-model="catForm.code" placeholder="例如 CT-2026-0001" />
+        </el-form-item>
+        <el-form-item label="名称" required>
+          <el-input v-model="catForm.name" placeholder="例如 橘子" />
+        </el-form-item>
+        <el-form-item label="封面图">
+          <el-input v-model="catForm.coverImage" placeholder="图片 URL，可后续补充" />
+        </el-form-item>
+        <el-form-item label="毛色">
+          <el-input v-model="catForm.coatColor" placeholder="例如 橘白、狸花、三花" />
+        </el-form-item>
+        <el-form-item label="年龄阶段">
+          <el-select v-model="catForm.ageStage" placeholder="请选择">
+            <el-option label="幼猫" value="幼猫" />
+            <el-option label="成年" value="成年" />
+            <el-option label="老年" value="老年" />
+            <el-option label="未知" value="未知" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="性别">
+          <el-select v-model="catForm.gender" placeholder="请选择">
+            <el-option label="公" value="公" />
+            <el-option label="母" value="母" />
+            <el-option label="未知" value="未知" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="健康状态">
+          <el-input v-model="catForm.healthStatus" placeholder="例如 健康良好、观察中、需复查" />
+        </el-form-item>
+        <el-form-item label="领养状态">
+          <el-select v-model="catForm.adoptionStatus" placeholder="请选择">
+            <el-option label="待领养" value="待领养" />
+            <el-option label="已领养" value="已领养" />
+            <el-option label="云领养中" value="云领养中" />
+            <el-option label="暂不开放" value="暂不开放" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="最近地点">
+          <el-input v-model="catForm.lastSeenLocation" placeholder="例如 三号楼花坛" />
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input v-model="catForm.description" type="textarea" :rows="3" placeholder="补充性格、健康、活动范围等信息" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button round @click="catDialogVisible = false">取消</el-button>
+        <el-button type="primary" round :loading="catSubmitting" @click="handleCreateCat">保存</el-button>
+      </template>
+    </el-dialog>
 
     <!-- 审核记录弹窗 -->
     <el-dialog v-model="auditDialogVisible" :title="`审核记录 — ${currentAuditCatName}`" width="580px">
@@ -136,8 +193,9 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { getRequestErrorMessage } from '@/api/request'
 import {
   getCatList,
   getCatAuditRecords,
@@ -145,6 +203,8 @@ import {
   batchUnmarkCats,
   toggleCatFocus,
   batchToggleFocus,
+  createCat,
+  deleteCat,
 } from '@/api/cat'
 import type { Cat, AuditRecord, BatchMarkPayload } from '@/types/cat'
 
@@ -152,9 +212,31 @@ import type { Cat, AuditRecord, BatchMarkPayload } from '@/types/cat'
 const cats = ref<Cat[]>([])
 const selectedCats = ref<Cat[]>([])
 const listLoading = ref(false)
+const catDialogVisible = ref(false)
+const catSubmitting = ref(false)
 
 // 标记映射（从 getCatList 返回的 _markType/_markRemark 中提取）
 const catMarkMap = ref<Record<string, { markType: string; remark: string }>>({})
+
+const DEFAULT_CAT_IMAGE = 'https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=900&q=80'
+
+const catForm = reactive<Omit<Cat, 'id'>>({
+  code: '',
+  name: '',
+  coverImage: '',
+  galleryImages: [],
+  coatColor: '',
+  ageStage: '成年',
+  gender: '未知',
+  personalityTags: [],
+  healthStatus: '观察中',
+  moodStatus: '稳定',
+  adoptionStatus: '暂不开放',
+  lastSeenLocation: '',
+  lastSeenAt: new Date().toISOString(),
+  description: '',
+  isFocus: false,
+})
 
 // 审核记录弹窗
 const auditDialogVisible = ref(false)
@@ -182,8 +264,9 @@ const refreshCatList = async () => {
     catMarkMap.value = markMap
 
     selectedCats.value = []
-  } catch {
-    ElMessage.error('获取猫咪列表失败')
+  } catch (error) {
+    cats.value = []
+    ElMessage.error(getRequestErrorMessage(error, '获取猫咪列表失败'))
   } finally {
     listLoading.value = false
   }
@@ -226,7 +309,58 @@ const handleSelectionChange = (selection: Cat[]) => {
 
 // 新增档案
 const handleAddCat = () => {
-  ElMessage.info('新增猫咪档案功能预留，后续实现')
+  resetCatForm()
+  catDialogVisible.value = true
+}
+
+const resetCatForm = () => {
+  Object.assign(catForm, {
+    code: `CT-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`,
+    name: '',
+    coverImage: '',
+    galleryImages: [],
+    coatColor: '',
+    ageStage: '成年',
+    gender: '未知',
+    personalityTags: [],
+    healthStatus: '观察中',
+    moodStatus: '稳定',
+    adoptionStatus: '暂不开放',
+    lastSeenLocation: '',
+    lastSeenAt: new Date().toISOString(),
+    description: '',
+    isFocus: false,
+  })
+}
+
+const handleCreateCat = async () => {
+  if (!catForm.code.trim() || !catForm.name.trim()) {
+    ElMessage.warning('请填写编号和名称')
+    return
+  }
+
+  catSubmitting.value = true
+  try {
+    const payload: Omit<Cat, 'id'> = {
+      ...catForm,
+      code: catForm.code.trim(),
+      name: catForm.name.trim(),
+      coverImage: catForm.coverImage.trim() || DEFAULT_CAT_IMAGE,
+      galleryImages: catForm.coverImage.trim() ? [catForm.coverImage.trim()] : [DEFAULT_CAT_IMAGE],
+      coatColor: catForm.coatColor.trim() || '未知',
+      healthStatus: catForm.healthStatus.trim() || '观察中',
+      lastSeenLocation: catForm.lastSeenLocation.trim() || '未知地点',
+      description: catForm.description.trim() || '管理员新增的猫咪档案。',
+    }
+    const result = await createCat(payload)
+    ElMessage.success(result.message ?? '猫咪档案创建成功')
+    catDialogVisible.value = false
+    await refreshCatList()
+  } catch (error) {
+    ElMessage.error(getRequestErrorMessage(error, '新增猫咪档案失败'))
+  } finally {
+    catSubmitting.value = false
+  }
 }
 
 // 批量标记
@@ -310,6 +444,27 @@ const handleToggleFocus = async (row: Cat) => {
     ElMessage.success(newFocus ? '已设为关注' : '已取消关注')
   } catch {
     ElMessage.error('操作失败')
+  }
+}
+
+const handleDeleteCat = async (row: Cat) => {
+  try {
+    await ElMessageBox.confirm(
+      `确认删除「${row.name}」的猫咪档案？删除后相关观察记录和审核记录也会被移除。`,
+      '删除猫咪档案',
+      {
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+      },
+    )
+    const result = await deleteCat(row.id)
+    ElMessage.success(result.message ?? `「${row.name}」档案已删除`)
+    await refreshCatList()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error(getRequestErrorMessage(error, '删除猫咪档案失败'))
+    }
   }
 }
 
@@ -417,5 +572,9 @@ const handleBatchUnfocus = async () => {
 .cell-dim {
   color: $color-text-secondary;
   font-size: 13px;
+}
+
+.danger-action {
+  color: #d93025;
 }
 </style>
