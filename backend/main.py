@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.auth import router as auth_router
 from app.api.cats import router as cats_router
 from app.api.recognition import router as recognition_router
+from app.api.chat import router as chat_router
 from app.config.settings import settings
 from app.database.migrations import ensure_runtime_columns
 from app.database.seed import seed_roles_and_admin
@@ -35,6 +36,7 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.include_router(auth_router)
 app.include_router(cats_router)
 app.include_router(recognition_router)
+app.include_router(chat_router)
 
 
 @app.on_event("startup")

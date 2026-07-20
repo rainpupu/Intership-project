@@ -3,6 +3,7 @@
 import os
 import re
 from langchain_core.tools import tool
+from sqlalchemy import String, func
 from pydantic import BaseModel, Field
 
 
@@ -86,13 +87,6 @@ _MOCK_CATS = [
         "cover_image_url": "https://placekitten.com/404/304",
         "description": "三花母猫，非常粘人，喜欢跟着人走，叫声特别多。",
     },
-]
-
-_MOCK_OBSERVATIONS = [
-    {"observation_id": 1, "cat_id": 1, "observed_at": "2026-07-13", "mood_status": "放松", "visible_health_status": "良好", "notes": "在图书馆门口晒太阳，毛发光亮"},
-    {"observation_id": 2, "cat_id": 1, "observed_at": "2026-07-10", "mood_status": "正常", "visible_health_status": "良好", "notes": "正常进食，精神状态好"},
-    {"observation_id": 3, "cat_id": 2, "observed_at": "2026-07-14", "mood_status": "警惕", "visible_health_status": "需观察", "notes": "左眼有轻微分泌物，建议持续观察"},
-    {"observation_id": 4, "cat_id": 5, "observed_at": "2026-07-12", "mood_status": "活泼", "visible_health_status": "良好", "notes": "非常粘人，一直在叫"},
 ]
 
 _MOCK_ENCOUNTERS = [
@@ -606,34 +600,40 @@ def search_cats(keyword: str = "", coat_color: str = "", adoption_status: str = 
 @tool("get_cat_profile", args_schema=GetCatProfileInput)
 def get_cat_profile(cat_id: int) -> str:
     """获取指定猫咪的完整档案。"""
-    cat = next((c for c in _MOCK_CATS if c["cat_id"] == cat_id), None)
-    if not cat:
-        return f"未找到 ID 为 {cat_id} 的猫咪。"
-    return (
-        f"【{cat['name']}】\n"
-        f"编号：{cat['code']}\n"
-        f"花色：{cat['coat_color']} | 年龄：{cat['age_stage']} | 性别：{cat['gender']}\n"
-        f"性格标签：{cat['personality_tags']}\n"
-        f"领养状态：{cat['adoption_status']}\n"
-        f"最近出现：{cat['last_seen_at']}\n"
-        f"简介：{cat['description']}"
-    )
+    from app.database.session import SessionLocal
+    from app.entity.db_models import Cat
+    db = SessionLocal()
+    try:
+        cat = db.query(Cat).filter(Cat.id == cat_id).first()
+        if not cat:
+            return f"未找到 ID 为 {cat_id} 的猫咪。"
+        return (
+            f"【{cat.name}】\n"
+            f"编号：{cat.code}\n"
+            f"花色：{cat.coat_color} | 年龄：{cat.age_stage} | 性别：{cat.gender}\n"
+            f"性格标签：{cat.personality_tags}\n"
+            f"领养状态：{cat.adoption_status}\n"
+            f"最近出现：{cat.last_seen_at.strftime('%Y-%m-%d') if cat.last_seen_at else '未知'}\n"
+            f"简介：{cat.description or '暂无简介'}"
+        )
+    finally:
+        db.close()
 
 
 @tool("get_cat_observations", args_schema=GetCatObservationsInput)
 def get_cat_observations(cat_id: int, limit: int = 10) -> str:
     """获取指定猫咪的状态观察记录时间线。"""
     from app.database.session import SessionLocal
-    from app.entity.db_models import Observation
+    from app.entity.db_models import CatObservation
     db = SessionLocal()
     try:
-        records = db.query(Observation).filter(Observation.cat_id == cat_id).order_by(Observation.observed_at.desc()).limit(limit).all()
+        records = db.query(CatObservation).filter(CatObservation.cat_id == cat_id).order_by(CatObservation.observed_at.desc()).limit(limit).all()
         if not records:
             return "暂无该猫咪的状态记录。"
         lines = []
         for r in records:
             lines.append(
-                f"- [{r.observed_at.strftime('%Y-%m-%d') if r.observed_at else '未知'}] 情绪：{r.mood_status} | 健康：{r.visible_health_status} | {r.notes or '无'}"
+                f"- [{r.observed_at.strftime('%Y-%m-%d') if r.observed_at else '未知'}] 情绪：{r.mood_status} | 健康：{r.health_status} | {r.description or '无'}"
             )
         return f"最近 {len(records)} 条状态记录：\n" + "\n".join(lines)
     finally:
@@ -645,19 +645,19 @@ def get_recent_encounters(cat_id: int = 0, days: int = 30) -> str:
     """获取近期猫咪出现事件记录。cat_id=0 表示查询全部。"""
     from datetime import datetime, timedelta
     from app.database.session import SessionLocal
-    from app.entity.db_models import Encounter
+    from app.entity.db_models import CatObservation
     db = SessionLocal()
     try:
         cutoff = datetime.now() - timedelta(days=days)
-        query = db.query(Encounter).filter(Encounter.occurred_at >= cutoff)
+        query = db.query(CatObservation).filter(CatObservation.observed_at >= cutoff)
         if cat_id > 0:
-            query = query.filter(Encounter.cat_id == cat_id)
-        records = query.order_by(Encounter.occurred_at.desc()).all()
+            query = query.filter(CatObservation.cat_id == cat_id)
+        records = query.order_by(CatObservation.observed_at.desc()).all()
         if not records:
             return "近期没有出现事件记录。"
         lines = []
         for r in records:
-            lines.append(f"- [{r.occurred_at.strftime('%Y-%m-%d %H:%M') if r.occurred_at else '未知'}] 地点：{r.location}（{r.status}）")
+            lines.append(f"- [{r.observed_at.strftime('%Y-%m-%d %H:%M') if r.observed_at else '未知'}] 地点：{r.location or '未知'}（{r.health_status or '未记录'}）")
         return f"最近 {len(records)} 条出现记录：\n" + "\n".join(lines)
     finally:
         db.close()
@@ -672,9 +672,9 @@ def recommend_adoption_cats(personality: str = "", experience: str = "", limit: 
     try:
         query = db.query(Cat).filter(~Cat.adoption_status.in_(["已领养", "领养中"]))
         if experience == "新手":
-            query = query.filter(Cat.age_stage == "成年").filter(Cat.personality_tags.contains("亲人"))
+            query = query.filter(Cat.age_stage == "成年").filter(func.cast(Cat.personality_tags, String).contains("亲人"))
         if personality:
-            query = query.filter(Cat.personality_tags.contains(personality))
+            query = query.filter(func.cast(Cat.personality_tags, String).contains(personality))
         cats = query.limit(limit).all()
         if not cats:
             cats = db.query(Cat).filter(~Cat.adoption_status.in_(["已领养", "领养中"])).limit(limit).all()
@@ -697,15 +697,15 @@ def recommend_adoption_cats(personality: str = "", experience: str = "", limit: 
 def get_attention_cats(limit: int = 10) -> str:
     """获取需要重点关注的猫咪列表（健康异常、长期未出现等）。"""
     from app.database.session import SessionLocal
-    from app.entity.db_models import Cat, Observation
+    from app.entity.db_models import Cat, CatObservation
     db = SessionLocal()
     try:
         cats = db.query(Cat).all()
         result = []
         for cat in cats:
-            latest_obs = db.query(Observation).filter(Observation.cat_id == cat.id).order_by(Observation.observed_at.desc()).first()
-            if latest_obs and latest_obs.visible_health_status in ("需观察", "异常"):
-                result.append((cat, f"健康需关注: {latest_obs.notes or latest_obs.visible_health_status}"))
+            latest_obs = db.query(CatObservation).filter(CatObservation.cat_id == cat.id).order_by(CatObservation.observed_at.desc()).first()
+            if latest_obs and latest_obs.health_status in ("需观察", "异常"):
+                result.append((cat, f"健康需关注: {latest_obs.description or latest_obs.health_status}"))
         if not result:
             return "目前所有猫咪状态良好，无需特别关注。"
         lines = []
