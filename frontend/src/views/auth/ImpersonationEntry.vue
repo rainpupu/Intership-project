@@ -21,10 +21,10 @@ import type { AuthResult } from '@/types/user';
 const router = useRouter();
 const userStore = useUserStore();
 const failed = ref(false);
-const statusMessage = ref('正在进入模拟用户视图...');
+const statusMessage = ref('正在进入用户端视图...');
 
 const statusIcon = computed(() => (failed.value ? 'error' : 'info'));
-const statusTitle = computed(() => (failed.value ? '模拟登录失败' : '模拟登录中'));
+const statusTitle = computed(() => (failed.value ? '进入用户端失败' : '正在进入用户端'));
 
 function parseImpersonationPayload(): AuthResult | null {
   const params = new URLSearchParams(window.location.hash.replace(/^#/, ''));
@@ -46,7 +46,7 @@ onMounted(async () => {
   const payload = parseImpersonationPayload();
   if (!payload || payload.profile.role !== 'user') {
     failed.value = true;
-    statusMessage.value = '模拟登录参数无效，请从管理端用户列表重新打开。';
+    statusMessage.value = '访问参数无效，请从管理端重新打开。';
     return;
   }
 

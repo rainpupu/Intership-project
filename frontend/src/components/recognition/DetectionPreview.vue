@@ -6,23 +6,18 @@
     <div class="caption">
       <div class="caption-head">
         <strong>AI 识别预览</strong>
-        <el-tag type="success" effect="light">置信度 {{ confidenceText }}</el-tag>
+        <el-tag type="success" effect="light">检测完成</el-tag>
       </div>
-      <p>展示 YOLO 检测结果缩略图，用于快速核对目标是否正确。</p>
+      <p>系统已生成 YOLO 检测缩略图，可用于快速核对识别目标。</p>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { formatPercent } from '@/utils/formatter';
-
-const props = defineProps<{
+defineProps<{
   image: string;
   confidence: number;
 }>();
-
-const confidenceText = computed(() => formatPercent(props.confidence));
 </script>
 
 <style scoped lang="scss">

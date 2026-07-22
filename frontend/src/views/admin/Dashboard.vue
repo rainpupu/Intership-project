@@ -35,7 +35,9 @@
               <strong>{{ record.catName }}</strong>
               <p>{{ record.location }} · {{ formatDateTime(record.createdAt) }}</p>
             </div>
-            <el-tag>{{ formatPercent(record.similarity) }}</el-tag>
+            <el-tag :type="recordMatchTagType(record)">
+              {{ recordMatchStatusText(record) }}
+            </el-tag>
           </article>
         </div>
       </div>
@@ -66,7 +68,7 @@ import DataState from '@/components/common/DataState.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import ChartCard from '@/components/dashboard/ChartCard.vue';
 import StatisticCard from '@/components/dashboard/StatisticCard.vue';
-import { formatDateTime, formatPercent } from '@/utils/formatter';
+import { formatDateTime } from '@/utils/formatter';
 
 const overview = reactive<DashboardOverview>({
   stats: {
@@ -81,6 +83,19 @@ const overview = reactive<DashboardOverview>({
   focusCats: [],
   recognitionTrend: [],
 });
+
+function recordMatchStatusText(record: DashboardOverview['recentRecognitions'][number]) {
+  if (record.modelType === 'individual' || (record.catId && !record.catId.startsWith('breed-'))) return '已匹配';
+  if (record.modelType === 'new') return '未匹配';
+  if (record.modelType === 'breed') return '仅识别品种';
+  return '待确认';
+}
+
+function recordMatchTagType(record: DashboardOverview['recentRecognitions'][number]) {
+  if (record.modelType === 'individual' || (record.catId && !record.catId.startsWith('breed-'))) return 'success';
+  if (record.modelType === 'new') return 'warning';
+  return 'info';
+}
 const loading = ref(false);
 const errorMessage = ref('');
 

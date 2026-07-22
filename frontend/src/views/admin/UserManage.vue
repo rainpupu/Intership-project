@@ -34,7 +34,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="campusRole" label="职责说明" min-width="150" />
-        <el-table-column label="操作" width="220" fixed="right">
+        <el-table-column label="操作" width="300" fixed="right">
           <template #default="{ row }">
             <el-button
               v-if="row.role === 'user'"
@@ -53,6 +53,16 @@
               设为普通用户
             </el-button>
             <span v-else class="muted">总管理员不可变更</span>
+            <el-button
+              v-if="canDeleteUser(row)"
+              size="small"
+              round
+              type="danger"
+              plain
+              @click="removeUser(row)"
+            >
+              删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -95,10 +105,12 @@
 import { onMounted, reactive, ref } from 'vue';
 import type { FormInstance, FormRules } from 'element-plus';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { createAdmin, getUserList, updateUserRole } from '@/api/auth';
+import { createAdmin, deleteUser, getUserList, updateUserRole } from '@/api/auth';
 import { getRequestErrorMessage } from '@/api/request';
+import { useUserStore } from '@/stores/user';
 import type { CreateAdminPayload, UserListQuery, UserProfile, UserRole } from '@/types/user';
 
+const userStore = useUserStore();
 const users = ref<UserProfile[]>([]);
 const loading = ref(false);
 const creating = ref(false);
@@ -202,6 +214,31 @@ async function changeRole(user: UserProfile, role: Extract<UserRole, 'user' | 'a
   }
   ElMessage.success('角色已更新');
   await fetchUsers();
+}
+
+function canDeleteUser(user: UserProfile) {
+  return user.id !== userStore.profile?.id;
+}
+
+async function removeUser(user: UserProfile) {
+  await ElMessageBox.confirm(
+    `确定删除账号「${user.nickname || user.phone || user.username}」吗？删除后该账号将无法登录，相关个人识别记录也会被移除。`,
+    '删除账号',
+    {
+      type: 'warning',
+      confirmButtonText: '确认删除',
+      cancelButtonText: '取消',
+      confirmButtonClass: 'el-button--danger',
+    },
+  );
+
+  try {
+    await deleteUser(user.id);
+    ElMessage.success('账号已删除');
+    await fetchUsers();
+  } catch (error) {
+    ElMessage.error(getRequestErrorMessage(error, '删除账号失败'));
+  }
 }
 
 onMounted(fetchUsers);

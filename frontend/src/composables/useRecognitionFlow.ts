@@ -7,7 +7,7 @@ import {
   getRecognitionCandidates,
   uploadEncounterImages,
 } from '@/api/recognition';
-import type { RecognitionAnalysis, RecognitionCandidate } from '@/types/recognition';
+import type { ConfirmExistingCatPayload, RecognitionAnalysis, RecognitionCandidate } from '@/types/recognition';
 
 export function useRecognitionFlow() {
   const selectedFiles = ref<UploadFile[]>([]);
@@ -53,7 +53,7 @@ export function useRecognitionFlow() {
     }
   }
 
-  async function confirmTopCandidate() {
+  async function confirmTopCandidate(payload: ConfirmExistingCatPayload) {
     if (!topCandidate.value) {
       ElMessage.warning('暂无可确认的候选猫咪');
       return false;
@@ -63,7 +63,7 @@ export function useRecognitionFlow() {
       return false;
     }
 
-    await confirmExistingCat(topCandidate.value.catId);
+    await confirmExistingCat(topCandidate.value.catId, payload);
     activeStep.value = 4;
     return true;
   }
@@ -73,6 +73,7 @@ export function useRecognitionFlow() {
     code?: string;
     description?: string;
     lastSeenLocation?: string;
+    observedAt?: string;
   }) {
     const result = await createNewCat(payload);
     activeStep.value = 4;

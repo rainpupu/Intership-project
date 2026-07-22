@@ -106,6 +106,11 @@ export async function updateUserRole(payload: UpdateUserRolePayload): Promise<Us
   return normalizeProfile(response.data);
 }
 
+export async function deleteUser(userId: string): Promise<{ success: boolean }> {
+  await request.delete<ApiResponse<{ success: boolean }>, ApiResponse<{ success: boolean }>>(`/auth/users/${userId}`);
+  return { success: true };
+}
+
 export async function createSelfImpersonation(): Promise<AuthResult> {
   const response = await request.post<ApiResponse<BackendAuthResult>, ApiResponse<BackendAuthResult>>(
     '/auth/impersonation/self',

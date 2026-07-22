@@ -155,6 +155,17 @@ async def update_user_role(
     return ApiResponse(data=UserProfileResponse(**profile).model_dump(by_alias=True))
 
 
+@router.delete("/users/{user_id}", response_model=ApiResponse)
+async def delete_user(
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_super_admin(current_user)
+    user_service.delete_user(db, user_id, current_user)
+    return ApiResponse(data={"success": True}, message="账号已删除")
+
+
 @router.post("/impersonation/self", response_model=ApiResponse)
 async def create_self_impersonation(
     current_user: User = Depends(get_current_user),
@@ -165,4 +176,4 @@ async def create_self_impersonation(
         token=session["token"],
         profile=UserProfileResponse(**session["profile"]),
     )
-    return ApiResponse(data=data.model_dump(by_alias=True), message="模拟用户登录会话已创建")
+    return ApiResponse(data=data.model_dump(by_alias=True), message="用户端视图会话已创建")

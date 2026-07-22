@@ -9,11 +9,10 @@
     >
       <div class="timeline-card">
         <div class="timeline-title">
-          <strong>{{ item.location }}</strong>
-          <el-tag size="small" effect="plain">{{ item.healthStatus }}</el-tag>
+          <strong>{{ item.location || '校内固定观察点' }}</strong>
+          <el-tag size="small" effect="plain">{{ item.healthStatus || '健康待确认' }}</el-tag>
         </div>
-        <p>{{ item.description }}</p>
-        <span>{{ item.moodStatus }}</span>
+        <span>{{ item.moodStatus || '心情待确认' }}</span>
       </div>
     </el-timeline-item>
   </el-timeline>
@@ -50,11 +49,6 @@ defineProps<{
 
 strong {
   color: $color-text;
-}
-
-p {
-  margin: 9px 0;
-  color: $color-text-secondary;
 }
 
 span {

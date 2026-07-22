@@ -4,7 +4,7 @@
     <div class="content">
       <div class="title">
         <strong>{{ candidate.name }}</strong>
-        <el-tag size="small">{{ formatPercent(candidate.similarity) }}</el-tag>
+        <el-tag size="small" :type="matchTagType">{{ matchStatusText }}</el-tag>
       </div>
       <div class="meta-tags">
         <el-tag v-if="candidate.breedName" size="small" effect="plain">
@@ -24,12 +24,25 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { RecognitionCandidate } from '@/types/recognition';
-import { formatPercent } from '@/utils/formatter';
 
-defineProps<{
+const props = defineProps<{
   candidate: RecognitionCandidate;
 }>();
+
+const matchStatusText = computed(() => {
+  if (props.candidate.modelType === 'individual') return '已匹配';
+  if (props.candidate.modelType === 'new') return '未匹配';
+  if (props.candidate.modelType === 'breed') return '品种识别';
+  return '待确认';
+});
+
+const matchTagType = computed(() => {
+  if (props.candidate.modelType === 'individual') return 'success';
+  if (props.candidate.modelType === 'new') return 'warning';
+  return 'info';
+});
 </script>
 
 <style scoped lang="scss">

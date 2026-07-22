@@ -36,7 +36,7 @@
           </RouterLink>
           <span class="role-badge">管理员：{{ userStore.displayName }}</span>
           <el-button type="primary" round :loading="impersonating" @click="handleImpersonation">
-            模拟用户
+            用户端视图
           </el-button>
           <el-button round @click="handleLogout">退出</el-button>
         </div>
@@ -90,7 +90,7 @@ async function handleImpersonation() {
     return;
   }
 
-  popup.document.write('<p style="font-family: sans-serif; padding: 24px;">正在打开模拟用户视图...</p>');
+  popup.document.write('<p style="font-family: sans-serif; padding: 24px;">正在打开用户端视图...</p>');
   impersonating.value = true;
   try {
     const result = await createSelfImpersonation();
@@ -99,10 +99,10 @@ async function handleImpersonation() {
       profile: JSON.stringify(result.profile),
     });
     popup.location.href = `${window.location.origin}/impersonate#${params.toString()}`;
-    ElMessage.success('已打开当前管理员的专属模拟用户窗口');
+    ElMessage.success('已打开用户端视图窗口');
   } catch (error) {
     popup.close();
-    ElMessage.error(getRequestErrorMessage(error, '模拟用户窗口创建失败'));
+    ElMessage.error(getRequestErrorMessage(error, '用户端视图窗口创建失败'));
   } finally {
     impersonating.value = false;
   }

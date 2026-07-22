@@ -71,3 +71,8 @@ export interface SubmitCampusCluePayload {
   observedAt?: string;
   userRemark?: string;
 }
+
+export interface ConfirmExistingCatPayload {
+  location: string;
+  observedAt: string;
+}

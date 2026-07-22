@@ -3,7 +3,7 @@
     <section class="page-head">
       <div>
         <h1 class="page-title">猫咪识别页面</h1>
-        <p class="page-subtitle">管理员视角展示全平台上传、AI 识别、身份确认和保存记录流程。</p>
+        <p class="page-subtitle">管理员可集中处理全平台上传、AI 识别、身份确认和记录保存。</p>
       </div>
     </section>
 
@@ -29,7 +29,7 @@
       </div>
 
       <div class="soft-card panel">
-        <h2 class="section-title">最高置信度结果</h2>
+        <h2 class="section-title">最佳识别结果</h2>
         <div v-if="candidates.length" class="candidate-list">
           <CandidateCard v-for="candidate in candidates" :key="candidate.catId" :candidate="candidate" />
         </div>
@@ -57,16 +57,15 @@
             <span class="result-label">{{ identityResultTitle }}</span>
             <strong>{{ identityResultName }}</strong>
             <p>{{ identityResultDescription }}</p>
-            <div v-if="topCandidate.bestIdentityMatch" class="match-hint">
-              最接近已有档案：{{ topCandidate.bestIdentityMatch.name }}，相似度
-              {{ formatPercent(topCandidate.bestIdentityMatch.similarity) }}
+            <div v-if="topCandidate.modelType === 'individual' && topCandidate.bestIdentityMatch" class="match-hint">
+              最接近已有档案：{{ topCandidate.bestIdentityMatch.name }}
             </div>
             <div class="result-actions">
               <el-button
                 v-if="topCandidate.modelType === 'individual'"
                 type="primary"
                 round
-                @click="confirmMatchedCandidate"
+                @click="openMatchedCandidateDialog"
               >
                 登记到匹配档案
               </el-button>
@@ -111,12 +110,41 @@
           >
             <el-option v-for="cat in cats" :key="cat.id" :label="cat.name" :value="cat.id" />
           </el-select>
-          <el-button type="primary" round @click="confirmExisting">确认为已有猫</el-button>
+          <el-button type="primary" round @click="openSelectedCatDialog">确认为已有猫</el-button>
           <el-button round @click="createNew">创建新猫档案</el-button>
           <el-button round @click="activeStep = 2">暂不确认</el-button>
         </div>
       </div>
     </section>
+
+    <el-dialog v-model="existingDialogVisible" title="登记到已有猫档案" width="520px">
+      <div class="prefill-card">
+        <img :src="existingDialogPreview.image" :alt="existingDialogPreview.name" />
+        <div>
+          <strong>{{ existingDialogPreview.name }}</strong>
+          <p>健康状态：{{ existingDialogPreview.healthStatus || '待人工确认' }}</p>
+          <p>心情状态：{{ existingDialogPreview.moodStatus || '待人工确认' }}</p>
+        </div>
+      </div>
+      <el-form label-width="92px">
+        <el-form-item label="发现地点" required>
+          <el-input v-model="existingForm.location" placeholder="请填写实际地点，例如：电动车棚入口" />
+        </el-form-item>
+        <el-form-item label="发现时间" required>
+          <el-date-picker
+            v-model="existingForm.observedAt"
+            type="datetime"
+            value-format="YYYY-MM-DDTHH:mm:ss"
+            placeholder="请选择实际发现时间"
+            style="width: 100%"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="existingDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="confirmingExisting" @click="confirmExistingWithForm">确认登记</el-button>
+      </template>
+    </el-dialog>
 
     <el-dialog v-model="createDialogVisible" title="创建新猫档案" width="520px">
       <div v-if="createDialogPreview" class="prefill-card">
@@ -127,7 +155,6 @@
             <p>品种/外观候选：{{ createDialogPreview.name }}</p>
             <p>健康状态：{{ createDialogPreview.healthStatus || '待人工确认' }}</p>
             <p>心情状态：{{ createDialogPreview.moodStatus || '待人工确认' }}</p>
-            <p>置信度：{{ formatPercent(createDialogPreview.similarity) }}</p>
             <p v-if="createDialogPreview.userRemark">用户备注：{{ createDialogPreview.userRemark }}</p>
         </div>
       </div>
@@ -140,6 +167,15 @@
         </el-form-item>
         <el-form-item label="发现地点" required>
           <el-input v-model="newCatForm.lastSeenLocation" placeholder="请人工输入，例如：东门、图书馆附近" />
+        </el-form-item>
+        <el-form-item label="发现时间" required>
+          <el-date-picker
+            v-model="newCatForm.observedAt"
+            type="datetime"
+            value-format="YYYY-MM-DDTHH:mm:ss"
+            placeholder="请选择实际发现时间"
+            style="width: 100%"
+          />
         </el-form-item>
         <el-form-item label="档案备注">
           <el-input
@@ -160,7 +196,7 @@
       <div class="records-head">
         <div>
           <h2 class="section-title">全平台最近识别记录</h2>
-          <p>展示全平台最近识别历史；用户提交的校园线索请到“线索审核”页面处理。</p>
+          <p>汇总全平台最近识别历史；用户提交的校园线索请到“线索审核”页面处理。</p>
         </div>
       </div>
       <DataState
@@ -183,8 +219,10 @@
         </el-table-column>
         <el-table-column prop="catName" label="候选猫咪" min-width="130" />
         <el-table-column prop="userId" label="上传用户" min-width="150" />
-        <el-table-column label="相似度" width="110">
-          <template #default="{ row }">{{ formatPercent(row.similarity) }}</template>
+        <el-table-column label="匹配结果" width="120">
+          <template #default="{ row }">
+            <el-tag :type="recordMatchTagType(row)" effect="light">{{ recordMatchStatusText(row) }}</el-tag>
+          </template>
         </el-table-column>
         <el-table-column prop="healthStatus" label="健康" width="110" />
         <el-table-column prop="moodStatus" label="心情" width="110" />
@@ -213,18 +251,30 @@ import UploadPanel from '@/components/recognition/UploadPanel.vue';
 import { useRecognitionFlow } from '@/composables/useRecognitionFlow';
 import type { Cat } from '@/types/cat';
 import type { RecognitionRecord } from '@/types/recognition';
-import { formatDateTime, formatPercent } from '@/utils/formatter';
+import { formatDateTime } from '@/utils/formatter';
 
 const records = ref<RecognitionRecord[]>([]);
 const cats = ref<Cat[]>([]);
 const selectedCatId = ref('');
 const createDialogVisible = ref(false);
+const existingDialogVisible = ref(false);
 const creatingCat = ref(false);
+const confirmingExisting = ref(false);
 const createdCatInfo = ref<{ catId: string; name?: string } | null>(null);
+const existingForm = reactive({
+  catId: '',
+  catName: '',
+  image: '',
+  healthStatus: '',
+  moodStatus: '',
+  location: '',
+  observedAt: '',
+});
 const newCatForm = reactive({
   name: '',
   code: '',
   lastSeenLocation: '',
+  observedAt: '',
   description: '',
 });
 const recordsLoading = ref(false);
@@ -245,7 +295,6 @@ const createDialogPreview = computed(() => {
     return {
       image: topCandidate.value.cropImage || topCandidate.value.image,
       name: topCandidate.value.breedName || topCandidate.value.name,
-      similarity: topCandidate.value.similarity,
       status: topCandidate.value.modelType === 'new' ? '疑似新猫' : topCandidate.value.status,
       healthStatus: topCandidate.value.healthStatus,
       moodStatus: topCandidate.value.moodStatus,
@@ -269,7 +318,7 @@ const identityResultDescription = computed(() => {
   const candidate = topCandidate.value;
   if (!candidate) return '';
   if (candidate.modelType === 'individual') {
-    return `个体识别模型匹配到已有档案「${candidate.name}」，相似度 ${formatPercent(candidate.similarity)}。`;
+    return `个体识别模型已匹配到已有档案「${candidate.name}」。`;
   }
   if (candidate.modelType === 'new') {
     const breedName = candidate.breedName || candidate.name || '未知品种';
@@ -277,8 +326,17 @@ const identityResultDescription = computed(() => {
   }
   return `${candidate.status}。当前结果可作为品种或外观参考，请结合图片与人工判断完成确认。`;
 });
+const existingDialogPreview = computed(() => {
+  const candidate = topCandidate.value;
+  return {
+    image: existingForm.image || candidate?.cropImage || candidate?.image || '',
+    name: existingForm.catName || candidate?.name || '已有猫咪档案',
+    healthStatus: existingForm.healthStatus || candidate?.healthStatus || '',
+    moodStatus: existingForm.moodStatus || candidate?.moodStatus || '',
+  };
+});
 
-async function confirmExisting() {
+function openSelectedCatDialog() {
   if (!candidates.value.length) {
     ElMessage.warning('请先上传图片并完成识别');
     return;
@@ -288,23 +346,71 @@ async function confirmExisting() {
     return;
   }
 
-  await confirmExistingCat(selectedCatId.value);
-  activeStep.value = 4;
-  ElMessage.success('已将本次识别特征登记到猫咪档案');
-  await fetchRecords();
+  const cat = cats.value.find((item) => item.id === selectedCatId.value);
+  openExistingDialog({
+    catId: selectedCatId.value,
+    catName: cat?.name || selectedCatId.value,
+    image: topCandidate.value?.cropImage || topCandidate.value?.image || cat?.coverImage || '',
+    healthStatus: topCandidate.value?.healthStatus || '',
+    moodStatus: topCandidate.value?.moodStatus || '',
+  });
 }
 
-async function confirmMatchedCandidate() {
+function openMatchedCandidateDialog() {
   const candidate = topCandidate.value;
   if (!candidate || candidate.modelType !== 'individual') {
     ElMessage.warning('当前没有可登记的已有猫匹配结果');
     return;
   }
 
-  await confirmExistingCat(candidate.catId);
-  activeStep.value = 4;
-  ElMessage.success(`已登记到「${candidate.name}」档案`);
-  await fetchRecords();
+  openExistingDialog({
+    catId: candidate.catId,
+    catName: candidate.name,
+    image: candidate.cropImage || candidate.image,
+    healthStatus: candidate.healthStatus || '',
+    moodStatus: candidate.moodStatus || '',
+  });
+}
+
+function openExistingDialog(payload: {
+  catId: string;
+  catName: string;
+  image: string;
+  healthStatus: string;
+  moodStatus: string;
+}) {
+  Object.assign(existingForm, {
+    ...payload,
+    location: '',
+    observedAt: '',
+  });
+  existingDialogVisible.value = true;
+}
+
+async function confirmExistingWithForm() {
+  if (!existingForm.catId) return;
+  if (!existingForm.location.trim()) {
+    ElMessage.warning('请填写实际发现地点');
+    return;
+  }
+  if (!existingForm.observedAt) {
+    ElMessage.warning('请选择实际发现时间');
+    return;
+  }
+
+  confirmingExisting.value = true;
+  try {
+    await confirmExistingCat(existingForm.catId, {
+      location: existingForm.location.trim(),
+      observedAt: existingForm.observedAt,
+    });
+    existingDialogVisible.value = false;
+    activeStep.value = 4;
+    ElMessage.success(`已登记到「${existingForm.catName}」档案`);
+    await fetchRecords();
+  } finally {
+    confirmingExisting.value = false;
+  }
 }
 
 async function createNew() {
@@ -325,12 +431,17 @@ function fillNewCatFormFromCandidate() {
   newCatForm.name = `待命名猫咪-${month}${day}${hour}${minute}`;
   newCatForm.code = '';
   newCatForm.lastSeenLocation = '';
+  newCatForm.observedAt = '';
   newCatForm.description = '';
 }
 
 async function handleCreateNewCat() {
   if (!newCatForm.lastSeenLocation.trim()) {
     ElMessage.warning('请填写发现地点');
+    return;
+  }
+  if (!newCatForm.observedAt) {
+    ElMessage.warning('请选择发现时间');
     return;
   }
 
@@ -340,6 +451,7 @@ async function handleCreateNewCat() {
       name: newCatForm.name.trim(),
       code: newCatForm.code.trim() || undefined,
       lastSeenLocation: newCatForm.lastSeenLocation.trim(),
+      observedAt: newCatForm.observedAt,
       description: newCatForm.description.trim() || undefined,
     });
     createdCatInfo.value = result;
@@ -388,6 +500,19 @@ async function fetchRecords() {
   } finally {
     recordsLoading.value = false;
   }
+}
+
+function recordMatchStatusText(record: RecognitionRecord) {
+  if (record.modelType === 'individual' || (record.catId && !record.catId.startsWith('breed-'))) return '已匹配';
+  if (record.modelType === 'new') return '未匹配';
+  if (record.modelType === 'breed') return '仅识别品种';
+  return '待确认';
+}
+
+function recordMatchTagType(record: RecognitionRecord) {
+  if (record.modelType === 'individual' || (record.catId && !record.catId.startsWith('breed-'))) return 'success';
+  if (record.modelType === 'new') return 'warning';
+  return 'info';
 }
 </script>
 

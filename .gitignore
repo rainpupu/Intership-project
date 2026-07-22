@@ -53,3 +53,7 @@ backend/static/
 backend/test_cat.jpg
 backend/models/
 docs/
+yolo_training_artifacts/
+猫/
+提交/
+*.mp4

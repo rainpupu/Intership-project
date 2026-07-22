@@ -8,7 +8,17 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.core.security import create_access_token, hash_password, verify_password
-from app.entity.db_models import Role, User, UserRole
+from app.entity.db_models import (
+    Cat,
+    CatAuditRecord,
+    CatIdentityEmbedding,
+    CatObservation,
+    CloudAdoptionOrder,
+    RecognitionRecord,
+    Role,
+    User,
+    UserRole,
+)
 
 
 DEFAULT_AVATAR = "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=200&q=80"
@@ -197,6 +207,42 @@ class UserService:
         return user
 
     @staticmethod
+    def delete_user(db: Session, user_id: int, current_user: User) -> None:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="用户不存在")
+        if user.id == current_user.id:
+            raise HTTPException(status_code=400, detail="不能删除当前登录账号")
+        if user.username.startswith("virtual-admin-"):
+            raise HTTPException(status_code=400, detail="用户端视图账号不支持手动删除")
+        if user.role == "super_admin":
+            super_admin_count = db.query(User).filter(User.role == "super_admin").count()
+            if super_admin_count <= 1:
+                raise HTTPException(status_code=400, detail="至少需要保留一个总管理员账号")
+
+        db.query(Cat).filter(Cat.created_by_id == user.id).update({Cat.created_by_id: None}, synchronize_session=False)
+        db.query(CatObservation).filter(CatObservation.created_by_id == user.id).update(
+            {CatObservation.created_by_id: None},
+            synchronize_session=False,
+        )
+        db.query(CatAuditRecord).filter(CatAuditRecord.operator_id == user.id).update(
+            {CatAuditRecord.operator_id: None},
+            synchronize_session=False,
+        )
+        db.query(CatIdentityEmbedding).filter(CatIdentityEmbedding.created_by_id == user.id).update(
+            {CatIdentityEmbedding.created_by_id: None},
+            synchronize_session=False,
+        )
+        db.query(CloudAdoptionOrder).filter(CloudAdoptionOrder.user_id == user.id).update(
+            {CloudAdoptionOrder.user_id: None},
+            synchronize_session=False,
+        )
+        db.query(RecognitionRecord).filter(RecognitionRecord.user_id == user.id).delete(synchronize_session=False)
+        db.query(UserRole).filter(UserRole.user_id == user.id).delete(synchronize_session=False)
+        db.delete(user)
+        db.commit()
+
+    @staticmethod
     def create_impersonation_session(db: Session, operator: User) -> dict:
         if operator.role not in ("admin", "super_admin"):
             raise HTTPException(status_code=403, detail="需要管理员权限")
@@ -212,7 +258,7 @@ class UserService:
     def _get_or_create_virtual_user(db: Session, operator: User) -> User:
         username = f"virtual-admin-{operator.id}"
         virtual_user = db.query(User).filter(User.username == username).first()
-        nickname = f"{operator.nickname or operator.username}的模拟用户"
+        nickname = f"{operator.nickname or operator.username}的用户端视图"
         email = f"virtual-admin-{operator.id}@cattrace.local"
 
         if virtual_user:

@@ -35,7 +35,7 @@ router.beforeEach((to, from) => {
 
   if (userStore.isLoggedIn && userStore.isAdmin && !to.path.startsWith('/admin')) {
     if (to.fullPath !== '/') {
-      ElMessage.warning('管理员账号只能进入管理端，请使用模拟用户功能查看用户端页面');
+      ElMessage.warning('管理员账号仅可进入管理端，请通过用户端视图查看用户页面');
     }
     return '/admin/dashboard';
   }

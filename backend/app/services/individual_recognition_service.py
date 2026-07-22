@@ -139,7 +139,7 @@ class IndividualRecognitionService:
             return f"已限定在「{breed_name}」品种参考库内匹配，暂无可用参考特征"
         return "个体识别模型已提取特征，暂无可匹配的猫咪参考特征"
 
-    def attach_record_to_cat(self, db: Session, record_id: str, cat_id: str, current_user: User) -> dict:
+    def attach_record_to_cat(self, db: Session, record_id: str, payload: dict[str, Any], current_user: User) -> dict:
         record_pk = self._parse_record_id(record_id)
         record = db.query(RecognitionRecord).filter(RecognitionRecord.id == record_pk).first()
         if not record:
@@ -147,12 +147,24 @@ class IndividualRecognitionService:
         if record.user_id != current_user.id and current_user.role not in ("admin", "super_admin"):
             raise HTTPException(status_code=403, detail="不能修改其他账号的识别记录")
 
+        cat_id = payload.get("cat_id")
+        location = (payload.get("location") or "").strip()
+        observed_at = payload.get("observed_at")
+        if not cat_id:
+            raise HTTPException(status_code=400, detail="请选择要登记的猫咪档案")
+        if not location:
+            raise HTTPException(status_code=400, detail="登记到已有猫档案必须填写发现地点")
+        if not observed_at:
+            raise HTTPException(status_code=400, detail="登记到已有猫档案必须填写发现时间")
+
         cat = self._resolve_cat(db, cat_id)
         candidate = self._first_candidate_with_embedding(record)
         embedding = candidate.get("identityEmbedding")
         if not embedding:
             raise HTTPException(status_code=400, detail="该识别记录没有可登记的个体特征")
 
+        record.location = location
+        record.observed_at = observed_at
         image_url = candidate.get("cropImage") or candidate.get("image") or record.image
         self._apply_status_observation(
             db,
@@ -160,7 +172,7 @@ class IndividualRecognitionService:
             record,
             candidate,
             current_user,
-            location=self._record_location_for_observation(record),
+            location=location,
         )
         db.add(
             CatIdentityEmbedding(
@@ -199,10 +211,12 @@ class IndividualRecognitionService:
         breed_name = to_chinese_breed_name(candidate.get("breedName")) or "未知品种"
         health_status = candidate.get("healthStatus") or record.health_status
         mood_status = candidate.get("moodStatus") or record.mood_status
-        observed_at = record.observed_at or record.created_at or datetime.now()
         last_seen_location = (payload.get("last_seen_location") or "").strip()
+        observed_at = payload.get("observed_at")
         if not last_seen_location:
             raise HTTPException(status_code=400, detail="创建新猫档案时必须填写发现地点")
+        if not observed_at:
+            raise HTTPException(status_code=400, detail="创建新猫档案时必须填写发现时间")
 
         auto_name = self._build_default_name(db)
         name = (payload.get("name") or "").strip() or auto_name
@@ -242,10 +256,12 @@ class IndividualRecognitionService:
                 mood_status=mood_status,
                 health_status=health_status,
                 observed_at=observed_at,
-                description=self._build_observation_description(record),
+                description=None,
                 created_by_id=current_user.id,
             )
         )
+        record.location = last_seen_location
+        record.observed_at = observed_at
         record.cat_id = _external_cat_id(cat)
         record.cat_name = cat.name
         record.status = "已建档"
@@ -333,23 +349,10 @@ class IndividualRecognitionService:
                     mood_status=mood_status,
                     health_status=health_status,
                     observed_at=observed_at,
-                    description=self._build_observation_description(record),
+                    description=None,
                     created_by_id=current_user.id,
                 )
             )
-
-    def _record_location_for_observation(self, record: RecognitionRecord) -> str | None:
-        if record.location and record.location != "用户上传":
-            return record.location
-        return None
-
-    def _build_observation_description(self, record: RecognitionRecord) -> str:
-        parts = ["由识别流程补充健康和心情信息。"]
-        if record.status == "线索待审核":
-            parts.append("该记录来自用户提交的校园猫线索，已由管理员确认。")
-        if record.user_remark:
-            parts.append(f"用户备注：{record.user_remark}")
-        return "".join(parts)
 
     def _generate_cat_code(self, db: Session) -> str:
         prefix = datetime.now().strftime("cat-%Y%m%d%H%M%S")

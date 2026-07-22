@@ -24,7 +24,7 @@ UPLOAD_DIR = STATIC_DIR / "uploads"
 CROP_DIR = STATIC_DIR / "crops"
 ANNOTATED_DIR = STATIC_DIR / "annotated"
 CACHE_DIR = BASE_DIR / ".runtime_cache"
-IDENTITY_MATCH_THRESHOLD = 0.78
+IDENTITY_MATCH_THRESHOLD = 0.50
 
 for directory in (UPLOAD_DIR, CROP_DIR, ANNOTATED_DIR, CACHE_DIR / "ultralytics", CACHE_DIR / "torch"):
     directory.mkdir(parents=True, exist_ok=True)
@@ -148,7 +148,6 @@ class YoloRecognitionService:
                             "status": "疑似新猫，待管理员确认",
                             "modelType": "new",
                             "identityStatus": identity.get("message"),
-                            "bestIdentityMatch": best_match,
                         }
                     )
 
@@ -224,7 +223,7 @@ class YoloRecognitionService:
             color = (94, 197, 34)
             cv2.rectangle(annotated, (x1, y1), (x2, y2), color, line_width)
 
-            label = f"{detection['name']} {detection['similarity']:.0%}"
+            label = detection["name"]
             (label_width, label_height), baseline = cv2.getTextSize(
                 label,
                 cv2.FONT_HERSHEY_SIMPLEX,
@@ -360,10 +359,10 @@ class YoloRecognitionService:
         x1, y1, x2, y2 = bbox
         width = max(0, x2 - x1)
         height = max(0, y2 - y1)
-        return f"YOLO 检测置信度 {confidence:.1%}，目标框约 {width:.0f}x{height:.0f}px。"
+        return f"YOLO 已检测到猫咪目标，目标框约 {width:.0f}x{height:.0f}px。"
 
     def _build_identity_reason(self, similarity: float, breed_name: str, breed_confidence: float) -> str:
-        return f"个体识别相似度 {similarity:.1%}；YOLO 品种候选为 {breed_name}（{breed_confidence:.1%}）。"
+        return f"个体识别已匹配已有档案；YOLO 品种候选为 {breed_name}。"
 
     def _build_summary(self, image_count: int, detection_count: int, elapsed_ms: float) -> str:
         if detection_count == 0:

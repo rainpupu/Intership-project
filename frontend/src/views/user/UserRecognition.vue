@@ -73,8 +73,10 @@
           </template>
         </el-table-column>
         <el-table-column prop="catName" label="候选猫咪" min-width="130" />
-        <el-table-column label="相似度" width="110">
-          <template #default="{ row }">{{ formatPercent(row.similarity) }}</template>
+        <el-table-column label="匹配结果" width="120">
+          <template #default="{ row }">
+            <el-tag :type="matchTagType(row)" effect="light">{{ matchStatusText(row) }}</el-tag>
+          </template>
         </el-table-column>
         <el-table-column prop="healthStatus" label="健康" width="110" />
         <el-table-column prop="moodStatus" label="心情" width="110" />
@@ -144,7 +146,7 @@ import UploadPanel from '@/components/recognition/UploadPanel.vue';
 import { useRecognitionFlow } from '@/composables/useRecognitionFlow';
 import { useUserStore } from '@/stores/user';
 import type { RecognitionRecord } from '@/types/recognition';
-import { formatDateTime, formatPercent } from '@/utils/formatter';
+import { formatDateTime } from '@/utils/formatter';
 
 const userStore = useUserStore();
 const records = ref<RecognitionRecord[]>([]);
@@ -171,6 +173,19 @@ const latestRecognizedRecord = computed(() => {
 
 function canSubmitClue(record: RecognitionRecord) {
   return !['线索待审核', '已确认', '已建档', '未检测到'].includes(record.status);
+}
+
+function matchStatusText(record: RecognitionRecord) {
+  if (record.modelType === 'individual' || (record.catId && !record.catId.startsWith('breed-'))) return '已匹配';
+  if (record.modelType === 'new') return '未匹配';
+  if (record.modelType === 'breed') return '仅识别品种';
+  return '待确认';
+}
+
+function matchTagType(record: RecognitionRecord) {
+  if (record.modelType === 'individual' || (record.catId && !record.catId.startsWith('breed-'))) return 'success';
+  if (record.modelType === 'new') return 'warning';
+  return 'info';
 }
 
 async function fetchMineRecords() {

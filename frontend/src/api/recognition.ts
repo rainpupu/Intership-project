@@ -6,6 +6,7 @@ import type {
   RecognitionAnalysis,
   RecognitionCandidate,
   RecognitionRecord,
+  ConfirmExistingCatPayload,
   SubmitCampusCluePayload,
 } from '@/types/recognition';
 
@@ -74,18 +75,24 @@ export function dismissCampusClue(recordId: string): Promise<RecognitionRecord> 
     .then((response) => response.data);
 }
 
-export function confirmExistingCatForRecord(recordId: string, catId: string): Promise<{ success: boolean; catId: string }> {
+export function confirmExistingCatForRecord(
+  recordId: string,
+  catId: string,
+  payload: ConfirmExistingCatPayload,
+): Promise<{ success: boolean; catId: string }> {
   return request
     .post<ApiResponse<{ success: boolean; catId: string }>, ApiResponse<{ success: boolean; catId: string }>>(
       `/recognition/records/${recordId}/confirm-existing`,
       {
         cat_id: catId,
+        location: payload.location,
+        observed_at: payload.observedAt,
       },
     )
     .then((response) => response.data);
 }
 
-export function confirmExistingCat(catId: string): Promise<{ success: boolean; catId: string }> {
+export function confirmExistingCat(catId: string, payload: ConfirmExistingCatPayload): Promise<{ success: boolean; catId: string }> {
   const recordId = latestAnalyzeResult?.record?.id;
   if (!recordId) {
     return mockResolve({
@@ -94,7 +101,7 @@ export function confirmExistingCat(catId: string): Promise<{ success: boolean; c
     });
   }
 
-  return confirmExistingCatForRecord(recordId, catId);
+  return confirmExistingCatForRecord(recordId, catId, payload);
 }
 
 export function createNewCatFromRecord(
@@ -104,6 +111,7 @@ export function createNewCatFromRecord(
     code?: string;
     description?: string;
     lastSeenLocation?: string;
+    observedAt?: string;
   },
 ): Promise<{ success: boolean; catId: string; name?: string; message?: string }> {
   return request
@@ -115,6 +123,7 @@ export function createNewCatFromRecord(
       code: payload?.code,
       description: payload?.description,
       last_seen_location: payload?.lastSeenLocation,
+      observed_at: payload?.observedAt,
     })
     .then((response) => response.data);
 }
@@ -124,6 +133,7 @@ export function createNewCat(payload?: {
   code?: string;
   description?: string;
   lastSeenLocation?: string;
+  observedAt?: string;
 }): Promise<{ success: boolean; catId: string; name?: string; message?: string }> {
   const recordId = latestAnalyzeResult?.record?.id;
   if (!recordId) {

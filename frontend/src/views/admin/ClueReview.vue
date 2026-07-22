@@ -40,8 +40,10 @@
         <el-table-column label="品种" min-width="130">
           <template #default="{ row }">{{ row.breedName || row.catName || '待确认' }}</template>
         </el-table-column>
-        <el-table-column label="相似度" width="100">
-          <template #default="{ row }">{{ formatPercent(row.similarity) }}</template>
+        <el-table-column label="匹配结果" width="120">
+          <template #default="{ row }">
+            <el-tag :type="decisionTagType(row)" effect="light">{{ decisionTitle(row) }}</el-tag>
+          </template>
         </el-table-column>
         <el-table-column prop="healthStatus" label="健康" width="110" />
         <el-table-column prop="moodStatus" label="心情" width="110" />
@@ -99,7 +101,7 @@ import {
 import DataState from '@/components/common/DataState.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import type { RecognitionRecord } from '@/types/recognition';
-import { formatDateTime, formatPercent } from '@/utils/formatter';
+import { formatDateTime } from '@/utils/formatter';
 
 const clues = ref<RecognitionRecord[]>([]);
 const loading = ref(false);
@@ -151,8 +153,8 @@ function decisionDescription(record: RecognitionRecord) {
   if (isExistingMatch(record)) {
     return `个体模型匹配到 ${record.catName}，确认后补充本次地点、健康和心情记录。`;
   }
-  if (record.bestIdentityMatch) {
-    return `低于入库阈值，最接近 ${record.bestIdentityMatch.name} ${formatPercent(record.bestIdentityMatch.similarity)}。`;
+  if (isNewCat(record)) {
+    return '个体识别未匹配到已有档案，确认后将创建新猫档案。';
   }
   if (record.identityStatus) return record.identityStatus;
   return '未匹配到已有档案，确认后将创建新猫档案。';
@@ -163,10 +165,21 @@ async function confirmModelMatch(record: RecognitionRecord) {
     ElMessage.warning('该线索没有模型匹配到的已有猫档案');
     return;
   }
+  if (!record.location || record.location === '用户上传') {
+    ElMessage.warning('该线索缺少实际地点，不能登记到猫咪档案');
+    return;
+  }
+  if (!record.observedAt) {
+    ElMessage.warning('该线索缺少拍摄时间，不能登记到猫咪档案');
+    return;
+  }
 
   actingRecordId.value = record.id;
   try {
-    await confirmExistingCatForRecord(record.id, record.catId);
+    await confirmExistingCatForRecord(record.id, record.catId, {
+      location: record.location,
+      observedAt: record.observedAt,
+    });
     ElMessage.success(`已绑定到 ${record.catName} 档案`);
     notifyPendingCountChanged();
     await fetchData();
@@ -180,11 +193,20 @@ async function createCatFromClue(record: RecognitionRecord) {
     ElMessage.warning('该线索已匹配已有档案，不应新建档案');
     return;
   }
+  if (!record.location || record.location === '用户上传') {
+    ElMessage.warning('该线索缺少实际地点，不能创建猫咪档案');
+    return;
+  }
+  if (!record.observedAt) {
+    ElMessage.warning('该线索缺少拍摄时间，不能创建猫咪档案');
+    return;
+  }
 
   actingRecordId.value = record.id;
   try {
     const result = await createNewCatFromRecord(record.id, {
       lastSeenLocation: record.location,
+      observedAt: record.observedAt,
       description: buildAutoDescription(record),
     });
     ElMessage.success(`已创建新猫档案：${result.name || result.catId}`);
@@ -211,7 +233,7 @@ function buildAutoDescription(record: RecognitionRecord) {
   const parts = [
     '由用户提交的校园猫线索自动创建。',
     `AI 品种候选：${record.breedName || record.catName || '未知品种'}。`,
-    `候选置信度：${formatPercent(record.similarity)}。`,
+    `匹配结果：${decisionTitle(record)}。`,
   ];
   if (record.healthStatus) parts.push(`健康状态：${record.healthStatus}。`);
   if (record.moodStatus) parts.push(`心情状态：${record.moodStatus}。`);

@@ -32,6 +32,8 @@ class RecognitionRecordListQuery(BaseModel):
 
 class ConfirmExistingCatRequest(BaseModel):
     cat_id: str
+    location: str
+    observed_at: datetime
 
 
 class CreateCatFromRecognitionRequest(BaseModel):
@@ -39,6 +41,7 @@ class CreateCatFromRecognitionRequest(BaseModel):
     code: str | None = None
     description: str | None = None
     last_seen_location: str | None = None
+    observed_at: datetime | None = None
 
 
 class SubmitCampusClueRequest(BaseModel):

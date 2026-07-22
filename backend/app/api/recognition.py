@@ -94,7 +94,12 @@ async def confirm_existing_cat(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    result = individual_recognition_service.attach_record_to_cat(db, record_id, request.cat_id, current_user)
+    result = individual_recognition_service.attach_record_to_cat(
+        db,
+        record_id,
+        request.model_dump(exclude_unset=True),
+        current_user,
+    )
     return ApiResponse(data=result, message=result["message"])
 
 

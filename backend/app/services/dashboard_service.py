@@ -36,6 +36,8 @@ def _cat_to_dashboard_item(cat: Cat) -> dict:
 
 
 def _record_to_dashboard_item(record: RecognitionRecord) -> dict:
+    candidates = record.candidates or []
+    top_candidate = candidates[0] if candidates else {}
     return {
         "id": f"rec-{record.id}",
         "userId": str(record.user_id),
@@ -43,6 +45,7 @@ def _record_to_dashboard_item(record: RecognitionRecord) -> dict:
         "catId": record.cat_id,
         "catName": record.cat_name,
         "similarity": record.similarity,
+        "modelType": top_candidate.get("modelType"),
         "healthStatus": record.health_status,
         "moodStatus": record.mood_status,
         "location": record.location,
