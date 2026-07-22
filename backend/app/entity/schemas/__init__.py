@@ -30,6 +30,7 @@ from app.entity.schemas.cat import (
     ToggleFocusRequest,
 )
 from app.entity.schemas.common import ApiResponse, PageParams, PageResponse
+from app.entity.schemas.cloud_adoption import CloudAdoptionOrderCreate, CloudAdoptionOrderResponse
 from app.entity.schemas.detection import (
     AnalyzeRequest,
     AnalyzeResponse,
@@ -77,6 +78,8 @@ __all__ = [
     "CatResponse",
     "CatUpdate",
     "ToggleFocusRequest",
+    "CloudAdoptionOrderCreate",
+    "CloudAdoptionOrderResponse",
     "DetectionResultItem",
     "DetectionResponse",
     "SceneResponse",

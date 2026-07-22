@@ -280,7 +280,7 @@ onBeforeUnmount(() => { window.clearInterval(behaviorTimer); });
 }
 
 .assistant :deep(table) {
-  width: 100%%;
+  width: 100%;
   margin: 6px 0;
   border-collapse: collapse;
   font-size: 12px;

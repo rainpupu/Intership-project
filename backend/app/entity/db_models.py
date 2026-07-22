@@ -83,6 +83,7 @@ class Cat(Base):
 
     observations = relationship("CatObservation", back_populates="cat", cascade="all, delete-orphan")
     audit_records = relationship("CatAuditRecord", back_populates="cat", cascade="all, delete-orphan")
+    cloud_adoption_orders = relationship("CloudAdoptionOrder", back_populates="cat", cascade="all, delete-orphan")
 
 
 class CatObservation(Base):
@@ -113,6 +114,30 @@ class CatAuditRecord(Base):
     operated_at = Column(DateTime, default=datetime.now, index=True)
 
     cat = relationship("Cat", back_populates="audit_records")
+
+
+class CloudAdoptionOrder(Base):
+    __tablename__ = "cloud_adoption_orders"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    order_no = Column(String(50), unique=True, nullable=False, index=True)
+    cat_id = Column(Integer, ForeignKey("cats.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    supporter_name = Column(String(100), nullable=True)
+    gift_id = Column(String(80), nullable=False, index=True)
+    gift_category = Column(String(50), nullable=False, index=True)
+    gift_name = Column(String(100), nullable=False)
+    gift_description = Column(String(300), nullable=True)
+    gift_icon = Column(String(20), nullable=True)
+    quantity = Column(Integer, default=1, nullable=False)
+    unit_price = Column(Integer, default=0, nullable=False)
+    total_amount = Column(Integer, default=0, nullable=False)
+    payment_method = Column(String(50), nullable=False)
+    status = Column(String(50), default="已记录", nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.now, index=True)
+
+    cat = relationship("Cat", back_populates="cloud_adoption_orders")
+    user = relationship("User")
 
 
 class CatIdentityEmbedding(Base):

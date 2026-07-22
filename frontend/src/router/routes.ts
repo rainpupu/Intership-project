@@ -107,6 +107,15 @@ export const routes: RouteRecordRaw[] = [
         },
       },
       {
+        path: 'cloud-adoptions',
+        name: 'AdminCloudAdoptions',
+        component: () => import('@/views/admin/CloudAdoptionOrders.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['admin', 'super_admin'],
+        },
+      },
+      {
         path: 'users',
         name: 'AdminUserManage',
         component: () => import('@/views/admin/UserManage.vue'),

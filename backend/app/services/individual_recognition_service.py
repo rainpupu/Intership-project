@@ -10,6 +10,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.entity.db_models import Cat, CatIdentityEmbedding, CatObservation, RecognitionRecord, User
+from app.services.breed_name_service import to_chinese_breed_name
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -69,6 +70,7 @@ class IndividualRecognitionService:
         return MODEL_PATH.exists() and self._load_error is None
 
     def identify_crop(self, db: Session, crop_path: Path, breed_name: str | None = None, top_k: int = 3) -> dict[str, Any]:
+        breed_name = to_chinese_breed_name(breed_name) if breed_name else None
         if not MODEL_PATH.exists():
             return {"available": False, "matches": [], "embedding": None, "message": "个体识别模型文件不存在"}
 
@@ -107,6 +109,7 @@ class IndividualRecognitionService:
     ) -> list[dict[str, Any]]:
         query = db.query(CatIdentityEmbedding).join(Cat)
         if breed_name:
+            breed_name = to_chinese_breed_name(breed_name)
             query = query.filter(Cat.coat_color == breed_name)
         references = query.all()
         candidates: list[dict[str, Any]] = []
@@ -193,19 +196,17 @@ class IndividualRecognitionService:
             raise HTTPException(status_code=409, detail="猫咪编号已存在")
 
         image_url = candidate.get("cropImage") or candidate.get("image") or record.image
-        breed_name = candidate.get("breedName") or "未知品种"
+        breed_name = to_chinese_breed_name(candidate.get("breedName")) or "未知品种"
         health_status = candidate.get("healthStatus") or record.health_status
         mood_status = candidate.get("moodStatus") or record.mood_status
         observed_at = record.observed_at or record.created_at or datetime.now()
-        last_seen_location = (payload.get("last_seen_location") or "").strip() or self._record_location_for_observation(record)
-        similarity = float(candidate.get("similarity") or record.similarity or 0)
+        last_seen_location = (payload.get("last_seen_location") or "").strip()
+        if not last_seen_location:
+            raise HTTPException(status_code=400, detail="创建新猫档案时必须填写发现地点")
+
         auto_name = self._build_default_name(db)
         name = (payload.get("name") or "").strip() or auto_name
-        description = (payload.get("description") or "").strip() or self._build_auto_description(
-            breed_name=breed_name,
-            similarity=similarity,
-            source_status=record.status,
-        )
+        description = (payload.get("description") or "").strip()
         cat = Cat(
             code=code,
             name=name,
@@ -367,18 +368,5 @@ class IndividualRecognitionService:
             suffix += 1
             name = f"{prefix}-{suffix}"
         return name
-
-    def _build_auto_description(self, breed_name: str, similarity: float, source_status: str | None) -> str:
-        parts = [
-            "由识别结果自动创建的待完善猫咪档案。",
-            f"YOLO 品种候选：{breed_name}。",
-        ]
-        if similarity:
-            parts.append(f"本次候选置信度：{similarity:.1%}。")
-        if source_status:
-            parts.append(f"识别状态：{source_status}。")
-        parts.append("管理员可后续补充昵称、年龄、性格、健康和领养状态等信息。")
-        return "".join(parts)
-
 
 individual_recognition_service = IndividualRecognitionService()

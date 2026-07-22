@@ -1,14 +1,10 @@
 <template>
   <PageContainer>
     <section class="auth-page">
-      <div class="auth-copy">
-        <el-tag effect="plain">CatTrace Agent 账号系统</el-tag>
-        <h1>欢迎回来</h1>
-        <p>登录后回到首页，你可以从导航进入个人识别、猫咪图鉴或管理端。</p>
-        <div class="role-tips">
-          <span>普通用户：使用注册手机号登录</span>
-          <span>管理员：使用总管理员创建的手机号账号登录</span>
-          <span>总管理员测试：superadmin / admin123</span>
+      <div class="auth-visual" aria-label="CatTrace Agent">
+        <div class="visual-content">
+          <span class="brand-badge">CatTrace Agent</span>
+          <h1>守护校园里的<span>每一次相遇</span></h1>
         </div>
       </div>
 
@@ -133,43 +129,52 @@ async function handleLogin() {
   min-height: calc(100vh - 180px);
 }
 
-.auth-copy {
+.auth-visual {
   @include card-shell(30px);
+  position: relative;
+  display: flex;
+  align-items: flex-end;
   min-height: 420px;
-  padding: 48px;
+  overflow: hidden;
+  padding: 0;
   background:
-    radial-gradient(circle at 84% 18%, rgba(251, 207, 232, 0.42), transparent 34%),
-    rgba(255, 255, 255, 0.78);
+    linear-gradient(180deg, rgba(15, 23, 42, 0.04) 0%, rgba(15, 23, 42, 0.62) 100%),
+    url('https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=1400&q=85') center / cover;
 }
 
-.auth-copy h1 {
-  margin: 24px 0 12px;
-  color: $color-text;
-  font-size: 54px;
+.visual-content {
+  position: relative;
+  z-index: 1;
+  max-width: 560px;
+  padding: 42px;
+  color: #fff;
+}
+
+.brand-badge {
+  display: inline-flex;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(12px);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.visual-content h1 {
+  max-width: 680px;
+  margin: 0;
+  font-size: 46px;
+  line-height: 1.12;
   letter-spacing: 0;
 }
 
-.auth-copy p {
-  max-width: 560px;
-  margin: 0;
-  color: $color-text-secondary;
-  font-size: 17px;
-  line-height: 1.8;
-}
-
-.role-tips {
-  display: grid;
-  gap: 10px;
-  margin-top: 28px;
-}
-
-.role-tips span {
-  width: fit-content;
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: rgba(251, 146, 60, 0.12);
-  color: $color-primary-dark;
-  font-weight: 800;
+.visual-content h1 span {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .auth-card {
@@ -201,6 +206,20 @@ async function handleLogin() {
 @media (max-width: 900px) {
   .auth-page {
     grid-template-columns: 1fr;
+  }
+
+  .auth-visual {
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 560px) {
+  .visual-content {
+    padding: 28px;
+  }
+
+  .visual-content h1 {
+    font-size: 34px;
   }
 }
 </style>

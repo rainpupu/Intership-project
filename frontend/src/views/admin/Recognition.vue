@@ -47,7 +47,7 @@
           <div>
             <span class="result-label">已创建新猫档案</span>
             <strong>{{ createdCatInfo.name || createdCatInfo.catId }}</strong>
-            <p>系统已登记本次个体识别特征，并同步写入健康状态、心情状态和最近出现时间；地点仍由管理员人工补充。</p>
+            <p>系统已登记本次个体识别特征，并同步写入发现地点、健康状态、心情状态和最近出现时间。</p>
           </div>
           <el-button type="primary" round @click="fetchCats">刷新猫咪档案</el-button>
         </div>
@@ -77,7 +77,7 @@
                 :loading="creatingCat"
                 @click="handleDirectCreateNewCat"
               >
-                直接创建档案
+                填写地点并创建
               </el-button>
               <el-button v-if="topCandidate.modelType === 'new'" round @click="createNew">编辑后创建</el-button>
             </div>
@@ -87,7 +87,7 @@
           <div>
             <span class="result-label">等待识别结果</span>
             <strong>尚未上传并识别图片</strong>
-            <p>上传照片并点击开始识别后，这里会显示已有猫匹配结果；如果判断为新猫，可直接创建待完善档案。</p>
+            <p>上传照片并点击开始识别后，系统会显示已有猫匹配结果；若判断为新猫，可创建新的猫咪档案。</p>
           </div>
         </div>
         <div class="hint-grid">
@@ -133,12 +133,12 @@
       </div>
       <el-form label-width="92px">
         <el-form-item label="档案名称">
-          <el-input v-model="newCatForm.name" placeholder="可直接使用系统生成名称，后续再补充昵称" />
+          <el-input v-model="newCatForm.name" placeholder="请输入档案名称，或使用系统生成名称" />
         </el-form-item>
         <el-form-item label="猫咪编号">
           <el-input v-model="newCatForm.code" placeholder="留空则自动生成" />
         </el-form-item>
-        <el-form-item label="发现地点">
+        <el-form-item label="发现地点" required>
           <el-input v-model="newCatForm.lastSeenLocation" placeholder="请人工输入，例如：东门、图书馆附近" />
         </el-form-item>
         <el-form-item label="档案备注">
@@ -146,7 +146,7 @@
             v-model="newCatForm.description"
             type="textarea"
             :rows="3"
-            placeholder="由本次识别创建，可后续在猫咪管理中补全"
+            placeholder="可补充外观特征、健康状态或其他说明"
           />
         </el-form-item>
       </el-form>
@@ -160,7 +160,7 @@
       <div class="records-head">
         <div>
           <h2 class="section-title">全平台最近识别记录</h2>
-          <p>这里展示全平台识别历史；用户提交的校园线索请到“线索审核”页面处理。</p>
+          <p>展示全平台最近识别历史；用户提交的校园线索请到“线索审核”页面处理。</p>
         </div>
       </div>
       <DataState
@@ -262,7 +262,7 @@ const identityResultTitle = computed(() => {
 });
 const identityResultName = computed(() => {
   if (!topCandidate.value) return '';
-  if (topCandidate.value.modelType === 'new') return '系统将创建待完善新猫档案';
+  if (topCandidate.value.modelType === 'new') return '系统将创建新猫档案';
   return topCandidate.value.name;
 });
 const identityResultDescription = computed(() => {
@@ -275,7 +275,7 @@ const identityResultDescription = computed(() => {
     const breedName = candidate.breedName || candidate.name || '未知品种';
     return `YOLO 检测到猫咪目标，个体识别未达到已有档案阈值。系统会用 ${breedName}、本次裁剪图、特征向量、健康状态和心情状态创建新档案。`;
   }
-  return `${candidate.status}。如果这里没有个体匹配结果，请先确认个体识别模型文件存在，并且已有猫档案已登记参考特征。`;
+  return `${candidate.status}。当前结果可作为品种或外观参考，请结合图片与人工判断完成确认。`;
 });
 
 async function confirmExisting() {
@@ -322,23 +322,24 @@ function fillNewCatFormFromCandidate() {
   const day = String(now.getDate()).padStart(2, '0');
   const hour = String(now.getHours()).padStart(2, '0');
   const minute = String(now.getMinutes()).padStart(2, '0');
-  const candidate = topCandidate.value;
-  const breedName = candidate?.breedName || candidate?.name || '未知品种';
   newCatForm.name = `待命名猫咪-${month}${day}${hour}${minute}`;
   newCatForm.code = '';
   newCatForm.lastSeenLocation = '';
-  const health = candidate?.healthStatus ? `；健康状态：${candidate.healthStatus}` : '';
-  const mood = candidate?.moodStatus ? `；心情状态：${candidate.moodStatus}` : '';
-  newCatForm.description = `由本次识别自动创建。AI 品种/外观候选：${breedName}；候选置信度：${candidate ? formatPercent(candidate.similarity) : '未知'}${health}${mood}。地点需要管理员人工补充。`;
+  newCatForm.description = '';
 }
 
 async function handleCreateNewCat() {
+  if (!newCatForm.lastSeenLocation.trim()) {
+    ElMessage.warning('请填写发现地点');
+    return;
+  }
+
   creatingCat.value = true;
   try {
     const result = await createNewCatProfile({
       name: newCatForm.name.trim(),
       code: newCatForm.code.trim() || undefined,
-      lastSeenLocation: newCatForm.lastSeenLocation.trim() || undefined,
+      lastSeenLocation: newCatForm.lastSeenLocation.trim(),
       description: newCatForm.description.trim() || undefined,
     });
     createdCatInfo.value = result;
@@ -357,7 +358,7 @@ async function handleDirectCreateNewCat() {
   }
 
   fillNewCatFormFromCandidate();
-  await handleCreateNewCat();
+  createDialogVisible.value = true;
 }
 
 async function handleAnalyze() {

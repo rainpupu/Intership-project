@@ -3,7 +3,7 @@
     <section class="chat-head">
       <div>
         <h1 class="page-title">AI 助手</h1>
-        <p class="page-subtitle">先实现静态聊天体验，后续可直接接入真实 Agent 接口。</p>
+        <p class="page-subtitle">围绕猫咪档案、重点关注状态和领养事项提供智能问答。</p>
       </div>
       <div class="assistant-badge">🤖 CatTrace Agent</div>
     </section>

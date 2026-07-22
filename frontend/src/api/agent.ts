@@ -24,7 +24,6 @@ async function ensureSession(): Promise<number> {
       body: JSON.stringify({ user_id: 1, title: '智能对话' }),
     }).then(r => r.json()).then(d => {
       _sessionId = d.id;
-      console.log('Agent session created:', d.id);
       return d.id;
     }).catch(e => {
       _sessionPromise = null;

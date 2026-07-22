@@ -1,7 +1,7 @@
-"""Agent 工具定义（mock 版，联调时替换为真实 API 调用）"""
+"""Agent 工具定义。"""
 
-import os
 import re
+from pathlib import Path
 from langchain_core.tools import tool
 from sqlalchemy import String, func
 from pydantic import BaseModel, Field
@@ -44,62 +44,9 @@ class QueryKnowledgeBaseInput(BaseModel):
     query: str = Field(description="检索关键词或问题")
 
 
-# ======== MOCK 数据 ========
-
-_MOCK_CATS = [
-    {
-        "cat_id": 1, "code": "CAT-20240001", "name": "大橘",
-        "coat_color": "橘白", "age_stage": "成年", "gender": "公",
-        "personality_tags": "亲人,贪吃,佛系",
-        "adoption_status": "待领养", "last_seen_at": "2026-07-13",
-        "cover_image_url": "https://placekitten.com/400/300",
-        "description": "校园图书馆常驻猫咪，性格温和亲人，喜欢晒太阳。",
-    },
-    {
-        "cat_id": 2, "code": "CAT-20240002", "name": "芝麻",
-        "coat_color": "玳瑁", "age_stage": "幼猫", "gender": "母",
-        "personality_tags": "胆小,活泼,好奇",
-        "adoption_status": "观察中", "last_seen_at": "2026-07-14",
-        "cover_image_url": "https://placekitten.com/401/301",
-        "description": "今年春天出生的小玳瑁，躲在食堂后面的灌木丛里，逐渐开始靠近人类。",
-    },
-    {
-        "cat_id": 3, "code": "CAT-20240003", "name": "奶茶",
-        "coat_color": "乳白", "age_stage": "成年", "gender": "母",
-        "personality_tags": "优雅,独立,温和",
-        "adoption_status": "已领养", "last_seen_at": "2026-07-10",
-        "cover_image_url": "https://placekitten.com/402/302",
-        "description": "优雅的乳白色猫咪，已经被学生领养，目前在新家适应中。",
-    },
-    {
-        "cat_id": 4, "code": "CAT-20240004", "name": "黑仔",
-        "coat_color": "纯黑", "age_stage": "成年", "gender": "公",
-        "personality_tags": "神秘,独立,夜间活跃",
-        "adoption_status": "待领养", "last_seen_at": "2026-07-08",
-        "cover_image_url": "https://placekitten.com/403/303",
-        "description": "纯黑公猫，主要在夜间出没，常出现在操场附近。",
-    },
-    {
-        "cat_id": 5, "code": "CAT-20240005", "name": "花花",
-        "coat_color": "三花", "age_stage": "成年", "gender": "母",
-        "personality_tags": "粘人,话多,温柔",
-        "adoption_status": "待领养", "last_seen_at": "2026-07-12",
-        "cover_image_url": "https://placekitten.com/404/304",
-        "description": "三花母猫，非常粘人，喜欢跟着人走，叫声特别多。",
-    },
-]
-
-_MOCK_ENCOUNTERS = [
-    {"encounter_id": 1, "cat_id": 1, "location": "图书馆门口", "occurred_at": "2026-07-13 15:30", "image_count": 4, "status": "已确认"},
-    {"encounter_id": 2, "cat_id": 1, "location": "图书馆西侧花坛", "occurred_at": "2026-07-10 12:15", "image_count": 2, "status": "已确认"},
-    {"encounter_id": 3, "cat_id": 2, "location": "食堂后灌木丛", "occurred_at": "2026-07-14 08:00", "image_count": 3, "status": "已确认"},
-    {"encounter_id": 4, "cat_id": 5, "location": "宿舍楼 C 区", "occurred_at": "2026-07-12 18:45", "image_count": 3, "status": "已确认"},
-]
-
-
 # ======== 知识库加载 ========
 
-_KNOWLEDGE_BASE_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "knowledge", "cat_knowledge_base.md")
+_KNOWLEDGE_BASE_PATH = Path(__file__).resolve().parents[3] / "knowledge" / "cat_knowledge_base.md"
 
 
 def _load_knowledge_base() -> dict[str, str]:
@@ -633,7 +580,9 @@ def get_cat_observations(cat_id: int, limit: int = 10) -> str:
         lines = []
         for r in records:
             lines.append(
-                f"- [{r.observed_at.strftime('%Y-%m-%d') if r.observed_at else '未知'}] 情绪：{r.mood_status} | 健康：{r.health_status} | {r.description or '无'}"
+                f"- [{r.observed_at.strftime('%Y-%m-%d') if r.observed_at else '未知'}] "
+                f"地点：{r.location or '未知'} | 情绪：{r.mood_status} | 健康：{r.health_status} | "
+                f"{r.description or '无'}"
             )
         return f"最近 {len(records)} 条状态记录：\n" + "\n".join(lines)
     finally:
@@ -686,9 +635,10 @@ def recommend_adoption_cats(personality: str = "", experience: str = "", limit: 
                 f"- {cat.name}（{cat.coat_color} {cat.age_stage}{cat.gender}猫）"
                 f"：{cat.personality_tags}，{cat.description or '暂无简介'}"
             )
+        response = f"为您推荐 {len(cats)} 只猫咪：\n" + "\n".join(lines)
         if experience == "新手":
-            lines.append("\n温馨提示：作为新手领养人，建议选择性格亲人、成年的猫咪，它们通常更稳定好养。")
-        return f"为您推荐 {len(lines)} 只猫咪：\n" + "\n".join(lines)
+            response += "\n\n温馨提示：作为新手领养人，建议选择性格亲人、成年的猫咪，它们通常更稳定好养。"
+        return response
     finally:
         db.close()
 
@@ -704,7 +654,7 @@ def get_attention_cats(limit: int = 10) -> str:
         result = []
         for cat in cats:
             latest_obs = db.query(CatObservation).filter(CatObservation.cat_id == cat.id).order_by(CatObservation.observed_at.desc()).first()
-            if latest_obs and latest_obs.health_status in ("需观察", "异常"):
+            if latest_obs and latest_obs.health_status in ("需观察", "异常", "观察中", "需复查"):
                 result.append((cat, f"健康需关注: {latest_obs.description or latest_obs.health_status}"))
         if not result:
             return "目前所有猫咪状态良好，无需特别关注。"
@@ -727,4 +677,4 @@ def query_knowledge_base(query: str) -> str:
     if result is not None:
         return result
 
-    return "请直接基于通用养猫常识回答用户，不要提及资料来源或检索过程。"
+    return "暂无匹配的知识库条目，建议结合通用养猫常识给出谨慎回答，并在医疗问题上提示咨询专业兽医。"

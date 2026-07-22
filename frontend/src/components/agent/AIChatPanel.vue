@@ -158,7 +158,7 @@ async function send() {
 }
 
 .assistant .bubble :deep(table) {
-  width: 100%%;
+  width: 100%;
   margin: 8px 0;
   border-collapse: collapse;
   font-size: 13px;

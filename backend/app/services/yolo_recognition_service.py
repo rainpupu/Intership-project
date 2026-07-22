@@ -11,6 +11,7 @@ import cv2
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
+from app.services.breed_name_service import to_chinese_breed_name
 from app.services.individual_recognition_service import individual_recognition_service
 
 
@@ -107,7 +108,8 @@ class YoloRecognitionService:
                 confidence = float(box.conf[0])
                 xyxy = [float(value) for value in box.xyxy[0].tolist()]
                 crop_path = self._save_crop(original, xyxy, image_path.stem, index)
-                breed_name = self._class_names.get(class_id, f"class_{class_id}")
+                raw_breed_name = self._class_names.get(class_id, f"class_{class_id}")
+                breed_name = to_chinese_breed_name(raw_breed_name)
 
                 detection = self._build_breed_detection(
                     class_id=class_id,

@@ -10,6 +10,7 @@ from app.api.cats import router as cats_router
 from app.api.dashboard import router as dashboard_router
 from app.api.recognition import router as recognition_router
 from app.api.chat import router as chat_router
+from app.api.cloud_adoptions import router as cloud_adoptions_router
 from app.config.settings import settings
 from app.database.migrations import ensure_runtime_columns
 from app.database.seed import seed_roles_and_admin
@@ -58,6 +59,7 @@ app.include_router(cats_router)
 app.include_router(dashboard_router)
 app.include_router(recognition_router)
 app.include_router(chat_router)
+app.include_router(cloud_adoptions_router)
 
 
 @app.get("/")
@@ -69,6 +71,7 @@ def root():
         "cats": "/api/cats",
         "dashboard": "/api/dashboard/overview",
         "recognition": "/api/recognition/analyze",
+        "cloudAdoptions": "/api/cloud-adoptions",
     }
 
 

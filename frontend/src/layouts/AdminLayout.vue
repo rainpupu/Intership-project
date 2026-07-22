@@ -26,7 +26,7 @@
       <header class="admin-topbar">
         <div>
           <strong>管理端</strong>
-          <span>管理员可查看全平台识别记录、猫咪档案和运营数据</span>
+          <span>集中查看识别记录、猫咪档案、云领养订单和运营数据</span>
         </div>
         <div class="topbar-actions">
           <RouterLink class="admin-avatar-link" to="/admin/clues" title="待审核线索">
@@ -67,11 +67,12 @@ const menuItems = computed(() => {
     { label: '数据概览', path: '/admin/dashboard', icon: '📊' },
     { label: '识别任务', path: '/admin/recognition', icon: '🧠' },
     { label: '线索审核', path: '/admin/clues', icon: '🔔' },
-    { label: '猫咪管理', path: '/admin/cats', icon: '🐾' },
+    { label: '猫咪档案', path: '/admin/cats', icon: '🐾' },
+    { label: '云领养订单', path: '/admin/cloud-adoptions', icon: '🎁' },
   ];
 
   if (userStore.isSuperAdmin) {
-    items.push({ label: '账号管理', path: '/admin/users', icon: '👤' });
+    items.push({ label: '账号管理', path: '/admin/users', icon: '👥' });
   }
 
   return items;

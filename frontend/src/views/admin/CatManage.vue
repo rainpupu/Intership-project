@@ -93,8 +93,11 @@
         </el-table-column>
 
         <!-- 操作列 -->
-        <el-table-column label="操作" width="240" fixed="right">
+        <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
+            <el-button type="text" size="small" @click="handleEditCat(row)">
+              编辑
+            </el-button>
             <el-button type="text" size="small" @click="handleViewAudit(row)">
               审核记录
             </el-button>
@@ -109,8 +112,8 @@
       </el-table>
     </section>
 
-    <!-- 新增猫咪档案 -->
-    <el-dialog v-model="catDialogVisible" title="新增猫咪档案" width="640px">
+    <!-- 猫咪档案表单 -->
+    <el-dialog v-model="catDialogVisible" :title="catDialogTitle" width="640px">
       <el-form :model="catForm" label-width="96px">
         <el-form-item label="编号" required>
           <el-input v-model="catForm.code" placeholder="例如 CT-2026-0001" />
@@ -119,7 +122,7 @@
           <el-input v-model="catForm.name" placeholder="例如 橘子" />
         </el-form-item>
         <el-form-item label="封面图">
-          <el-input v-model="catForm.coverImage" placeholder="图片 URL，可后续补充" />
+          <el-input v-model="catForm.coverImage" placeholder="请输入图片 URL；留空则使用默认封面" />
         </el-form-item>
         <el-form-item label="毛色">
           <el-input v-model="catForm.coatColor" placeholder="例如 橘白、狸花、三花" />
@@ -159,7 +162,7 @@
       </el-form>
       <template #footer>
         <el-button round @click="catDialogVisible = false">取消</el-button>
-        <el-button type="primary" round :loading="catSubmitting" @click="handleCreateCat">保存</el-button>
+        <el-button type="primary" round :loading="catSubmitting" @click="handleSubmitCat">{{ catSubmitText }}</el-button>
       </template>
     </el-dialog>
 
@@ -193,7 +196,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getRequestErrorMessage } from '@/api/request'
 import {
@@ -204,6 +207,7 @@ import {
   toggleCatFocus,
   batchToggleFocus,
   createCat,
+  updateCat,
   deleteCat,
 } from '@/api/cat'
 import type { Cat, AuditRecord, BatchMarkPayload } from '@/types/cat'
@@ -214,8 +218,9 @@ const selectedCats = ref<Cat[]>([])
 const listLoading = ref(false)
 const catDialogVisible = ref(false)
 const catSubmitting = ref(false)
+const editingCatId = ref('')
 
-// 标记映射（从 getCatList 返回的 _markType/_markRemark 中提取）
+// 标记映射（从列表扩展字段中提取）
 const catMarkMap = ref<Record<string, { markType: string; remark: string }>>({})
 
 const DEFAULT_CAT_IMAGE = 'https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=900&q=80'
@@ -245,6 +250,10 @@ const auditLoading = ref(false)
 const currentAuditCatId = ref<string>('')
 const currentAuditCatName = ref<string>('')
 
+const isEditingCat = computed(() => Boolean(editingCatId.value))
+const catDialogTitle = computed(() => (isEditingCat.value ? `修改猫咪档案 — ${catForm.name || editingCatId.value}` : '新增猫咪档案'))
+const catSubmitText = computed(() => (isEditingCat.value ? '保存修改' : '保存'))
+
 // ========== 工具函数 ==========
 
 /** 刷新猫咪列表 */
@@ -254,7 +263,7 @@ const refreshCatList = async () => {
     const data = await getCatList()
     cats.value = data
 
-    // 从 getCatList 返回数据中提取标记信息（mock 层注入 _markType / _markRemark 字段）
+    // 从列表返回数据中提取标记信息
     const markMap: Record<string, { markType: string; remark: string }> = {}
     data.forEach((cat: any) => {
       if (cat._markType) {
@@ -309,7 +318,30 @@ const handleSelectionChange = (selection: Cat[]) => {
 
 // 新增档案
 const handleAddCat = () => {
+  editingCatId.value = ''
   resetCatForm()
+  catDialogVisible.value = true
+}
+
+const handleEditCat = (row: Cat) => {
+  editingCatId.value = row.id
+  Object.assign(catForm, {
+    code: row.code || '',
+    name: row.name || '',
+    coverImage: row.coverImage || '',
+    galleryImages: [...(row.galleryImages || [])],
+    coatColor: row.coatColor || '',
+    ageStage: row.ageStage || '未知',
+    gender: row.gender || '未知',
+    personalityTags: [...(row.personalityTags || [])],
+    healthStatus: row.healthStatus || '观察中',
+    moodStatus: row.moodStatus || '稳定',
+    adoptionStatus: row.adoptionStatus || '暂不开放',
+    lastSeenLocation: row.lastSeenLocation || '',
+    lastSeenAt: row.lastSeenAt || new Date().toISOString(),
+    description: row.description || '',
+    isFocus: row.isFocus,
+  })
   catDialogVisible.value = true
 }
 
@@ -333,7 +365,23 @@ const resetCatForm = () => {
   })
 }
 
-const handleCreateCat = async () => {
+const buildCatPayload = (): Omit<Cat, 'id'> => {
+  const coverImage = catForm.coverImage.trim() || DEFAULT_CAT_IMAGE
+  return {
+    ...catForm,
+    code: catForm.code.trim(),
+    name: catForm.name.trim(),
+    coverImage,
+    galleryImages: coverImage ? [coverImage] : [DEFAULT_CAT_IMAGE],
+    coatColor: catForm.coatColor.trim() || '未知',
+    healthStatus: catForm.healthStatus.trim() || '观察中',
+    moodStatus: catForm.moodStatus.trim() || '稳定',
+    lastSeenLocation: catForm.lastSeenLocation.trim() || '未知地点',
+    description: catForm.description.trim() || (isEditingCat.value ? '' : '管理员新增的猫咪档案。'),
+  }
+}
+
+const handleSubmitCat = async () => {
   if (!catForm.code.trim() || !catForm.name.trim()) {
     ElMessage.warning('请填写编号和名称')
     return
@@ -341,23 +389,16 @@ const handleCreateCat = async () => {
 
   catSubmitting.value = true
   try {
-    const payload: Omit<Cat, 'id'> = {
-      ...catForm,
-      code: catForm.code.trim(),
-      name: catForm.name.trim(),
-      coverImage: catForm.coverImage.trim() || DEFAULT_CAT_IMAGE,
-      galleryImages: catForm.coverImage.trim() ? [catForm.coverImage.trim()] : [DEFAULT_CAT_IMAGE],
-      coatColor: catForm.coatColor.trim() || '未知',
-      healthStatus: catForm.healthStatus.trim() || '观察中',
-      lastSeenLocation: catForm.lastSeenLocation.trim() || '未知地点',
-      description: catForm.description.trim() || '管理员新增的猫咪档案。',
-    }
-    const result = await createCat(payload)
-    ElMessage.success(result.message ?? '猫咪档案创建成功')
+    const payload = buildCatPayload()
+    const result = isEditingCat.value
+      ? await updateCat(editingCatId.value, payload)
+      : await createCat(payload)
+    ElMessage.success(result.message ?? (isEditingCat.value ? '猫咪档案修改成功' : '猫咪档案创建成功'))
     catDialogVisible.value = false
+    editingCatId.value = ''
     await refreshCatList()
   } catch (error) {
-    ElMessage.error(getRequestErrorMessage(error, '新增猫咪档案失败'))
+    ElMessage.error(getRequestErrorMessage(error, isEditingCat.value ? '修改猫咪档案失败' : '新增猫咪档案失败'))
   } finally {
     catSubmitting.value = false
   }

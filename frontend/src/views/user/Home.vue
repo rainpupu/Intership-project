@@ -4,7 +4,7 @@
       <div class="hero-copy">
         <el-tag effect="plain" size="large">AI 视觉识别 · 流浪猫数字档案</el-tag>
         <h1>给每一只流浪猫<br />一个<span>温暖的家</span></h1>
-        <p>通过视觉识别与 AI 智能体，为流浪猫建立持续更新的数字档案。</p>
+        <p>视觉识别与 AI 智能体协同，持续更新每只流浪猫的数字档案。</p>
       </div>
       <div class="hero-visual paw-dot">
         <img :src="featuredCat?.coverImage" alt="CatTrace 推荐猫咪" />
@@ -91,11 +91,12 @@ h1 span {
 }
 
 .hero-copy p {
-  max-width: 560px;
+  max-width: 720px;
   margin: 0;
   color: $color-text-secondary;
   font-size: 17px;
   line-height: 1.8;
+  white-space: nowrap;
 }
 
 .hero-visual {
@@ -150,6 +151,11 @@ h1 span {
   .stats-grid,
   .cat-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hero-copy p {
+    max-width: 100%;
+    white-space: normal;
   }
 }
 

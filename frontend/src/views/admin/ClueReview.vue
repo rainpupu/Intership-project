@@ -3,7 +3,7 @@
     <section class="page-head">
       <div>
         <h1 class="page-title">线索审核</h1>
-        <p class="page-subtitle">只处理用户主动提交的校园猫线索。已有猫按个体识别结果绑定，新猫直接创建待完善档案。</p>
+        <p class="page-subtitle">集中处理用户提交的校园猫线索，确认已有档案匹配或为新猫建立档案。</p>
       </div>
       <el-button round :loading="loading" @click="fetchData">刷新</el-button>
     </section>

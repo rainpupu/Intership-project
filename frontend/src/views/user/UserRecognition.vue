@@ -46,7 +46,7 @@
       <div class="panel-head">
         <div>
           <h2 class="section-title">我的历史识别记录</h2>
-          <p>这里通过当前登录账号加载历史识别记录，普通用户只能查看自己的数据。</p>
+          <p>当前账号的历史识别记录如下，普通用户仅可查看本人上传的数据。</p>
         </div>
       </div>
       <DataState

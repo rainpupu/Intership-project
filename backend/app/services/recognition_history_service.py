@@ -7,10 +7,11 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.entity.db_models import RecognitionRecord, User
+from app.services.breed_name_service import normalize_breed_candidates, to_chinese_breed_name
 
 
 def _record_to_dict(record: RecognitionRecord) -> dict:
-    candidates = record.candidates or []
+    candidates = normalize_breed_candidates(record.candidates or [])
     top_candidate = candidates[0] if candidates else {}
     return {
         "id": f"rec-{record.id}",
@@ -20,7 +21,7 @@ def _record_to_dict(record: RecognitionRecord) -> dict:
         "catName": record.cat_name,
         "similarity": record.similarity,
         "modelType": top_candidate.get("modelType"),
-        "breedName": top_candidate.get("breedName"),
+        "breedName": to_chinese_breed_name(top_candidate.get("breedName")),
         "breedConfidence": top_candidate.get("breedConfidence"),
         "identityStatus": top_candidate.get("identityStatus"),
         "bestIdentityMatch": top_candidate.get("bestIdentityMatch"),
@@ -37,7 +38,7 @@ def _record_to_dict(record: RecognitionRecord) -> dict:
 class RecognitionHistoryService:
     @staticmethod
     def create_from_analysis(db: Session, current_user: User, result: dict[str, Any]) -> dict:
-        candidates = result.get("candidates") or []
+        candidates = normalize_breed_candidates(result.get("candidates") or [])
         uploaded_images = result.get("uploadedImages") or []
         analysis = result.get("analysis") or {}
         top_candidate = candidates[0] if candidates else {}
